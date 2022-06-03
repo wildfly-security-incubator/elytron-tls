@@ -19,16 +19,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>template-parent</artifactId>
-        <groupId>org.wildfly.extras.wildfly-feature-pack-template</groupId>
+        <groupId>org.wildfly.extras.elytron-tls</groupId>
+        <artifactId>elytron-tls-parent</artifactId>
         <version>1.0.0.Alpha-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>template-feature-pack</artifactId>
+    <artifactId>elytron-tls-feature-pack</artifactId>
     <packaging>pom</packaging>
 
-    <name>WildFly Galleon FP Template - Galleon Pack</name>
+    <name>Elytron TLS Subsystem - Galleon Pack</name>
 
     <properties>
         <license.output.directory>${project.build.directory}/resources/content/docs/licenses</license.output.directory>
@@ -79,7 +79,7 @@
                 <version>${version.org.wildfly.galleon-plugins}</version>
                 <executions>
                     <execution>
-                        <id>wildfly-template-feature-pack-build</id>
+                        <id>elytron-tls-feature-pack-build</id>
                         <goals>
                             <goal>build-feature-pack</goal>
                         </goals>
@@ -131,13 +131,63 @@
         <!-- module and copy artifact dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>template-dependency</artifactId>
+            <artifactId>elytron-tls-dependency</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>template-subsystem</artifactId>
+            <artifactId>elytron-tls-subsystem</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-asn1</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-base</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-credential</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-provider-util</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-ssl-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-x500</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-x500-cert</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-x500-cert-acme</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-x500-cert-util</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-x500-principal</artifactId>
         </dependency>
 <!--
 

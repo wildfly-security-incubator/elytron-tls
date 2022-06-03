@@ -19,27 +19,27 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>template-parent</artifactId>
-        <groupId>org.wildfly.extras.wildfly-feature-pack-template</groupId>
+        <groupId>org.wildfly.extras.elytron-tls</groupId>
+        <artifactId>elytron-tls-parent</artifactId>
         <version>1.0.0.Alpha-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>template-build</artifactId>
-    <name>WildFly Galleon FP Template - Build</name>
+    <artifactId>elytron-tls-build</artifactId>
+    <name>Elytron TLS Subsystem - Build</name>
 
     <packaging>pom</packaging>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>template-feature-pack</artifactId>
+            <artifactId>elytron-tls-feature-pack</artifactId>
             <type>pom</type>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>template-feature-pack</artifactId>
+            <artifactId>elytron-tls-feature-pack</artifactId>
             <type>zip</type>
             <exclusions>
                 <exclusion>
@@ -78,7 +78,7 @@
                                 </feature-pack>
                                 <feature-pack>
                                     <groupId>${project.groupId}</groupId>
-                                    <artifactId>template-feature-pack</artifactId>
+                                    <artifactId>elytron-tls-feature-pack</artifactId>
                                     <version>${project.version}</version>
                                     <inherit-packages>false</inherit-packages>
                                     <inherit-configs>false</inherit-configs>
@@ -97,7 +97,7 @@
                                         <layer>management</layer>
                                         <!-- Layers from this FP  -->
                                         <!-- TODO - rename to what you have called your layer -->
-                                        <layer>template-layer</layer>
+                                        <layer>elytron-tls-layer</layer>
                                     </layers>
                                 </config>
                             </configurations>

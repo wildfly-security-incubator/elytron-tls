@@ -19,14 +19,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>template-parent</artifactId>
-        <groupId>org.wildfly.extras.wildfly-feature-pack-template</groupId>
+        <groupId>org.wildfly.extras.elytron-tls</groupId>
+        <artifactId>elytron-tls-parent</artifactId>
         <version>1.0.0.Alpha-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>template-dependency</artifactId>
-    <name>WildFly Galleon FP Template - Subsystem Dependency</name>
+    <artifactId>elytron-tls-dependency</artifactId>
+    <name>Elytron TLS Subsystem - Subsystem Dependency</name>
 
     <dependencies>
         <dependency>

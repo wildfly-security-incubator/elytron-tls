@@ -26,8 +26,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.wildfly.feature.pack.template.dependency.ExampleQualifier;
-import org.wildfly.feature.pack.template.dependency.Message;
+import org.wildfly.feature.pack.elytron.tls.dependency.ExampleQualifier;
+import org.wildfly.feature.pack.elytron.tls.dependency.Message;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>

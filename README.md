@@ -1,10 +1,7 @@
 ![Galleon Pack Template Java CI](https://github.com/wildfly/wildfly-feature-pack-template/workflows/Galleon%20Pack%20Template%20Java%20CI/badge.svg)
 
-# Wildfly Galleon Feature Pack Template
-A template Galleon feature pack to provision a new subsystem into WildFly using Galleon. 
-It is runnable as-is, and provides a very basic subsystem which supplies a CDI `@Produces` method. 
-Instances from this `@Produces` method are available to your deployments when your subsystem is 
-installed in the server.
+# Elytron TLS Subsystem
+A lightweight TLS/SSL subsystem based on the Elytron project.
 
 We will start off by showing you how to run the example, and dig more into the details of how this
 feature pack is structured so that you can adapt it to provide your functionality as a Galleon

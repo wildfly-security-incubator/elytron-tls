@@ -21,13 +21,13 @@
         <artifactId>jboss-parent</artifactId>
         <version>35</version>
     </parent>
-    <groupId>org.wildfly.extras.wildfly-feature-pack-template</groupId>
-    <artifactId>template-parent</artifactId>
+    <groupId>org.wildfly.extras.elytron-tls</groupId>
+    <artifactId>elytron-tls-parent</artifactId>
     <version>1.0.0.Alpha-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>WildFly Galleon FP Template - Parent</name>
+    <name>Elytron TLS Subsystem - Parent</name>
   
-    <description>WildFly Galleon Pack Template</description>
+    <description>Elytron TLS Subsystem</description>
 
     <licenses>
         <license>
@@ -37,27 +37,17 @@
         </license>
     </licenses>
     <properties>
-        <!--
-            Target WildFly version, and other parts needed for the Galleon maven plugin
-        -->
-        <version.org.wildfly>23.0.2.Final</version.org.wildfly>
-        <!--
-            The value of version.org.wildfly.core from the WildFly version tag. E.g. for 20.0.0.Final it is
-            found here: https://github.com/wildfly/wildfly/blob/20.0.0.Final/pom.xml#L445
-        -->
-        <version.org.wildfly.core>15.0.1.Final</version.org.wildfly.core>
-        <!--
-            The value of version.org.wildfly.common from the WildFly Core version tag. E.g. for 12.0.1.Final it is
-            found here: https://github.com/wildfly/wildfly-core/blob/12.0.1.Final/pom.xml#L217
-        -->
+
+        <version.org.wildfly>27.0.0.Alpha2-SNAPSHOT</version.org.wildfly>
+        <version.org.wildfly.component.matrix>26.1.1.Final</version.org.wildfly.component.matrix>
+        <version.org.wildfly.core>19.0.0.Beta12-SNAPSHOT</version.org.wildfly.core>
         <version.org.wildfly.common>1.5.4.Final</version.org.wildfly.common>
-
-
 
 
         <!-- Other dependency versions -->
         <version.org.jboss.arquillian.junit>1.6.0.Final</version.org.jboss.arquillian.junit>
         <version.org.jboss.galleon>4.2.8.Final</version.org.jboss.galleon>
+        <version.org.wildfly.security.elytron>1.19.1.CR1-SNAPSHOT</version.org.wildfly.security.elytron>
 
 
         <!-- Plugin versions and their dependency versions -->
@@ -79,7 +69,7 @@
         <maven.redhat.repository.url>${maven.repository.protocol}://maven.repository.redhat.com/ga/</maven.redhat.repository.url>
 
         <!-- Name of the built server -->
-        <server.name>wildfly-${version.org.wildfly}-template-${project.version}</server.name>
+        <server.name>wildfly-${version.org.wildfly}-elytron-tls-${project.version}</server.name>
         <wildfly.build.output.dir>build/target/${server.name}</wildfly.build.output.dir>
 
         <!-- Galleon -->
@@ -144,7 +134,7 @@
             <dependency>
                 <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-component-matrix</artifactId>
-                <version>${version.org.wildfly}</version>
+                <version>${version.org.wildfly.component.matrix}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -154,7 +144,7 @@
             <!-- Project -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>template-dependency</artifactId>
+                <artifactId>elytron-tls-dependency</artifactId>
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
@@ -165,7 +155,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>template-subsystem</artifactId>
+                <artifactId>elytron-tls-subsystem</artifactId>
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
@@ -176,7 +166,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>template-feature-pack</artifactId>
+                <artifactId>elytron-tls-feature-pack</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <exclusions>
@@ -188,7 +178,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>template-feature-pack</artifactId>
+                <artifactId>elytron-tls-feature-pack</artifactId>
                 <version>${project.version}</version>
                 <type>zip</type>
                 <exclusions>
@@ -209,6 +199,65 @@
                 <version>${version.org.wildfly.checkstyle-config}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-asn1</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-base</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-credential</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-provider-util</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-ssl-common</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-x500</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-x500-cert</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-x500-cert-acme</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-x500-cert-util</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-x500-principal</artifactId>
+                <version>${version.org.wildfly.security.elytron}</version>
+            </dependency>
 
 
             <!-- Test dependencies -->
