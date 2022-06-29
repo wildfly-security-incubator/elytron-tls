@@ -131,11 +131,6 @@
         <!-- module and copy artifact dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-dependency</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>elytron-tls-subsystem</artifactId>
             <scope>provided</scope>
         </dependency>

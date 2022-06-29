@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Red Hat, Inc.
+ * Copyright 2022 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
+import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ModelOnlyRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
@@ -34,7 +35,7 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.dmr.ModelNode;
-import org.wildfly.extension.elytron.tls.subsystem._private.TemplateLogger;
+import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
 import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcessor;
 
 /**
@@ -61,6 +62,12 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
     }
 
     @Override
+    public void registerChildren(ManagementResourceRegistration resourceRegistration) {
+        resourceRegistration.registerSubModel(SSLContextDefinitions.createClientSSLContextDefinition());
+        resourceRegistration.registerSubModel(SSLContextDefinitions.createServerSSLContextDefinition());
+    }
+
+    @Override
     public Collection<AttributeDefinition> getAttributes() {
         return Collections.emptyList();
     }
@@ -68,16 +75,6 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
     @Override
     public void registerAdditionalRuntimePackages(ManagementResourceRegistration resourceRegistration) {
         super.registerAdditionalRuntimePackages(resourceRegistration);
-
-        /*
-        resourceRegistration.registerAdditionalRuntimePackages(
-                // Required dependencies are always added
-                RuntimePackageDependency.required("my.required.module"),
-                // Optional and passive modules depend on the 'optional-packages' mode. See the Galleon
-                // documentation for more details as this is an advanced feature
-                RuntimePackageDependency.optional("my.optional.module"),
-                RuntimePackageDependency.passive("my.passive.module")
-        );*/
     }
 
     static class AddHandler extends AbstractBoottimeAddStepHandler {
@@ -99,7 +96,11 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                 }
             }, RUNTIME);
 
-            TemplateLogger.LOGGER.activatingSubsystem();
+            ElytronTLSLogger.LOGGER.activatingSubsystem();
         }
+    }
+
+    static class RemoveHandler extends AbstractRemoveStepHandler {
+
     }
 }

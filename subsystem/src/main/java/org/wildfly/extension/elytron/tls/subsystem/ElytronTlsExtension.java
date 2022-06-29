@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Red Hat, Inc.
+ * Copyright 2022 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,10 @@ import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.msc.service.ServiceName;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  * @author <a href="mailto:mmazanek@redhat.com">Martin Mazanek</a>
- *
  */
 public class ElytronTlsExtension implements Extension {
 
@@ -42,6 +41,8 @@ public class ElytronTlsExtension implements Extension {
     public static final String SUBSYSTEM_NAME = "elytron-tls";
 
     protected static final PathElement SUBSYSTEM_PATH = PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME);
+
+    static final ServiceName BASE_SERVICE_NAME = ServiceName.of(SUBSYSTEM_NAME);
 
     static final String WELD_CAPABILITY_NAME = "org.wildfly.weld";
 
@@ -81,5 +82,4 @@ public class ElytronTlsExtension implements Extension {
     public void initializeParsers(ExtensionParsingContext extensionParsingContext) {
         extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, SubsystemParser_1_0.NAMESPACE, CURRENT_PARSER);
     }
-
 }

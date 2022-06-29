@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Red Hat, Inc.
+ * Copyright 2022 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.jboss.as.controller.PersistentResourceXMLParser;
  */
 public class SubsystemParser_1_0 extends PersistentResourceXMLParser {
 
-    // TODO Rename to something that makes sense and update the template-subsytem.xsd namespaces to match
     public static final String NAMESPACE = "urn:wildfly:elytron-tls-subsystem:1.0";
 
     private static final PersistentResourceXMLDescription xmlDescription = builder(ElytronTlsExtension.SUBSYSTEM_PATH, NAMESPACE)

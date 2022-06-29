@@ -22,6 +22,7 @@
         <artifactId>elytron-tls-testsuite-integration</artifactId>
         <groupId>org.wildfly.extras.elytron-tls</groupId>
         <version>1.0.0.Alpha-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -37,79 +38,57 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-feature-pack</artifactId>
-            <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>elytron-tls-subsystem</artifactId>
+            <scope>test</scope>
         </dependency>
+        <!-- Test dependencies -->
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-dependency</artifactId>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
+
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jboss.galleon</groupId>
-                <artifactId>galleon-maven-plugin</artifactId>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <groupId>org.wildfly</groupId>
+                            <artifactId>wildfly-galleon-pack</artifactId>
+                            <version>${version.org.wildfly}</version>
+                        </feature-pack>
+                        <feature-pack>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>elytron-tls-feature-pack</artifactId>
+                            <version>${project.version}</version>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>web-server</layer>
+                        <layer>jmx-remoting</layer>
+                        <!-- Layers from this FP  -->
+                        <layer>elytron-tls</layer>
+                    </layers>
+                    <galleon-options>
+                        <jboss-maven-dist/>
+                        <jboss-fork-embedded>${galleon.fork.embedded}</jboss-fork-embedded>
+                    </galleon-options>
+                    <provisioning-dir>wildfly</provisioning-dir>
+                    <log-provisioning-time>${galleon.log.time}</log-provisioning-time>
+                    <offline>true</offline>
+                </configuration>
                 <executions>
-                    <!-- Provision a server with relevant layers -->
                     <execution>
                         <id>server-provisioning</id>
                         <goals>
                             <goal>provision</goal>
                         </goals>
                         <phase>compile</phase>
-                        <configuration>
-                            <install-dir>${project.build.directory}/wildfly</install-dir>
-                            <record-state>false</record-state>
-                            <log-time>${galleon.log.time}</log-time>
-                            <offline>true</offline>
-                            <plugin-options>
-                                <jboss-maven-dist/>
-                                <jboss-fork-embedded>${galleon.fork.embedded}</jboss-fork-embedded>
-                                <optional-packages>passive+</optional-packages>
-                            </plugin-options>
-                            <feature-packs>
-                                <feature-pack>
-                                    <transitive>true</transitive>
-                                    <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-galleon-pack</artifactId>
-                                    <version>${version.org.wildfly}</version>
-                                    <inherit-packages>false</inherit-packages>
-                                    <inherit-configs>false</inherit-configs>
-                                </feature-pack>
-                                <feature-pack>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>elytron-tls-feature-pack</artifactId>
-                                    <version>${project.version}</version>
-                                    <inherit-packages>false</inherit-packages>
-                                    <inherit-configs>false</inherit-configs>
-                                </feature-pack>
-                            </feature-packs>
-                            <configurations>
-                                <config>
-                                    <model>standalone</model>
-                                    <name>standalone.xml</name>
-                                    <layers>
-                                        <!--
-                                            Layers needed to have a base server that makes sense,
-                                            which are not required by this FP's layers
-                                        -->
-                                        <layer>web-server</layer>
-                                        <layer>jmx-remoting</layer>
-                                        <!-- Layers from this FP  -->
-                                        <layer>elytron-tls-layer</layer>
-                                    </layers>
-                                </config>
-                            </configurations>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

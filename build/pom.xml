@@ -73,15 +73,11 @@
                                     <groupId>org.wildfly</groupId>
                                     <artifactId>wildfly-galleon-pack</artifactId>
                                     <version>${version.org.wildfly}</version>
-                                    <inherit-packages>false</inherit-packages>
-                                    <inherit-configs>false</inherit-configs>
                                 </feature-pack>
                                 <feature-pack>
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>elytron-tls-feature-pack</artifactId>
                                     <version>${project.version}</version>
-                                    <inherit-packages>false</inherit-packages>
-                                    <inherit-configs>false</inherit-configs>
                                 </feature-pack>
                             </feature-packs>
                             <configurations>
@@ -96,8 +92,7 @@
                                         <layer>jaxrs</layer>
                                         <layer>management</layer>
                                         <!-- Layers from this FP  -->
-                                        <!-- TODO - rename to what you have called your layer -->
-                                        <layer>elytron-tls-layer</layer>
+                                        <layer>elytron-tls</layer>
                                     </layers>
                                 </config>
                             </configurations>
