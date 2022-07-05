@@ -14,6 +14,6 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<feature-group-spec name="elytron-tls" xmlns="urn:jboss:galleon:feature-group:1.0">
+<feature-group-spec name="elytron-tls-base" xmlns="urn:jboss:galleon:feature-group:1.0">
     <feature spec="subsystem.elytron-tls"/>
 </feature-group-spec>

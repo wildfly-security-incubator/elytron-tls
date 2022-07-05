@@ -30,11 +30,5 @@
         <module name="org.jboss.modules"/>
         <module name="org.jboss.staxmapper"/>
         <module name="org.wildfly.security.manager"/>
-
-        <!--
-            Additional module dependencies. If they contain any classes that should be exposed to the user's code,
-            (e.g. in a deployment) make sure you add them in the subsystem's DependencyProcessor too
-        -->
-        <module name="org.wildfly.elytron-tls-dependency"/>
     </dependencies>
 </module>

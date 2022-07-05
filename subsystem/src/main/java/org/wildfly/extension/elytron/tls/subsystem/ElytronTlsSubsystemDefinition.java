@@ -68,16 +68,6 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
     @Override
     public void registerAdditionalRuntimePackages(ManagementResourceRegistration resourceRegistration) {
         super.registerAdditionalRuntimePackages(resourceRegistration);
-
-        /*
-        resourceRegistration.registerAdditionalRuntimePackages(
-                // Required dependencies are always added
-                RuntimePackageDependency.required("my.required.module"),
-                // Optional and passive modules depend on the 'optional-packages' mode. See the Galleon
-                // documentation for more details as this is an advanced feature
-                RuntimePackageDependency.optional("my.optional.module"),
-                RuntimePackageDependency.passive("my.passive.module")
-        );*/
     }
 
     static class AddHandler extends AbstractBoottimeAddStepHandler {

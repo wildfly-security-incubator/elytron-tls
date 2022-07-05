@@ -45,17 +45,7 @@ public class DependencyProcessor implements DeploymentUnitProcessor {
     private void addModuleDependencies(DeploymentUnit deploymentUnit) {
         final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
         final ModuleLoader moduleLoader = Module.getBootModuleLoader();
-
-        // Pull in dependencies needed by deployments in the subsystem
-
-        // This is needed if running with a security manager, and seems to be needed by arquillian in all cases
         moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.security.manager", false, false, true, false));
-        // TODO use the name of the modules after renaming, and add any other dependencies
-        // In this case we don't need any classes from the subsystem module itself so we don't need to add it to the
-        // deployment's module dependencies
-        // moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.extension.template-subsystem", false, false, true, false));
-        moduleSpecification.addSystemDependency(
-                cdiDependency(new ModuleDependency(moduleLoader, "org.wildfly.elytron-tls-dependency", false, false, true, false)));
     }
 
 

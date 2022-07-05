@@ -38,10 +38,10 @@
     </licenses>
     <properties>
 
-        <version.org.wildfly>27.0.0.Alpha2-SNAPSHOT</version.org.wildfly>
+        <version.org.wildfly>26.1.1.Final</version.org.wildfly>
         <version.org.wildfly.component.matrix>26.1.1.Final</version.org.wildfly.component.matrix>
-        <version.org.wildfly.core>19.0.0.Beta12-SNAPSHOT</version.org.wildfly.core>
-        <version.org.wildfly.common>1.5.4.Final</version.org.wildfly.common>
+        <version.org.wildfly.core>18.1.1.Final</version.org.wildfly.core>
+        <version.org.wildfly.common>1.6.0.Final</version.org.wildfly.common>
 
 
         <!-- Other dependency versions -->
@@ -52,7 +52,7 @@
 
         <!-- Plugin versions and their dependency versions -->
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
-        <version.org.wildfly.galleon-plugins>4.2.8.Final</version.org.wildfly.galleon-plugins>
+        <version.org.wildfly.galleon-plugins>5.2.11.Final</version.org.wildfly.galleon-plugins>
 
         <!-- Misc. -->
         <wildfly-extras.repo.scm.connection>git@github.com:wildfly-extras/wildfly-galleon-pack-template.git</wildfly-extras.repo.scm.connection>
@@ -82,7 +82,7 @@
         <linkXRef>false</linkXRef>
 
         <!-- WildFLy plugin version. We use it to be able to run wildfly:deploy for the example -->
-        <version.wildfly.maven.plugin>2.0.0.Final</version.wildfly.maven.plugin>
+        <version.wildfly.maven.plugin>3.0.1.Final</version.wildfly.maven.plugin>
     </properties>
     <repositories>
         <repository>
@@ -142,17 +142,6 @@
 
 
             <!-- Project -->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>elytron-tls-dependency</artifactId>
-                <version>${project.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>elytron-tls-subsystem</artifactId>
@@ -353,7 +342,6 @@
     </scm>
     <modules>
         <module>build</module>
-        <module>dependency</module>
         <module>example</module>
         <module>feature-pack</module>
         <module>subsystem</module>
