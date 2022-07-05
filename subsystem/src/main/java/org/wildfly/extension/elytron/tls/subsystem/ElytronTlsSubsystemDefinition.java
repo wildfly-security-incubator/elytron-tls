@@ -18,6 +18,7 @@ package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.OperationContext.Stage.RUNTIME;
 import static org.jboss.as.server.deployment.Phase.DEPENDENCIES;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +35,6 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.dmr.ModelNode;
-import org.wildfly.extension.elytron.tls.subsystem._private.TemplateLogger;
 import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcessor;
 
 /**
@@ -89,7 +89,7 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                 }
             }, RUNTIME);
 
-            TemplateLogger.LOGGER.activatingSubsystem();
+            LOGGER.activatingSubsystem();
         }
     }
 }
