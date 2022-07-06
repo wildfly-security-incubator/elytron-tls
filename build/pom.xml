@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2019 Red Hat, Inc.
+  ~ Copyright 2023 Red Hat, Inc.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -26,20 +26,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-build</artifactId>
-    <name>Elytron TLS Subsystem - Build</name>
+    <name>Elytron TLS: Build</name>
 
     <packaging>pom</packaging>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-feature-pack</artifactId>
+            <artifactId>elytron-tls-galleon-pack</artifactId>
             <type>pom</type>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-feature-pack</artifactId>
+            <artifactId>elytron-tls-galleon-pack</artifactId>
             <type>zip</type>
             <exclusions>
                 <exclusion>
@@ -64,19 +64,19 @@
                         </goals>
                         <phase>prepare-package</phase>
                         <configuration>
-                            <install-dir>${project.build.directory}/${project.build.finalName}</install-dir>
+                            <installDir>${project.build.directory}/${project.build.finalName}</installDir>
                             <record-state>false</record-state>
                             <log-time>${galleon.log.time}</log-time>
                             <offline>true</offline>
                             <feature-packs>
                                 <feature-pack>
                                     <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-galleon-pack</artifactId>
+                                    <artifactId>wildfly-preview-feature-pack</artifactId>
                                     <version>${version.org.wildfly}</version>
                                 </feature-pack>
                                 <feature-pack>
                                     <groupId>${project.groupId}</groupId>
-                                    <artifactId>elytron-tls-feature-pack</artifactId>
+                                    <artifactId>elytron-tls-galleon-pack</artifactId>
                                     <version>${project.version}</version>
                                 </feature-pack>
                             </feature-packs>
@@ -85,13 +85,7 @@
                                     <model>standalone</model>
                                     <name>standalone.xml</name>
                                     <layers>
-                                        <!--
-                                            Layers needed to have a base server that makes sense,
-                                            which are not required by this FP's layers
-                                        -->
-                                        <layer>jaxrs</layer>
                                         <layer>management</layer>
-                                        <!-- Layers from this FP  -->
                                         <layer>elytron-tls</layer>
                                     </layers>
                                 </config>

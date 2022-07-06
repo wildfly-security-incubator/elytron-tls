@@ -15,8 +15,5 @@
   ~ limitations under the License.
   -->
 <layer-spec xmlns="urn:jboss:galleon:layer-spec:1.0" name="elytron-tls">
-    <dependencies>
-        <layer name="cdi"/>
-    </dependencies>
-    <feature-group name="elytron-tls-base"/>
+    <feature-group name="elytron-tls"/>
 </layer-spec>

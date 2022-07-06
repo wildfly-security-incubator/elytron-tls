@@ -29,7 +29,7 @@
             <include name="docs.licenses"/>
         </packages>
     </feature-pack>
-    <feature-pack location="org.wildfly.extras.elytron-tls:elytron-tls-feature-pack:1.0.0.Alpha-SNAPSHOT">
+    <feature-pack location="org.wildfly.extras.elytron-tls:elytron-tls-galleon-pack:1.0.0.Alpha-SNAPSHOT">
         <default-configs inherit="false"/>
         <packages inherit="false">
             <!-- If docs/licenses is desired, uncomment this line -->
@@ -42,7 +42,7 @@
             <include name="cloud-profile"/>
 
             <!-- Our layer(s) -->
-            <include name="elytron-tls-layer"/>
+            <include name="elytron-tls"/>
         </layers>
     </config>
     <options>

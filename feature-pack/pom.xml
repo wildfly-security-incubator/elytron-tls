@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2019 Red Hat, Inc.
+  ~ Copyright 2023 Red Hat, Inc.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -28,9 +28,10 @@
     <artifactId>elytron-tls-feature-pack</artifactId>
     <packaging>pom</packaging>
 
-    <name>Elytron TLS Subsystem - Galleon Pack</name>
+    <name>Elytron TLS: Galleon Feature Pack</name>
 
     <properties>
+        <version.org.wildfly.licenses-plugin>2.3.1.Final</version.org.wildfly.licenses-plugin>
         <license.output.directory>${project.build.directory}/resources/content/docs/licenses</license.output.directory>
         <license.src.directory>${basedir}/src/license</license.src.directory>
     </properties>
@@ -76,7 +77,6 @@
             <plugin>
                 <groupId>org.wildfly.galleon-plugins</groupId>
                 <artifactId>wildfly-galleon-maven-plugin</artifactId>
-                <version>${version.org.wildfly.galleon-plugins}</version>
                 <executions>
                     <execution>
                         <id>elytron-tls-feature-pack-build</id>
@@ -93,6 +93,7 @@
             <plugin>
                 <groupId>org.wildfly.maven.plugins</groupId>
                 <artifactId>licenses-plugin</artifactId>
+                <version>${version.org.wildfly.licenses-plugin}</version>
                 <inherited>false</inherited>
                 <executions>
                     <execution>
@@ -103,97 +104,37 @@
                         <phase>process-resources</phase>
                         <configuration>
                             <sortByGroupIdAndArtifactId>true</sortByGroupIdAndArtifactId>
-                            <!-- TODO Give these the same name as you changed the xml to -->
-                            <licensesConfigFile>src/license/template-feature-pack-licenses.xml</licensesConfigFile>
-                            <licensesOutputFile>${license.output.directory}/template-feature-pack-licenses.xml</licensesOutputFile>
+                            <licensesConfigFile>src/license/elytron-tls-feature-pack-licenses.xml</licensesConfigFile>
+                            <licensesOutputFile>${license.output.directory}/elytron-tls-feature-pack-licenses.xml</licensesOutputFile>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
     <dependencies>
-        <!-- Other feature pack dependencies -->
         <dependency>
             <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-galleon-pack</artifactId>
-            <version>${version.org.wildfly}</version>
-            <type>zip</type>
+            <artifactId>wildfly-preview-feature-pack</artifactId>
+            <type>pom</type>
         </dependency>
-
         <dependency>
             <groupId>org.wildfly.galleon-plugins</groupId>
             <artifactId>wildfly-galleon-plugins</artifactId>
             <scope>provided</scope>
         </dependency>
 
-
-        <!-- module and copy artifact dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>elytron-tls-subsystem</artifactId>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-asn1</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-base</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-credential</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-provider-util</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-ssl-common</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert-acme</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert-util</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-principal</artifactId>
-        </dependency>
-<!--
-
-        <dependency>
-            <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-feature-pack-galleon-content</artifactId>
-            <version>${version.org.wildfly}</version>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-core-feature-pack-common</artifactId>
             <type>pom</type>
             <scope>provided</scope>
         </dependency>
--->
-
     </dependencies>
 </project>

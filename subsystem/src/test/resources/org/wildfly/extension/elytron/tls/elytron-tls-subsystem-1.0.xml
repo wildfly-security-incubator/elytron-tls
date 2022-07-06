@@ -1,0 +1,206 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright 2021, Red Hat, Inc., and individual contributors as indicated
+  ~ by the @authors tag.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!-- for needs of DomainTestCase -->
+<!-- <subsystem xmlns="urn:wildfly:elytron:15.1" register-jaspi-factory="false" default-ssl-context="client"> -->
+<subsystem xmlns="urn:wildfly:elytron-tls:1.0" default-ssl-context="client">
+    <!-- <sasl>
+        <sasl-authentication-factory name="SaslAuthenticationDefinition" security-domain="MyDomain" sasl-server-factory="ConfigurableSaslServerFactory">
+            <mechanism-configuration>
+                <mechanism mechanism-name="PLAIN" pre-realm-principal-transformer="PreRealmNameRewriter" post-realm-principal-transformer="PostRealmNameRewriter"
+                           final-principal-transformer="FinalNameRewriter" realm-mapper="RegexMapper">
+                    <mechanism-realm realm-name="Test Realm" pre-realm-principal-transformer="PreRealmNameRewriter_II"
+                                     post-realm-principal-transformer="PostRealmNameRewriter_II" final-principal-transformer="FinalNameRewriter_II"
+                                     realm-mapper="RegexMapper_II"/>
+                </mechanism>
+            </mechanism-configuration>
+        </sasl-authentication-factory>
+        <sasl-authentication-factory name="KerberosHttpMgmtSaslTestCase" sasl-server-factory="KerberosHttpMgmtSaslTestCase"
+                                     security-domain="KerberosHttpMgmtSaslTestCase">
+            <mechanism-configuration>
+                <mechanism mechanism-name="GSSAPI" credential-security-factory="KerberosHttpMgmtSaslTestCase">
+                    <mechanism-realm realm-name="KerberosHttpMgmtSaslTestCase" />
+                </mechanism>
+                <mechanism mechanism-name="GS2-KRB5" credential-security-factory="KerberosHttpMgmtSaslTestCase">
+                    <mechanism-realm realm-name="KerberosHttpMgmtSaslTestCase" />
+                </mechanism>
+                <mechanism mechanism-name="GS2-KRB5-PLUS" credential-security-factory="KerberosHttpMgmtSaslTestCase">
+                    <mechanism-realm realm-name="KerberosHttpMgmtSaslTestCase" />
+                </mechanism>
+            </mechanism-configuration>
+        </sasl-authentication-factory>
+        <aggregate-sasl-server-factory name="AggregateSaslFactory">
+            <sasl-server-factory name="ProviderSaslFactory"/>
+            <sasl-server-factory name="ServiceSaslFactory"/>
+        </aggregate-sasl-server-factory>
+        <configurable-sasl-server-factory name="ConfigurableSaslServerFactory" server-name="server" protocol="test-protocol" sasl-server-factory="MechFiltering">
+            <properties>
+                <property name="a" value="b"/>
+                <property name="c" value="d"/>
+            </properties>
+            <filters>
+                <filter enabling="false" pattern="x"/>
+                <filter enabling="false" predefined="HASH_MD5"/>
+            </filters>
+        </configurable-sasl-server-factory>
+        <mechanism-provider-filtering-sasl-server-factory name="MechFiltering" sasl-server-factory="AggregateSaslFactory" enabling="false">
+            <filters>
+                <filter mechanism-name="Digest" provider-name="Sun" provider-version="1.5" version-comparison="greater-than"/>
+                <filter mechanism-name="Scram" provider-name="Sun" provider-version="1.5" version-comparison="greater-than"/>
+            </filters>
+        </mechanism-provider-filtering-sasl-server-factory>
+        <provider-sasl-server-factory name="ProviderSaslFactory" providers="TestProviderLoader"/>
+        <service-loader-sasl-server-factory name="ServiceSaslFactory" module="a.b.c"/>
+    </sasl> -->
+    <tls>
+        <key-stores>
+            <key-store name="PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11"/>
+            </key-store>
+            <key-store name="jks_store" alias-filter="one,two,three">
+                <credential-reference clear-text="password"/>
+                <implementation type="jks"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jks" required="true"/>
+            </key-store>
+            <key-store name="jceks_store">
+                <credential-reference clear-text="password"/>
+                <implementation type="jceks"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jceks"/>
+            </key-store>
+            <key-store name="Custom_PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11" providers="custom-loader"/>
+            </key-store>
+            <key-store name="accounts.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="JKS"/>
+                <file path="accounts.keystore.jks" relative-to="jboss.server.config.dir"/>
+            </key-store>
+            <key-store name="test.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="PKCS12"/>
+                <file path="test.keystore" relative-to="jboss.server.config.dir"/>
+            </key-store>
+            <!-- <filtering-key-store name="FilteringKeyStore" key-store="Custom_PKCS_11" alias-filter="NONE:+firefly"/> -->
+        </key-stores>
+        <key-managers>
+            <key-manager name="serverKey" algorithm="SunX509" key-store="jks_store">
+                <credential-reference clear-text="password"/>
+            </key-manager>
+            <key-manager name="serverKey2" algorithm="SunX509" key-store="jks_store" providers="custom-loader" provider-name="first">
+                <credential-reference store="credstore1" alias="password-alias" type="PasswordCredential"/>
+            </key-manager>
+            <key-manager name="clientKey" algorithm="SunX509" key-store="jks_store">
+                <credential-reference store="credstore1" alias="password-alias" type="PasswordCredential"/>
+            </key-manager>
+            <key-manager name="LazyKeyManager" key-store="test.keystore" generate-self-signed-certificate-host="localhost">
+                <credential-reference clear-text="elytron"/>
+            </key-manager>
+        </key-managers>
+        <trust-managers>
+            <trust-manager name="serverTrust" algorithm="SunX509" key-store="jks_store"/>
+            <trust-manager name="serverTrust2" algorithm="SunX509" key-store="jks_store" providers="custom-loader" provider-name="first"/>
+            <trust-manager name="trust-with-crl" algorithm="SunX509" key-store="jks_store">
+                <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir" maximum-cert-path="2"/>
+            </trust-manager>
+            <trust-manager name="trust-with-crl-dp" algorithm="SunX509" key-store="jks_store">
+                <certificate-revocation-list/>
+            </trust-manager>
+            <trust-manager name="trust-with-ocsp" algorithm="PKIX" key-store="jks_store">
+                <ocsp responder="http://localhost/ocsp" responder-keystore="jceks_store" responder-certificate="responder-alias"/>
+            </trust-manager>
+        </trust-managers>
+        <server-ssl-contexts>
+            <server-ssl-context name="server" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true" authentication-optional="true"
+                                use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager="serverKey" trust-manager="serverTrust" providers="custom-loader" provider-name="first"/>
+            <server-ssl-context name="server2" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true" authentication-optional="true"
+                                use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager="serverKey" trust-manager="serverTrust" providers="custom-loader" provider-name="first"/>
+        </server-ssl-contexts>
+        <client-ssl-contexts>
+            <client-ssl-context name="client" protocols="TLSv1.3 TLSv1.2" key-manager="clientKey" trust-manager="serverTrust" providers="custom-loader"
+                                provider-name="first"/>
+        </client-ssl-contexts>
+        <certificate-authorities>
+            <certificate-authority name="testCA" url="https://www.test.com"/>
+        </certificate-authorities>
+        <certificate-authority-accounts>
+            <certificate-authority-account name="MyCA" certificate-authority="LetsEncrypt">
+                <account-key key-store="accounts.keystore" alias="server">
+                    <credential-reference clear-text="elytron"/>
+                </account-key>
+            </certificate-authority-account>
+            <certificate-authority-account name="MyCA2" certificate-authority="testCA">
+                <account-key key-store="accounts.keystore" alias="server">
+                    <credential-reference clear-text="elytron"/>
+                </account-key>
+            </certificate-authority-account>
+        </certificate-authority-accounts>
+        <!-- <server-ssl-sni-contexts>
+            <server-ssl-sni-context name="sni" default-ssl-context="server">
+                <sni-mapping host="server" ssl-context="server" />
+                <sni-mapping host=".*\.server" ssl-context="server2" />
+            </server-ssl-sni-context>
+        </server-ssl-sni-contexts> -->
+    </tls>
+    <credential-stores>
+        <credential-store name="test1" relative-to="jboss.server.data.dir" location="test1.store" create="true">
+            <implementation-properties>
+                <property name="keyStoreType" value="JCEKS"/>
+                <property name="keyAlias" value="adminKey"/>
+            </implementation-properties>
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <credential-store name="test2" relative-to="jboss.server.data.dir" modifiable="true">
+            <credential-reference store="test1" alias="to_open_test2"/>
+        </credential-store>
+        <credential-store name="test4" relative-to="jboss.server.data.dir" path="test1.store" create="true">
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <secret-key-credential-store name="test3" relative-to="jboss.server.data.dir" path="test3.cs" create="false" populate="false" key-size="192" default-alias="test3" />
+    </credential-stores>
+    <expression-resolver default-resolver="A" prefix="G">
+        <resolver name="A" credential-store="test1" secret-key="C"/>
+        <resolver name="D" credential-store="test2" secret-key="F"/>
+    </expression-resolver>
+    <!-- <jaspi>
+        <jaspi-configuration name="test" layer="HttpServlet" application-context="default /test" description="Test Definition">
+            <server-auth-modules>
+                <server-auth-module class-name="org.wildfly.Test" module="org.test" flag="REQUISITE">
+                    <options>
+                        <property name="a" value="b"/>
+                        <property name="c" value="d"/>
+                    </options>
+                </server-auth-module>
+                <server-auth-module class-name="org.wildfly.Test2" module="org.test2" flag="SUFFICIENT">
+                    <options>
+                        <property name="e" value="f"/>
+                        <property name="g" value="h"/>
+                    </options>
+                </server-auth-module>
+            </server-auth-modules>
+        </jaspi-configuration>
+        <jaspi-configuration name="minimal">
+            <server-auth-modules>
+                <server-auth-module class-name="org.wildfly.Test3" />
+            </server-auth-modules>
+        </jaspi-configuration>
+    </jaspi> -->
+</subsystem>

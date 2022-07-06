@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2019 Red Hat, Inc.
+  ~ Copyright 2022 Red Hat, Inc.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -20,31 +20,16 @@
 
     <resources>
         <artifact name="${org.wildfly.extras.elytron-tls:elytron-tls-subsystem}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-asn1}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-base}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-credential}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-keystore}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-provider-util}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-ssl-common}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-util}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-cert}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-cert-acme}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-cert-util}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-principal}"/>
     </resources>
 
     <dependencies>
-        <!-- Typical module dependencies for a subsystem -->
-        <module name="javax.enterprise.api"/>
         <module name="org.jboss.as.controller"/>
         <module name="org.jboss.as.server"/>
         <module name="org.jboss.logging"/>
         <module name="org.jboss.modules"/>
-        <module name="org.jboss.weld.api"/>
-        <module name="org.jboss.weld.core"/>
-        <module name="org.jboss.weld.spi"/>
         <module name="org.jboss.staxmapper"/>
+        <module name="org.wildfly.common"/>
+        <module name="org.wildfly.security.elytron-base"/>
         <module name="org.wildfly.security.manager"/>
     </dependencies>
 </module>
