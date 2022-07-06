@@ -54,17 +54,14 @@ public class ElytronTlsExtension implements Extension {
     private static final SubsystemParser_1_0 CURRENT_PARSER = new SubsystemParser_1_0();
 
     static ResourceDescriptionResolver getResourceDescriptionResolver(final String... keyPrefix) {
-        return getResourceDescriptionResolver(true, keyPrefix);
+        return getResourceDescriptionResolver(false, keyPrefix);
 
     }
 
     static ResourceDescriptionResolver getResourceDescriptionResolver(final boolean useUnprefixedChildTypes, final String... keyPrefix) {
-        StringBuilder prefix = new StringBuilder();
+        StringBuilder prefix = new StringBuilder(ElytronTlsExtension.SUBSYSTEM_NAME);
         for (String kp : keyPrefix) {
-            if (prefix.length() > 0){
-                prefix.append('.');
-            }
-            prefix.append(kp);
+            prefix.append('.').append(kp);
         }
         return new StandardResourceDescriptionResolver(prefix.toString(), RESOURCE_NAME, ElytronTlsExtension.class.getClassLoader(), true, useUnprefixedChildTypes);
     }
