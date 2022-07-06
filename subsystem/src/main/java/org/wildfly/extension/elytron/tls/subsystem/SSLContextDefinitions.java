@@ -22,81 +22,20 @@ import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.KEY_STORE
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.TRUST_MANAGER_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
-import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
+import static org.wildfly.extension.elytron.tls.subsystem.TrivialResourceDefinition.Builder;
+import static org.wildfly.extension.elytron.tls.subsystem.TrivialService.ValueSupplier;
 import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
 
-import org.jboss.as.controller.AbstractAddStepHandler;
-import org.jboss.as.controller.AbstractWriteAttributeHandler;
-import org.jboss.as.controller.AttributeDefinition;
-import org.jboss.as.controller.ObjectListAttributeDefinition;
-import org.jboss.as.controller.ObjectTypeAttributeDefinition;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.OperationStepHandler;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.ReloadRequiredWriteAttributeHandler;
-import org.jboss.as.controller.ResourceDefinition;
-import org.jboss.as.controller.SimpleAttributeDefinition;
-import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
-import org.jboss.as.controller.SimpleResourceDefinition;
-import org.jboss.as.controller.StringListAttributeDefinition;
-import org.jboss.as.controller.capability.RuntimeCapability;
-import org.jboss.as.controller.operations.validation.IntRangeValidator;
-import org.jboss.as.controller.operations.validation.StringAllowedValuesValidator;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
-import org.jboss.as.controller.registry.OperationEntry;
-import org.jboss.as.controller.registry.Resource;
-import org.jboss.as.controller.security.CredentialReference;
-import org.jboss.as.controller.services.path.PathManager;
-import org.jboss.as.controller.services.path.PathManagerService;
-import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.value.InjectedValue;
-import org.wildfly.common.function.ExceptionSupplier;
-import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
-import org.wildfly.security.EmptyProvider;
-import org.wildfly.security.auth.server.MechanismConfiguration;
-import org.wildfly.security.auth.server.MechanismConfigurationSelector;
-import org.wildfly.security.auth.server.RealmMapper;
-import org.wildfly.security.auth.server.SecurityDomain;
-import org.wildfly.security.credential.PasswordCredential;
-import org.wildfly.security.credential.source.CredentialSource;
-import org.wildfly.security.keystore.AliasFilter;
-import org.wildfly.security.keystore.AtomicLoadKeyStore;
-import org.wildfly.security.keystore.FilteringKeyStore;
-import org.wildfly.security.keystore.KeyStoreUtil;
-import org.wildfly.security.password.interfaces.ClearPassword;
-import org.wildfly.security.provider.util.ProviderUtil;
-import org.wildfly.security.ssl.CipherSuiteSelector;
-import org.wildfly.security.ssl.Protocol;
-import org.wildfly.security.ssl.ProtocolSelector;
-import org.wildfly.security.ssl.SSLContextBuilder;
-import org.wildfly.security.ssl.X509RevocationTrustManager;
-import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
-import javax.security.auth.x500.X500Principal;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.URI;
-import java.nio.file.PathMatcher;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -107,21 +46,71 @@ import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSessionContext;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
+import javax.net.ssl.X509ExtendedTrustManager;
+
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.ObjectListAttributeDefinition;
+import org.jboss.as.controller.ObjectTypeAttributeDefinition;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.ResourceDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.StringListAttributeDefinition;
+import org.jboss.as.controller.capability.RuntimeCapability;
+import org.jboss.as.controller.operations.validation.IntRangeValidator;
+import org.jboss.as.controller.operations.validation.StringAllowedValuesValidator;
+import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.controller.security.CredentialReference;
+import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.controller.services.path.PathManagerService;
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.StartException;
+import org.wildfly.common.function.ExceptionSupplier;
+import org.wildfly.security.EmptyProvider;
+import org.wildfly.security.credential.PasswordCredential;
+import org.wildfly.security.credential.source.CredentialSource;
+import org.wildfly.security.keystore.AliasFilter;
+import org.wildfly.security.keystore.AtomicLoadKeyStore;
+import org.wildfly.security.keystore.FilteringKeyStore;
+import org.wildfly.security.keystore.KeyStoreUtil;
+import org.wildfly.security.password.interfaces.ClearPassword;
+import org.wildfly.security.provider.util.ProviderUtil;
+import org.wildfly.security.ssl.CipherSuiteSelector;
+import org.wildfly.security.ssl.DomainlessSSLContextBuilder;
+import org.wildfly.security.ssl.Protocol;
+import org.wildfly.security.ssl.ProtocolSelector;
+import org.wildfly.security.ssl.X509RevocationTrustManager;
+
+
 public class SSLContextDefinitions {
     private static final String[] ALLOWED_PROTOCOLS = { "SSLv2", "SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3" };
+
+    static final ServiceUtil<SSLContext> SERVER_SERVICE_UTIL = ServiceUtil.newInstance(SSL_CONTEXT_RUNTIME_CAPABILITY, Constants.SERVER_SSL_CONTEXT, SSLContext.class);
+    static final ServiceUtil<SSLContext> CLIENT_SERVICE_UTIL = ServiceUtil.newInstance(SSL_CONTEXT_RUNTIME_CAPABILITY, Constants.CLIENT_SSL_CONTEXT, SSLContext.class);
 
     static final ObjectTypeAttributeDefinition CREDENTIAL_REFERENCE = CredentialReference.getAttributeDefinition(true);
 
@@ -356,6 +345,9 @@ public class SSLContextDefinitions {
 
     static final AttributeDefinition[] SERVER_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS, KEY_MANAGER, KEY_MANAGER_REFERENCE, TRUST_MANAGER, TRUST_MANAGER_REFERENCE, PROVIDER_NAME, WANT_CLIENT_AUTH, NEED_CLIENT_AUTH, USE_CIPHER_SUITES_ORDER, MAXIMUM_SESSION_CACHE_SIZE, SESSION_TIMEOUT, WRAP};
 
+    private static final SimpleAttributeDefinition ACTIVE_SESSION_COUNT = new SimpleAttributeDefinitionBuilder(Constants.ACTIVE_SESSION_COUNT, ModelType.INT)
+            .setStorageRuntime()
+            .build();
 
     static ResourceDefinition createClientSSLContextDefinition() {
 
@@ -367,7 +359,7 @@ public class SSLContextDefinitions {
 
             @Override
             protected ValueSupplier<SSLContext> getValueSupplier(ServiceBuilder<SSLContext> serviceBuilder,
-                                                                 OperationContext context, ModelNode model) throws OperationFailedException {
+                                                                                OperationContext context, ModelNode model) throws OperationFailedException {
 
                 final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
                 final List<String> protocols = PROTOCOLS.unwrap(context, model);
@@ -384,29 +376,35 @@ public class SSLContextDefinitions {
                 final ModelNode trustManagerNode = TRUST_MANAGER.resolveModelAttribute(context, model);
 
                 ExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
-                ExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
+                ExceptionSupplier<TrustManager, Exception> trustManagerSupplier = null;
+
+                ServiceBuilder<TrustManager> trustManagerServiceBuilder = null;
+
+                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
 
                 if (keyManagerNode.isDefined()) {
-                    keyManagerSupplier = createKeyManager(serviceBuilder, context, keyManagerNode, )
+                    keyManagerSupplier = createKeyManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
                     String keyManagerReference = KEY_MANAGER_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
                     keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();
                 }
 
                 if (trustManagerNode.isDefined()) {
-                    trustManagerSupplier = createTrustManager(serviceBuilder, context, keyManagerNode, )
+                    trustManagerSupplier = createTrustManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
                     String keyManagerReference = KEY_MANAGER_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
                     keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();
                 }
 
+                final ExceptionSupplier<KeyManager, Exception> finalKeyManagerSupplier = keyManagerSupplier;
+                final ExceptionSupplier<TrustManager, Exception> finalTrustManagerSupplier = trustManagerSupplier;
+
                 return () -> {
-                    X509ExtendedKeyManager keyManager = getX509KeyManager(keyManagerSupplier.get());
-                    X509ExtendedTrustManager trustManager = getX509TrustManager(trustManagerSupplier.get());
+                    X509ExtendedKeyManager keyManager = getX509KeyManager(finalKeyManagerSupplier.get());
+                    X509ExtendedTrustManager trustManager = getX509TrustManager(finalTrustManagerSupplier.get());
                     Provider[] providers = Security.getProviders();
 
-                    // TODO: SSLContextBuilder needs to be changed to a elytron-ssl-base variant
-                    SSLContextBuilder builder = new SSLContextBuilder();
+                    DomainlessSSLContextBuilder builder = new DomainlessSSLContextBuilder();
                     if (keyManager != null)
                         builder.setKeyManager(keyManager);
                     if (trustManager != null)
@@ -1034,15 +1032,63 @@ public class SSLContextDefinitions {
         return provider;
     }
 
+    abstract static class SSLContextRuntimeHandler extends ElytronRuntimeOnlyHandler {
+        @Override
+        protected void executeRuntimeStep(OperationContext context, ModelNode operation) throws OperationFailedException {
+            ServiceName serviceName = getSSLContextServiceUtil().serviceName(operation);
 
-    private static ResourceDefinition createSSLContextDefinition(String pathKey, boolean server, AbstractAddStepHandler addHandler, AttributeDefinition[] attributes) {
-        SimpleResourceDefinition.Parameters parameters = new SimpleResourceDefinition.Parameters(PathElement.pathElement(pathKey), ElytronTlsExtension.getResourceDescriptionResolver(pathKey))
+            ServiceController<SSLContext> serviceController = getRequiredService(context.getServiceRegistry(false), serviceName, SSLContext.class);
+            ServiceController.State serviceState;
+            if ((serviceState = serviceController.getState()) != ServiceController.State.UP) {
+                throw LOGGER.requiredServiceNotUp(serviceName, serviceState);
+            }
+
+            performRuntime(context.getResult(), operation, serviceController.getService().getValue());
+        }
+
+        protected abstract void performRuntime(ModelNode result, ModelNode operation, SSLContext sslContext) throws OperationFailedException;
+
+        protected abstract ServiceUtil<SSLContext> getSSLContextServiceUtil();
+    }
+
+    private static ResourceDefinition createSSLContextDefinition(String pathKey, boolean server, AbstractAddStepHandler addHandler, AttributeDefinition[] attributes, boolean serverOrHostController) {
+        /* The original method used SimpleResourceDefinition and would return an object from SSLContextResourceDefinition(parameters, attributes)
+         * This was likely planned to replace a variety of other classes (like TrivialResourceDefinition) */
+        // TODO: Simplify and reimplement _Trivial_ classes with native subsystem versions
+
+//        SimpleResourceDefinition.Parameters parameters = new SimpleResourceDefinition.Parameters(PathElement.pathElement(pathKey), ElytronTlsExtension.getResourceDescriptionResolver(pathKey))
+//                .setAddHandler(addHandler)
+//                .setCapabilities(SSL_CONTEXT_RUNTIME_CAPABILITY)
+//                .setAddRestartLevel(OperationEntry.Flag.RESTART_RESOURCE_SERVICES)
+//                .setRemoveRestartLevel(OperationEntry.Flag.RESTART_RESOURCE_SERVICES);
+
+        Builder builder = TrivialResourceDefinition.builder()
+                .setPathKey(pathKey)
                 .setAddHandler(addHandler)
-                .setCapabilities(SSL_CONTEXT_RUNTIME_CAPABILITY)
-                .setAddRestartLevel(OperationEntry.Flag.RESTART_RESOURCE_SERVICES)
-                .setRemoveRestartLevel(OperationEntry.Flag.RESTART_RESOURCE_SERVICES);
+                .setAttributes(attributes)
+                .setRuntimeCapabilities(SSL_CONTEXT_RUNTIME_CAPABILITY);
 
-        return new SSLContextResourceDefinition(parameters, attributes);
+        if (serverOrHostController) {
+            builder.addReadOnlyAttribute(ACTIVE_SESSION_COUNT, new SSLContextRuntimeHandler() {
+                @Override
+                protected void performRuntime(ModelNode result, ModelNode operation, SSLContext sslContext) throws OperationFailedException {
+                    SSLSessionContext sessionContext = server ? sslContext.getServerSessionContext() : sslContext.getClientSessionContext();
+                    int sum = 0;
+                    for (byte[] b : Collections.list(sessionContext.getIds())) {
+                        int i = 1;
+                        sum += i;
+                    }
+                    result.set(sum);
+                }
+
+                @Override
+                protected ServiceUtil<SSLContext> getSSLContextServiceUtil() {
+                    return server ? SERVER_SERVICE_UTIL : CLIENT_SERVICE_UTIL;
+                }
+            }).addChild(new SSLSessionDefinition(server));
+        }
+
+        return builder.build();
     }
 
     static class CrlFile {
