@@ -26,7 +26,43 @@ import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitio
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
+import static org.wildfly.extension.elytron.tls.subsystem.TrivialService.ValueSupplier;
 import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.net.Socket;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
+import javax.net.ssl.X509ExtendedTrustManager;
+import javax.security.auth.x500.X500Principal;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
@@ -55,9 +91,8 @@ import org.jboss.as.controller.services.path.PathManager;
 import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.StartException;
+import org.jboss.msc.Service;
+import org.jboss.msc.service.*;
 import org.jboss.msc.value.InjectedValue;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
@@ -81,44 +116,6 @@ import org.wildfly.security.ssl.SSLContextBuilder;
 import org.wildfly.security.ssl.X509RevocationTrustManager;
 import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
-import javax.security.auth.x500.X500Principal;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.Socket;
-import java.net.URI;
-import java.nio.file.PathMatcher;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
-import java.security.PrivateKey;
-import java.security.Provider;
-import java.security.Security;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 public class SSLContextDefinitions {
     private static final String[] ALLOWED_PROTOCOLS = { "SSLv2", "SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3" };
@@ -367,7 +364,7 @@ public class SSLContextDefinitions {
 
             @Override
             protected ValueSupplier<SSLContext> getValueSupplier(ServiceBuilder<SSLContext> serviceBuilder,
-                                                                 OperationContext context, ModelNode model) throws OperationFailedException {
+                                                                                OperationContext context, ModelNode model) throws OperationFailedException {
 
                 final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
                 final List<String> protocols = PROTOCOLS.unwrap(context, model);
@@ -386,15 +383,19 @@ public class SSLContextDefinitions {
                 ExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
                 ExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
 
+                ServiceBuilder<TrustManager> trustManagerServiceBuilder = null;
+
+                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
+
                 if (keyManagerNode.isDefined()) {
-                    keyManagerSupplier = createKeyManager(serviceBuilder, context, keyManagerNode, )
+                    keyManagerSupplier = createKeyManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
                     String keyManagerReference = KEY_MANAGER_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
                     keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();
                 }
 
                 if (trustManagerNode.isDefined()) {
-                    trustManagerSupplier = createTrustManager(serviceBuilder, context, keyManagerNode, )
+                    trustManagerSupplier = createTrustManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
                     String keyManagerReference = KEY_MANAGER_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
                     keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();

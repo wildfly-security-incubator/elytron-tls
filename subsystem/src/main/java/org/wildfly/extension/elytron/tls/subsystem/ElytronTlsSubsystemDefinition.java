@@ -35,6 +35,7 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.dmr.ModelNode;
+import org.jboss.msc.service.ServiceBuilder;
 import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
 import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcessor;
 
@@ -54,8 +55,8 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         super(
                 new SimpleResourceDefinition.Parameters(
                         ElytronTlsExtension.SUBSYSTEM_PATH,
-                        ElytronTlsExtension.getResourceDescriptionResolver(ElytronTlsExtension.SUBSYSTEM_NAME))
-                .setAddHandler(AddHandler.INSTANCE)
+                        ElytronTlsExtension.getResourceDescriptionResolver())
+                .setAddHandler(BoottimeAddHandler.INSTANCE)
                 .setRemoveHandler(new ModelOnlyRemoveStepHandler())
                 .setCapabilities(CONTEXT_PROPAGATION_CAPABILITY)
         );
@@ -77,11 +78,11 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         super.registerAdditionalRuntimePackages(resourceRegistration);
     }
 
-    static class AddHandler extends AbstractBoottimeAddStepHandler {
+    static class BoottimeAddHandler extends AbstractBoottimeAddStepHandler {
 
-        static AddHandler INSTANCE = new AddHandler();
+        static BoottimeAddHandler INSTANCE = new BoottimeAddHandler();
 
-        private AddHandler() {
+        private BoottimeAddHandler() {
             super(Collections.emptyList());
         }
 
@@ -102,5 +103,11 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
     static class RemoveHandler extends AbstractRemoveStepHandler {
 
+    }
+
+    static <T> ServiceBuilder<T> commonRequirements(ServiceBuilder<T> serviceBuilder, boolean dependOnProperties, boolean dependOnProviderRegistration) {
+        if (dependOnProperties) serviceBuilder.requires(ElytronTlsExtension.BASE_SERVICE_NAME.append(Constants.SECURITY_PROPERTIES));
+        if (dependOnProviderRegistration) serviceBuilder.requires(ElytronTlsExtension.BASE_SERVICE_NAME.append(Constants.PROVIDER_REGISTRATION));
+        return serviceBuilder;
     }
 }
