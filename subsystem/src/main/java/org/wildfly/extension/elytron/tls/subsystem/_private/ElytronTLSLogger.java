@@ -27,6 +27,8 @@ import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
 
 import java.io.IOException;
@@ -74,6 +76,12 @@ public interface ElytronTLSLogger extends BasicLogger {
 
     @Message(id = 910, value = "Password cannot be resolved for key-store '%s'")
     IOException keyStorePasswordCannotBeResolved(String path);
+
+    @Message(id = 3, value = "The operation did not contain an address with a value for '%s'.")
+    IllegalArgumentException operationAddressMissingKey(final String key);
+
+    @Message(id = 7, value = "The required service '%s' is not UP, it is currently '%s'.")
+    OperationFailedException requiredServiceNotUp(ServiceName serviceName, ServiceController.State state);
 
     @Message(id = 1059, value = "Unable to detect KeyStore '%s'")
     StartException unableToDetectKeyStore(String path);
