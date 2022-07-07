@@ -28,7 +28,9 @@ import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceRegistry;
 
 /**
  * @author <a href="mailto:mmazanek@redhat.com">Martin Mazanek</a>
@@ -53,6 +55,8 @@ public class ElytronTlsExtension implements Extension {
 
     private static final SubsystemParser_1_0 CURRENT_PARSER = new SubsystemParser_1_0();
 
+    static final String ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
     static ResourceDescriptionResolver getResourceDescriptionResolver(final String... keyPrefix) {
         return getResourceDescriptionResolver(false, keyPrefix);
 
@@ -66,6 +70,10 @@ public class ElytronTlsExtension implements Extension {
         return new StandardResourceDescriptionResolver(prefix.toString(), RESOURCE_NAME, ElytronTlsExtension.class.getClassLoader(), true, useUnprefixedChildTypes);
     }
 
+    static <T> ServiceController<T> getRequiredService(ServiceRegistry serviceRegistry, ServiceName serviceName, Class<T> serviceType) {
+        ServiceController<?> controller = serviceRegistry.getRequiredService(serviceName);
+        return (ServiceController<T>) controller;
+    }
 
     @Override
     public void initialize(ExtensionContext extensionContext) {
