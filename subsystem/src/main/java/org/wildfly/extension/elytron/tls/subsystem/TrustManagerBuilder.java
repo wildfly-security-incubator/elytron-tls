@@ -1,6 +1,5 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import org.jboss.as.controller.ObjectTypeAttributeDefinition;
 import org.wildfly.common.function.ExceptionSupplier;
 
 import javax.net.ssl.TrustManager;
