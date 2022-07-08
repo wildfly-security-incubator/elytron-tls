@@ -25,7 +25,6 @@ import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.TRUST_MAN
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
-import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
 import static org.wildfly.extension.elytron.tls.subsystem.TrivialResourceDefinition.Builder;
 import static org.wildfly.extension.elytron.tls.subsystem.TrivialService.ValueSupplier;
@@ -37,47 +36,61 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import javax.net.ssl.*;
-import javax.security.auth.x500.X500Principal;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSessionContext;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.ObjectListAttributeDefinition;
+import org.jboss.as.controller.ObjectTypeAttributeDefinition;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.ResourceDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.operations.validation.StringAllowedValuesValidator;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
-import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
 import org.jboss.as.controller.services.path.PathManager;
 import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.jboss.msc.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
-import org.jboss.msc.value.InjectedValue;
 import org.wildfly.common.function.ExceptionSupplier;
-import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
 import org.wildfly.security.EmptyProvider;
-import org.wildfly.security.auth.server.MechanismConfiguration;
-import org.wildfly.security.auth.server.MechanismConfigurationSelector;
-import org.wildfly.security.auth.server.RealmMapper;
-import org.wildfly.security.auth.server.SecurityDomain;
 import org.wildfly.security.credential.PasswordCredential;
 import org.wildfly.security.credential.source.CredentialSource;
 import org.wildfly.security.keystore.AliasFilter;
@@ -91,7 +104,6 @@ import org.wildfly.security.ssl.DomainlessSSLContextBuilder;
 import org.wildfly.security.ssl.Protocol;
 import org.wildfly.security.ssl.ProtocolSelector;
 import org.wildfly.security.ssl.X509RevocationTrustManager;
-import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 
 
 public class SSLContextDefinitions {
@@ -364,7 +376,7 @@ public class SSLContextDefinitions {
                 final ModelNode trustManagerNode = TRUST_MANAGER.resolveModelAttribute(context, model);
 
                 ExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
-                ExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
+                ExceptionSupplier<TrustManager, Exception> trustManagerSupplier = null;
 
                 ServiceBuilder<TrustManager> trustManagerServiceBuilder = null;
 
@@ -384,9 +396,12 @@ public class SSLContextDefinitions {
                     keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();
                 }
 
+                final ExceptionSupplier<KeyManager, Exception> finalKeyManagerSupplier = keyManagerSupplier;
+                final ExceptionSupplier<TrustManager, Exception> finalTrustManagerSupplier = trustManagerSupplier;
+
                 return () -> {
-                    X509ExtendedKeyManager keyManager = getX509KeyManager(keyManagerSupplier.get());
-                    X509ExtendedTrustManager trustManager = getX509TrustManager(trustManagerSupplier.get());
+                    X509ExtendedKeyManager keyManager = getX509KeyManager(finalKeyManagerSupplier.get());
+                    X509ExtendedTrustManager trustManager = getX509TrustManager(finalTrustManagerSupplier.get());
                     Provider[] providers = Security.getProviders();
 
                     DomainlessSSLContextBuilder builder = new DomainlessSSLContextBuilder();
