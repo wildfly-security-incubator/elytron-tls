@@ -64,7 +64,7 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
-        resourceRegistration.registerSubModel(SSLContextDefinitions.createClientSSLContextDefinition());
+//        resourceRegistration.registerSubModel(SSLContextDefinitions.createClientSSLContextDefinition());
         resourceRegistration.registerSubModel(SSLContextDefinitions.createServerSSLContextDefinition());
     }
 
