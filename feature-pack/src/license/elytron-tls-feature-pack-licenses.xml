@@ -23,7 +23,7 @@ TODO: Rename this file to something which matches our Galleon feature pack name
         <!-- Project dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>template-dependency</artifactId>
+            <artifactId>elytron-tls-dependency</artifactId>
             <licenses>
                 <license>
                     <name>Apache License 2.0</name>
@@ -34,7 +34,7 @@ TODO: Rename this file to something which matches our Galleon feature pack name
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>template-subsystem</artifactId>
+            <artifactId>elytron-tls-subsystem</artifactId>
             <licenses>
                 <license>
                     <name>Apache License 2.0</name>

@@ -104,8 +104,8 @@
                         <configuration>
                             <sortByGroupIdAndArtifactId>true</sortByGroupIdAndArtifactId>
                             <!-- TODO Give these the same name as you changed the xml to -->
-                            <licensesConfigFile>src/license/template-feature-pack-licenses.xml</licensesConfigFile>
-                            <licensesOutputFile>${license.output.directory}/template-feature-pack-licenses.xml</licensesOutputFile>
+                            <licensesConfigFile>src/license/elytron-tls-feature-pack-licenses.xml</licensesConfigFile>
+                            <licensesOutputFile>${license.output.directory}/elytron-tls-feature-pack-licenses.xml</licensesOutputFile>
                         </configuration>
                     </execution>
                 </executions>
