@@ -38,6 +38,12 @@ import org.jboss.msc.service.ServiceRegistry;
 public class ElytronTlsExtension implements Extension {
 
     /**
+     * The namespaces used for the TLS subsystem.
+     */
+
+    public static final String NAMESPACE_1_0 = "urn:wildfly:elytron-tls-subsystem:1.0";
+
+    /**
      * The name of our subsystem within the model.
      */
     public static final String SUBSYSTEM_NAME = "elytron-tls";
@@ -53,7 +59,7 @@ public class ElytronTlsExtension implements Extension {
     protected static final ModelVersion VERSION_1_0_0 = ModelVersion.create(1, 0, 0);
     private static final ModelVersion CURRENT_MODEL_VERSION = VERSION_1_0_0;
 
-    private static final SubsystemParser_1_0 CURRENT_PARSER = new SubsystemParser_1_0();
+    private static final ElytronTlsSubsystemParser_1_0 CURRENT_PARSER = new ElytronTlsSubsystemParser_1_0();
 
     static final String ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
@@ -85,6 +91,6 @@ public class ElytronTlsExtension implements Extension {
 
     @Override
     public void initializeParsers(ExtensionParsingContext extensionParsingContext) {
-        extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, SubsystemParser_1_0.NAMESPACE, CURRENT_PARSER);
+        extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, ElytronTlsExtension.NAMESPACE_1_0, CURRENT_PARSER);
     }
 }

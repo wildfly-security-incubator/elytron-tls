@@ -16,24 +16,47 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.jboss.as.controller.PersistentResourceXMLDescription.builder;
-
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 import org.jboss.as.controller.PersistentResourceXMLParser;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class SubsystemParser_1_0 extends PersistentResourceXMLParser {
+public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
 
-    public static final String NAMESPACE = "urn:wildfly:elytron-tls-subsystem:1.0";
+    PersistentResourceXMLDescription getServerSSLContextParser() {
+        return new SSLContextParser().serverSslContextParser_1_0;
+    }
 
-    private static final PersistentResourceXMLDescription xmlDescription = builder(ElytronTlsExtension.SUBSYSTEM_PATH, NAMESPACE)
-            .build();
+    PersistentResourceXMLDescription getClientSSLContextParser() {
+        return new SSLContextParser().clientSslContextParser_1_0;
+    }
+
+    PersistentResourceXMLDescription getKeyStoreParser() {
+        return new KeyStoreParser().keyStoreParser_1_0;
+    }
+
+    PersistentResourceXMLDescription getKeyManagerParser() {
+        return new ManagerParser().keyManagerParser_1_0;
+
+    }
+    PersistentResourceXMLDescription getTrustManagerParser() {
+        return new ManagerParser().trustManagerParser_1_0;
+    }
+
+    String getNameSpace() {
+        return ElytronTlsExtension.NAMESPACE_1_0;
+    }
 
     @Override
     public PersistentResourceXMLDescription getParserDescription() {
-        return xmlDescription;
+        return PersistentResourceXMLDescription.builder(ElytronTlsExtension.SUBSYSTEM_PATH, getNameSpace())
+                .addChild(getServerSSLContextParser())
+                .addChild(getClientSSLContextParser())
+                .addChild(getKeyStoreParser())
+                .addChild(getKeyManagerParser())
+                .addChild(getTrustManagerParser())
+                .build();
     }
 
 }

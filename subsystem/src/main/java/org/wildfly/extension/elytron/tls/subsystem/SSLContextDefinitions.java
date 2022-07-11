@@ -166,6 +166,13 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
+    static final SimpleAttributeDefinition AUTHENTICATION_OPTIONAL = new SimpleAttributeDefinitionBuilder(Constants.AUTHENTICATION_OPTIONAL, ModelType.BOOLEAN, true)
+            .setAllowExpression(true)
+            .setDefaultValue(ModelNode.FALSE)
+            .setMinSize(1)
+            .setRestartAllServices()
+            .build();
+
     static final SimpleAttributeDefinition USE_CIPHER_SUITES_ORDER = new SimpleAttributeDefinitionBuilder(Constants.USE_CIPHER_SUITES_ORDER, ModelType.BOOLEAN, true)
             .setAllowExpression(true)
             .setDefaultValue(ModelNode.TRUE)
@@ -226,6 +233,8 @@ public class SSLContextDefinitions {
     static final ObjectTypeAttributeDefinition KEY_STORE = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_STORE, TYPE, PATH, RELATIVE_TO, REQUIRED, CREDENTIAL_REFERENCE, ALIAS_FILTER, PROVIDER_NAME)
             .setMinSize(1)
             .setRestartAllServices()
+            .setAlternatives(Constants.KEY_STORE_REFERENCE)
+            .setAllowExpression(false)
             .build();
 
     static final SimpleAttributeDefinition KEY_STORE_REFERENCE = new SimpleAttributeDefinitionBuilder(Constants.KEY_STORE_REFERENCE, ModelType.STRING, true)
@@ -303,7 +312,11 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
-
+//    static final SimpleAttributeDefinition GENERATE_SELF_SIGNED_CERTIFICATE_HOST = new SimpleAttributeDefinitionBuilder(Constants.GENERATE_SELF_SIGNED_CERTIFICATE_HOST, ModelType.STRING, true)
+//            .setAllowExpression(true)
+//            .setMinSize(1)
+//            .setRestartAllServices()
+//            .build();
 
     /** KeyManager definitions **/
 
@@ -341,16 +354,16 @@ public class SSLContextDefinitions {
             .build();
 
 
-    static final AttributeDefinition[] CLIENT_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS, KEY_MANAGER, KEY_MANAGER_REFERENCE, TRUST_MANAGER, TRUST_MANAGER_REFERENCE, PROVIDER_NAME};
+    static final AttributeDefinition[] CLIENT_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE,/* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE, PROVIDER_NAME};
 
-    static final AttributeDefinition[] SERVER_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS, KEY_MANAGER, KEY_MANAGER_REFERENCE, TRUST_MANAGER, TRUST_MANAGER_REFERENCE, PROVIDER_NAME, WANT_CLIENT_AUTH, NEED_CLIENT_AUTH, USE_CIPHER_SUITES_ORDER, MAXIMUM_SESSION_CACHE_SIZE, SESSION_TIMEOUT, WRAP};
+    static final AttributeDefinition[] SERVER_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE,/* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE, PROVIDER_NAME, WANT_CLIENT_AUTH, NEED_CLIENT_AUTH, USE_CIPHER_SUITES_ORDER, MAXIMUM_SESSION_CACHE_SIZE, SESSION_TIMEOUT, WRAP};
 
     private static final SimpleAttributeDefinition ACTIVE_SESSION_COUNT = new SimpleAttributeDefinitionBuilder(Constants.ACTIVE_SESSION_COUNT, ModelType.INT)
             .setStorageRuntime()
             .build();
 
     static ResourceDefinition createClientSSLContextDefinition() {
-
+        // TODO: implement
         return null;
     }
 
