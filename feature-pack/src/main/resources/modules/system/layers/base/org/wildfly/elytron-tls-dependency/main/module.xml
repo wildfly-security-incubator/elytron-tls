@@ -19,7 +19,7 @@
     </properties>
 
     <resources>
-<!--        <artifact name="${org.wildfly.extras.elytron-tls:elytron-tls-dependency}"/>-->
+        <artifact name="${org.wildfly.extras.elytron-tls:elytron-tls-dependency}"/>
         <artifact name="${org.wildfly.security:wildfly-elytron-asn1}"/>
         <artifact name="${org.wildfly.security:wildfly-elytron-base}"/>
         <artifact name="${org.wildfly.security:wildfly-elytron-credential}"/>

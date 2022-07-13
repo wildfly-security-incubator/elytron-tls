@@ -52,7 +52,7 @@ public class DependencyProcessor implements DeploymentUnitProcessor {
         // In this case we don't need any classes from the subsystem module itself so we don't need to add it to the
         // deployment's module dependencies
         // moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.extension.elytron-tls", false, false, true, false));
-        //moduleSpecification.addSystemDependency(cdiDependency(new ModuleDependency(moduleLoader, "org.wildfly.elytron-tls-dependency", false, false, true, false)));
+        moduleSpecification.addSystemDependency(cdiDependency(new ModuleDependency(moduleLoader, "org.wildfly.elytron-tls-dependency", false, false, true, false)));
     }
 
 
