@@ -22,7 +22,6 @@
         <artifactId>elytron-tls-parent</artifactId>
         <groupId>org.wildfly.extras.elytron-tls</groupId>
         <version>1.0.0.Alpha-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
