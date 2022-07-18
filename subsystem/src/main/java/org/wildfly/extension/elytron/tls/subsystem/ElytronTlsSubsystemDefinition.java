@@ -18,6 +18,7 @@ package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.OperationContext.Stage.RUNTIME;
 import static org.jboss.as.server.deployment.Phase.DEPENDENCIES;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -64,8 +65,10 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
+        final boolean serverOrHostController = isServerOrHostController(resourceRegistration);
+
 //        resourceRegistration.registerSubModel(SSLContextDefinitions.createClientSSLContextDefinition());
-        resourceRegistration.registerSubModel(SSLContextDefinitions.createServerSSLContextDefinition());
+        resourceRegistration.registerSubModel(SSLContextDefinitions.createServerSSLContextDefinition(serverOrHostController));
     }
 
     @Override
