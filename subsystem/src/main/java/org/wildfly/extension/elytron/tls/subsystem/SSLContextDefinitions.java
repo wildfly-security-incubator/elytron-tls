@@ -17,11 +17,7 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.capability.RuntimeCapability.buildDynamicCapabilityName;
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.KEY_MANAGER_CAPABILITY;
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.KEY_STORE_CAPABILITY;
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_CAPABILITY;
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_RUNTIME_CAPABILITY;
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.TRUST_MANAGER_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.*;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
@@ -79,6 +75,7 @@ import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.operations.validation.StringAllowedValuesValidator;
+import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
 import org.jboss.as.controller.services.path.PathManager;
@@ -124,6 +121,12 @@ public class SSLContextDefinitions {
             .setAllowExpression(true)
             .setMinSize(1)
             .setRestartAllServices()
+            .build();
+
+    static final SimpleAttributeDefinition PROVIDERS = new SimpleAttributeDefinitionBuilder(Constants.PROVIDERS, ModelType.STRING, true)
+            .setAllowExpression(false)
+            .setMinSize(1)
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
             .build();
 
     static final SimpleAttributeDefinition CIPHER_SUITE_FILTER = new SimpleAttributeDefinitionBuilder(Constants.CIPHER_SUITE_FILTER, ModelType.STRING, true)
@@ -367,7 +370,19 @@ public class SSLContextDefinitions {
         return null;
     }
 
-    static ResourceDefinition createServerSSLContextDefinition() {
+    static ResourceDefinition createServerSSLContextDefinition(boolean serverOrHostController) {
+
+        final SimpleAttributeDefinition providersDefinition = new SimpleAttributeDefinitionBuilder(PROVIDERS)
+                .setCapabilityReference(PROVIDERS_CAPABILITY, SSL_CONTEXT_CAPABILITY)
+                .setAllowExpression(false)
+                .setRestartAllServices()
+                .build();
+
+        final SimpleAttributeDefinition keyManagerDefinition = new SimpleAttributeDefinitionBuilder(KEY_MANAGER)
+                .setRequired(true)
+                .setRestartAllServices()
+                .build();
+
         AbstractAddStepHandler add = new TrivialAddHandler<SSLContext>(SSLContext.class, ServiceController.Mode.ACTIVE, ServiceController.Mode.PASSIVE, SERVER_ATTRIBUTES, SSL_CONTEXT_RUNTIME_CAPABILITY) {
 
             @Override
@@ -393,7 +408,8 @@ public class SSLContextDefinitions {
 
                 ServiceBuilder<TrustManager> trustManagerServiceBuilder = null;
 
-                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
+                // TODO: implement properly when creating key stores is enabled
+//                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
 
                 if (keyManagerNode.isDefined()) {
                     keyManagerSupplier = createKeyManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
@@ -472,7 +488,7 @@ public class SSLContextDefinitions {
 
         };
 
-        return createSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, SERVER_ATTRIBUTES, true);
+        return createSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, SERVER_ATTRIBUTES, serverOrHostController);
     }
 
 
