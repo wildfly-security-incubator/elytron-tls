@@ -21,11 +21,12 @@ package org.wildfly.extension.elytron.tls.subsystem;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 
-import static org.wildfly.extension.elytron.tls.subsystem.Constants.*;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXTS;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXTS;
 
 class SSLContextParser {
 
-    final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(CLIENT_SSL_CONTEXT))
+    final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.CLIENT_SSL_CONTEXT))
             .setXmlWrapperElement(CLIENT_SSL_CONTEXTS)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_FILTER)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_NAMES)
@@ -34,7 +35,7 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.KEY_MANAGER_REFERENCE)
 //            .addAttribute(SSLContextDefinitions.TRUST_MANAGER)
             .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
-//            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(SSLContextDefinitions.WANT_CLIENT_AUTH)
             .addAttribute(SSLContextDefinitions.NEED_CLIENT_AUTH)
@@ -45,7 +46,7 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.WRAP)
             .build();
 
-    final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(SERVER_SSL_CONTEXT))
+    final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.SERVER_SSL_CONTEXT))
             .setXmlWrapperElement(SERVER_SSL_CONTEXTS)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_FILTER)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_NAMES)
@@ -61,7 +62,7 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.KEY_MANAGER_REFERENCE)
 //            .addAttribute(SSLContextDefinitions.TRUST_MANAGER)
             .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
-//            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .build();
 

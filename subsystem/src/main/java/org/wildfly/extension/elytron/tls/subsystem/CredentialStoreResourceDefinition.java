@@ -1,0 +1,642 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2015 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.wildfly.extension.elytron.tls.subsystem;
+
+import static org.jboss.as.controller.AbstractControllerService.PATH_MANAGER_CAPABILITY;
+import static org.jboss.as.controller.security.CredentialReference.getCredentialSource;
+import static org.jboss.as.controller.security.CredentialReference.handleCredentialReferenceUpdate;
+import static org.jboss.as.controller.security.CredentialReference.rollbackCredentialStoreUpdate;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CREDENTIAL_STORE_API_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CREDENTIAL_STORE_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CREDENTIAL_STORE_RUNTIME_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_API_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
+import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
+import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Provider;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+
+import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.CapabilityServiceBuilder;
+import org.jboss.as.controller.ModelVersion;
+import org.jboss.as.controller.ObjectTypeAttributeDefinition;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.OperationStepHandler;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.ResourceDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.SimpleMapAttributeDefinition;
+import org.jboss.as.controller.SimpleOperationDefinition;
+import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
+import org.jboss.as.controller.SimpleResourceDefinition;
+import org.jboss.as.controller.capability.RuntimeCapability;
+import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
+import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.OperationEntry;
+import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.controller.security.CredentialReference;
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.StartException;
+import org.wildfly.common.function.ExceptionFunction;
+import org.wildfly.common.function.ExceptionRunnable;
+import org.wildfly.common.function.ExceptionSupplier;
+import org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PathResolver;
+import org.wildfly.security.EmptyProvider;
+import org.wildfly.security.auth.server.IdentityCredentials;
+import org.wildfly.security.credential.Credential;
+import org.wildfly.security.credential.PasswordCredential;
+import org.wildfly.security.credential.SecretKeyCredential;
+import org.wildfly.security.credential.source.CredentialSource;
+import org.wildfly.security.credential.store.CredentialStore;
+import org.wildfly.security.credential.store.CredentialStore.CredentialSourceProtectionParameter;
+import org.wildfly.security.credential.store.CredentialStoreException;
+import org.wildfly.security.credential.store.impl.KeyStoreCredentialStore;
+
+/**
+ * A {@link ResourceDefinition} for a CredentialStore.
+ *
+ * @author <a href="mailto:pskopek@redhat.com">Peter Skopek</a>
+ */
+final class CredentialStoreResourceDefinition extends AbstractCredentialStoreResourceDefinition {
+
+    // KeyStore backed credential store supported attributes
+    private static final String CS_KEY_STORE_TYPE_ATTRIBUTE = "keyStoreType";
+    private static final List<String> filebasedKeystoreTypes = Collections.unmodifiableList(Arrays.asList("JKS", "JCEKS", "PKCS12"));
+
+    static final SimpleAttributeDefinition LOCATION = new SimpleAttributeDefinitionBuilder(Constants.LOCATION, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(true)
+            .setMinSize(1)
+            .setRestartAllServices()
+            .setDeprecated(ModelVersion.create(13))
+            .setAlternatives(Constants.PATH)
+            .build();
+
+    static final SimpleAttributeDefinition MODIFIABLE = new SimpleAttributeDefinitionBuilder(Constants.MODIFIABLE, ModelType.BOOLEAN, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setDefaultValue(ModelNode.TRUE)
+            .setAllowExpression(false)
+            .setRestartAllServices()
+            .build();
+
+    static final SimpleAttributeDefinition CREATE = new SimpleAttributeDefinitionBuilder(Constants.CREATE, ModelType.BOOLEAN, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(false)
+            .setDefaultValue(ModelNode.FALSE)
+            .setRestartAllServices()
+            .build();
+
+    static final SimpleMapAttributeDefinition IMPLEMENTATION_PROPERTIES = new SimpleMapAttributeDefinition.Builder(Constants.IMPLEMENTATION_PROPERTIES, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(true)
+            .setRestartAllServices()
+            .build();
+
+    static final ObjectTypeAttributeDefinition CREDENTIAL_REFERENCE = CredentialReference.getAttributeDefinition(true);
+
+    static final SimpleAttributeDefinition TYPE = new SimpleAttributeDefinitionBuilder(Constants.TYPE, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(true)
+            .setMinSize(1)
+            .setRestartAllServices()
+            .build();
+
+    static final SimpleAttributeDefinition PROVIDER_NAME = new SimpleAttributeDefinitionBuilder(Constants.PROVIDER_NAME, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(true)
+            .setMinSize(1)
+            .setRestartAllServices()
+            .build();
+
+    static final SimpleAttributeDefinition PROVIDERS = new SimpleAttributeDefinitionBuilder(Constants.PROVIDERS, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(false)
+            .setMinSize(1)
+            .setRestartAllServices()
+            .setCapabilityReference(PROVIDERS_CAPABILITY, CREDENTIAL_STORE_CAPABILITY)
+            .build();
+
+    static final SimpleAttributeDefinition OTHER_PROVIDERS = new SimpleAttributeDefinitionBuilder(Constants.OTHER_PROVIDERS, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .setAllowExpression(false)
+            .setMinSize(1)
+            .setRestartAllServices()
+            .setCapabilityReference(PROVIDERS_CAPABILITY, CREDENTIAL_STORE_CAPABILITY)
+            .build();
+
+    static final SimpleAttributeDefinition RELATIVE_TO = new SimpleAttributeDefinitionBuilder(Constants.RELATIVE_TO, ModelType.STRING, true)
+            .setAllowExpression(false)
+            .setMinSize(1)
+            .setAttributeGroup(Constants.FILE)
+            .setRestartAllServices()
+            .build();
+
+    static final SimpleAttributeDefinition PATH = new SimpleAttributeDefinitionBuilder(Constants.PATH, ModelType.STRING, true)
+            .setAllowExpression(true)
+            .setMinSize(1)
+            .setAttributeGroup(Constants.FILE)
+            .setRestartAllServices()
+            .setAlternatives(Constants.LOCATION)
+            .build();
+
+    // Resource Resolver
+    private static final StandardResourceDescriptionResolver RESOURCE_RESOLVER = ElytronTlsExtension.getResourceDescriptionResolver(Constants.CREDENTIAL_STORE);
+
+    // Operations parameters
+
+
+    static final SimpleAttributeDefinition KEY_SIZE = new SimpleAttributeDefinitionBuilder(Constants.KEY_SIZE, ModelType.INT, true)
+            .setMinSize(1)
+            .setDefaultValue(new ModelNode(256))
+            .setAllowedValues(128, 192, 256)
+            .build();
+
+    static final SimpleAttributeDefinition ADD_ENTRY_TYPE;
+    static final SimpleAttributeDefinition REMOVE_ENTRY_TYPE;
+
+    static {
+        String[] addEntryTypes = new String[] { PasswordCredential.class.getCanonicalName() };
+        ADD_ENTRY_TYPE = new SimpleAttributeDefinitionBuilder(Constants.ENTRY_TYPE, ModelType.STRING, true)
+                .setAllowedValues(addEntryTypes)
+                .build();
+        String[] removeEntryTypes = new String[] { PasswordCredential.class.getCanonicalName(), PasswordCredential.class.getSimpleName(),
+                                                   SecretKeyCredential.class.getCanonicalName(), SecretKeyCredential.class.getSimpleName()};
+        REMOVE_ENTRY_TYPE = new SimpleAttributeDefinitionBuilder(Constants.ENTRY_TYPE, ModelType.STRING, true)
+                .setAllowedValues(removeEntryTypes)
+                .setDefaultValue(new ModelNode(PasswordCredential.class.getSimpleName()))
+                .build();
+    }
+
+    static final SimpleAttributeDefinition SECRET_VALUE = new SimpleAttributeDefinitionBuilder(Constants.SECRET_VALUE, ModelType.STRING, true)
+            .setMinSize(0)
+            .build();
+
+    // Operations
+
+    private static final SimpleOperationDefinition ADD_ALIAS = new SimpleOperationDefinitionBuilder(Constants.ADD_ALIAS, OPERATION_RESOLVER)
+            .setParameters(ALIAS, ADD_ENTRY_TYPE, SECRET_VALUE)
+            .setRuntimeOnly()
+            .build();
+
+    private static final SimpleOperationDefinition REMOVE_ALIAS = new SimpleOperationDefinitionBuilder(Constants.REMOVE_ALIAS, OPERATION_RESOLVER)
+            .setParameters(ALIAS, REMOVE_ENTRY_TYPE)
+            .setRuntimeOnly()
+            .build();
+
+    private static final SimpleOperationDefinition SET_SECRET = new SimpleOperationDefinitionBuilder(Constants.SET_SECRET, OPERATION_RESOLVER)
+            .setParameters(ALIAS, ADD_ENTRY_TYPE, SECRET_VALUE)
+            .setRuntimeOnly()
+            .build();
+
+    private static final SimpleOperationDefinition GENERATE_SECRET_KEY = new SimpleOperationDefinitionBuilder(Constants.GENERATE_SECRET_KEY, OPERATION_RESOLVER)
+            .setParameters(ALIAS, KEY_SIZE)
+            .setRuntimeOnly()
+            .build();
+
+    private static final AttributeDefinition[] CONFIG_ATTRIBUTES = new AttributeDefinition[] {LOCATION, PATH, CREATE, MODIFIABLE, IMPLEMENTATION_PROPERTIES, CREDENTIAL_REFERENCE, TYPE, PROVIDER_NAME, PROVIDERS, OTHER_PROVIDERS, RELATIVE_TO};
+
+    private static final CredentialStoreAddHandler ADD = new CredentialStoreAddHandler();
+    private static final OperationStepHandler REMOVE = new TrivialCapabilityServiceRemoveHandler(ADD, CREDENTIAL_STORE_RUNTIME_CAPABILITY);
+
+
+    CredentialStoreResourceDefinition() {
+        super(new SimpleResourceDefinition.Parameters(PathElement.pathElement(Constants.CREDENTIAL_STORE), RESOURCE_RESOLVER)
+                .setAddHandler(ADD)
+                .setRemoveHandler(REMOVE)
+                .setAddRestartLevel(OperationEntry.Flag.RESTART_NONE)
+                .setRemoveRestartLevel(OperationEntry.Flag.RESTART_NONE)
+                .setCapabilities(CREDENTIAL_STORE_RUNTIME_CAPABILITY)
+        );
+    }
+
+    @Override
+    protected AttributeDefinition[] getAttributeDefinitions() {
+        return CONFIG_ATTRIBUTES;
+    }
+
+    @Override
+    public void registerOperations(ManagementResourceRegistration resourceRegistration) {
+        super.registerOperations(resourceRegistration); // Always needed to register add / remove.
+
+        boolean isServerOrHostController = isServerOrHostController(resourceRegistration);
+        Map<String, CredentialStoreRuntimeOperation> operationMethods = new HashMap<>();
+
+        operationMethods.put(Constants.READ_ALIASES, this::readAliasesOperation);
+        if (isServerOrHostController) {
+            operationMethods.put(Constants.ADD_ALIAS, this::addAliasOperation);
+            operationMethods.put(Constants.REMOVE_ALIAS, this::removeAliasOperation);
+            operationMethods.put(Constants.SET_SECRET, this::setSecretOperation);
+            operationMethods.put(Constants.EXPORT_SECRET_KEY, this::exportSecretKeyOperation);
+            operationMethods.put(Constants.GENERATE_SECRET_KEY, this::generateSecretKeyOperation);
+            operationMethods.put(Constants.IMPORT_SECRET_KEY, this::importSecretKeyOperation);
+        }
+
+        OperationStepHandler operationHandler = new CredentialStoreRuntimeHandler(operationMethods);
+        resourceRegistration.registerOperationHandler(READ_ALIASES, operationHandler); // MAPPED
+        if (isServerOrHostController) {
+            resourceRegistration.registerOperationHandler(ADD_ALIAS, operationHandler); // Mapped
+            resourceRegistration.registerOperationHandler(REMOVE_ALIAS, operationHandler); // Mapped
+            resourceRegistration.registerOperationHandler(SET_SECRET, operationHandler); // Mapped
+            resourceRegistration.registerOperationHandler(GENERATE_SECRET_KEY, operationHandler);
+            resourceRegistration.registerOperationHandler(EXPORT_SECRET_KEY, operationHandler);
+            resourceRegistration.registerOperationHandler(IMPORT_SECRET_KEY, operationHandler);
+            resourceRegistration.registerOperationHandler(RELOAD, RELOAD_HANDLER);
+        }
+    }
+
+    /*
+     * Operation Handler Methods
+     */
+
+    void addAliasOperation(OperationContext context, ModelNode operation, CredentialStore credentialStore) throws OperationFailedException {
+        try {
+            try {
+                String alias = ALIAS.resolveModelAttribute(context, operation).asString();
+                String entryType = ADD_ENTRY_TYPE.resolveModelAttribute(context, operation).asStringOrNull();
+                String secretValue = SECRET_VALUE.resolveModelAttribute(context, operation).asStringOrNull();
+                if (entryType == null || entryType.equals(PasswordCredential.class.getCanonicalName())) {
+                    if (credentialStore.exists(alias, PasswordCredential.class)) {
+                        throw LOGGER.credentialAlreadyExists(alias, PasswordCredential.class.getName());
+                    }
+                    storeSecret(credentialStore, alias, secretValue);
+                } else {
+                    String credentialStoreName = CredentialStoreResourceDefinition.credentialStoreName(operation);
+                    throw LOGGER.credentialStoreEntryTypeNotSupported(credentialStoreName, entryType);
+                }
+            } catch (CredentialStoreException e) {
+                throw LOGGER.unableToCompleteOperation(e, dumpCause(e));
+            }
+        } catch (RuntimeException e) {
+            throw new OperationFailedException(e);
+        }
+    }
+
+    void removeAliasOperation(OperationContext context, ModelNode operation, CredentialStore credentialStore) throws OperationFailedException {
+        String entryType = REMOVE_ENTRY_TYPE.resolveModelAttribute(context, operation).asString();
+        Class<? extends Credential> credentialType = fromEntryType(entryType);
+
+        super.removeAliasOperation(context, operation, credentialStore, credentialType);
+    }
+
+    void setSecretOperation(OperationContext context, ModelNode operation, CredentialStore credentialStore) throws OperationFailedException {
+        try {
+            try {
+                String alias = ALIAS.resolveModelAttribute(context, operation).asString();
+                String entryType = ADD_ENTRY_TYPE.resolveModelAttribute(context, operation).asStringOrNull();
+                String secretValue = SECRET_VALUE.resolveModelAttribute(context, operation).asStringOrNull();
+
+                if (entryType == null || entryType.equals(PasswordCredential.class.getCanonicalName())) {
+                    if ( ! credentialStore.exists(alias, PasswordCredential.class)) {
+                        throw LOGGER.credentialDoesNotExist(alias, PasswordCredential.class.getName());
+                    }
+                    storeSecret(credentialStore, alias, secretValue);
+                    context.addResponseWarning(Level.WARNING, LOGGER.reloadDependantServices());
+                } else {
+                    String credentialStoreName = CredentialStoreResourceDefinition.credentialStoreName(operation);
+                    throw LOGGER.credentialStoreEntryTypeNotSupported(credentialStoreName, entryType);
+                }
+            } catch (CredentialStoreException e) {
+                throw LOGGER.unableToCompleteOperation(e, dumpCause(e));
+            }
+        } catch (RuntimeException e) {
+            throw new OperationFailedException(e);
+        }
+    }
+
+    protected void generateSecretKeyOperation(OperationContext context, ModelNode operation, CredentialStore credentialStore) throws OperationFailedException {
+        final int keySize = KEY_SIZE.resolveModelAttribute(context, operation).asInt();
+
+        generateSecretKeyOperation(context, operation, credentialStore, keySize);
+    }
+
+    static String credentialStoreName(ModelNode operation) {
+        String credentialStoreName = null;
+        PathAddress pa = PathAddress.pathAddress(operation.require(ModelDescriptionConstants.OP_ADDR));
+        for (int i = pa.size() - 1; i > 0; i--) {
+            PathElement pe = pa.getElement(i);
+            if (Constants.CREDENTIAL_STORE.equals(pe.getKey())) {
+                credentialStoreName = pe.getValue();
+                break;
+            }
+        }
+
+        if (credentialStoreName == null) {
+            throw LOGGER.operationAddressMissingKey(Constants.CREDENTIAL_STORE);
+        }
+
+        return credentialStoreName;
+    }
+
+    private static Class<? extends Credential> fromEntryType(final String entryTyoe) {
+        if (PasswordCredential.class.getCanonicalName().equals(entryTyoe) || PasswordCredential.class.getSimpleName().equals(entryTyoe)) {
+            return PasswordCredential.class;
+        } else if (SecretKeyCredential.class.getCanonicalName().equals(entryTyoe) || SecretKeyCredential.class.getSimpleName().equals(entryTyoe)) {
+            return SecretKeyCredential.class;
+        }
+
+        return null;
+    }
+
+    private static class CredentialStoreAddHandler extends DoohickeyAddHandler<CredentialStore> {
+
+        private CredentialStoreAddHandler() {
+            super(CREDENTIAL_STORE_RUNTIME_CAPABILITY, CONFIG_ATTRIBUTES, CREDENTIAL_STORE_API_CAPABILITY);
+        }
+
+        @Override
+        protected void populateModel(final OperationContext context, final ModelNode operation, final Resource resource) throws  OperationFailedException {
+            super.populateModel(context, operation, resource);
+            handleCredentialReferenceUpdate(context, resource.getModel());
+        }
+
+        @Override
+        protected ElytronDoohickey<CredentialStore> createDoohickey(PathAddress resourceAddress) {
+            return new CredentialStoreDoohickey(resourceAddress);
+        }
+
+        @Override
+        protected void rollbackRuntime(OperationContext context, final ModelNode operation, final Resource resource) {
+            rollbackCredentialStoreUpdate(CREDENTIAL_REFERENCE, context, resource);
+        }
+    }
+
+    static class CredentialStoreDoohickey extends AbstractCredentialStoreDoohickey {
+
+        private final String name;
+        private volatile String location;
+        private volatile boolean modifiable;
+        private volatile String type;
+        private volatile String providers;
+        private volatile String otherProviders;
+        private volatile String providerName;
+        private volatile String relativeTo;
+        private volatile Map<String, String> credentialStoreAttributes;
+        private volatile ModelNode model; // It would be nice to eliminate but credential reference performs resolution
+                                          // and use of values in a single step.
+
+        private volatile ExceptionRunnable<GeneralSecurityException> reloader;
+
+        protected CredentialStoreDoohickey(PathAddress resourceAddress) {
+            super(resourceAddress);
+            this.name = resourceAddress.getLastElement().getValue();
+        }
+
+        @Override
+        protected void resolveRuntime(ModelNode model, OperationContext context) throws OperationFailedException {
+            location = PATH.resolveModelAttribute(context, model).asStringOrNull();
+            if (location == null) {
+                location = LOCATION.resolveModelAttribute(context, model).asStringOrNull();
+            }
+            credentialStoreAttributes = new HashMap<>();
+            modifiable =  MODIFIABLE.resolveModelAttribute(context, model).asBoolean();
+            credentialStoreAttributes.put(Constants.MODIFIABLE, Boolean.toString(modifiable));
+            boolean create = CREATE.resolveModelAttribute(context, model).asBoolean();
+            credentialStoreAttributes.put(Constants.CREATE, Boolean.toString(create));
+            ModelNode implAttrModel = IMPLEMENTATION_PROPERTIES.resolveModelAttribute(context, model);
+            if (implAttrModel.isDefined()) {
+                for (String s : implAttrModel.keys()) {
+                    credentialStoreAttributes.put(s, implAttrModel.require(s).asString());
+                }
+            }
+            type = TYPE.resolveModelAttribute(context, model).asStringOrNull();
+            providers = PROVIDERS.resolveModelAttribute(context, model).asStringOrNull();
+            otherProviders = OTHER_PROVIDERS.resolveModelAttribute(context, model).asStringOrNull();
+            providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
+            relativeTo = RELATIVE_TO.resolveModelAttribute(context, model).asStringOrNull();
+            if (type == null || type.equals(KeyStoreCredentialStore.KEY_STORE_CREDENTIAL_STORE)) {
+                credentialStoreAttributes.putIfAbsent(CS_KEY_STORE_TYPE_ATTRIBUTE, "JCEKS");
+            }
+
+            String implAttrKeyStoreType = credentialStoreAttributes.get(CS_KEY_STORE_TYPE_ATTRIBUTE);
+            if (location == null && implAttrKeyStoreType != null && filebasedKeystoreTypes.contains(implAttrKeyStoreType.toUpperCase(Locale.ENGLISH))) {
+                throw LOGGER.filebasedKeystoreLocationMissing(implAttrKeyStoreType);
+            }
+            this.model = model;
+        }
+
+        @Override
+        protected ExceptionSupplier<CredentialStore, StartException> prepareServiceSupplier(OperationContext context,
+                CapabilityServiceBuilder<?> serviceBuilder) throws OperationFailedException {
+
+            if (relativeTo != null) {
+                pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                serviceBuilder.requires(pathName(relativeTo));
+            } else {
+                pathManagerSupplier = null;
+            }
+
+            final Supplier<Provider[]> providerSupplier;
+            if (providers != null) {
+                String providersCapabilityName = RuntimeCapability.buildDynamicCapabilityName(PROVIDERS_CAPABILITY, providers);
+                ServiceName providerLoaderServiceName = context.getCapabilityServiceName(providersCapabilityName,
+                        Provider[].class);
+
+                providerSupplier = serviceBuilder.requires(providerLoaderServiceName);
+            } else {
+                providerSupplier = null;
+            }
+
+            final Supplier<Provider[]> otherProviderSupplier;
+            if (otherProviders != null) {
+                String providersCapabilityName = RuntimeCapability.buildDynamicCapabilityName(PROVIDERS_CAPABILITY,
+                        otherProviders);
+                ServiceName otherProvidersLoaderServiceName = context.getCapabilityServiceName(providersCapabilityName,
+                        Provider[].class);
+
+                otherProviderSupplier = serviceBuilder.requires(otherProvidersLoaderServiceName);
+            } else {
+                otherProviderSupplier = null;
+            }
+
+            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier = CredentialReference
+                    .getCredentialSourceSupplier(context, CredentialStoreResourceDefinition.CREDENTIAL_REFERENCE, model,
+                            serviceBuilder);
+
+            return new ExceptionSupplier<CredentialStore, StartException>() {
+
+                @Override
+                public CredentialStore get() throws StartException {
+                    try {
+                        if (location != null) {
+                            PathResolver pathResolver = pathResolver();
+                            pathResolver.path(location);
+                            if (relativeTo != null) {
+                                pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
+                            }
+                            File resolved = pathResolver.resolve();
+                            pathResolver.clear();
+                            credentialStoreAttributes.put(Constants.LOCATION, resolved.getAbsolutePath());
+                        } else {
+                            credentialStoreAttributes.put(Constants.LOCATION, null);
+                        }
+
+                        LOGGER.tracef("starting CredentialStore:  name = %s", name);
+
+                        CredentialStore cs = getCredentialStoreInstance(providerSupplier != null ? providerSupplier.get() : null);
+                        Provider[] otherProvidersArr = otherProviderSupplier != null ? otherProviderSupplier.get() : null;
+                        if (LOGGER.isTraceEnabled()) {
+                            LOGGER.tracef(
+                                    "initializing CredentialStore:  name = %s  type = %s  provider = %s  otherProviders = %s  attributes = %s",
+                                    name, type, providerName, Arrays.toString(otherProvidersArr), credentialStoreAttributes);
+                        }
+
+                        CredentialSourceProtectionParameter credentialSource = resolveCredentialStoreProtectionParameter(name,
+                                credentialSourceSupplier != null ? credentialSourceSupplier.get() : null);
+                        reloader = new ExceptionRunnable<GeneralSecurityException>() {
+
+                            @Override
+                            public void run() throws GeneralSecurityException {
+                                synchronized (EmptyProvider.getInstance()) {
+                                    cs.initialize(credentialStoreAttributes, credentialSource, otherProvidersArr);
+                                }
+                            }
+                        };
+                        reloader.run();
+
+                        return cs;
+                    } catch (Exception e) {
+                        throw LOGGER.unableToStartService(e);
+                    }
+                }
+
+            };
+
+        }
+
+        @Override
+        protected CredentialStore createImmediately(OperationContext foreignContext) throws OperationFailedException {
+            File resolvedPath = null;
+            if (location != null) {
+                resolvedPath = resolveRelativeToImmediately(location, relativeTo, foreignContext);
+                credentialStoreAttributes.put(Constants.LOCATION, resolvedPath.getAbsolutePath());
+            }
+
+            Provider[] providers = null;
+            if (this.providers != null) {
+                ExceptionFunction<OperationContext, Provider[], OperationFailedException> providerApi = foreignContext
+                        .getCapabilityRuntimeAPI(PROVIDERS_API_CAPABILITY, this.providers, ExceptionFunction.class);
+                providers = providerApi.apply(foreignContext);
+            }
+
+            Provider[] otherProviders;
+            if (this.otherProviders != null) {
+                ExceptionFunction<OperationContext, Provider[], OperationFailedException> providerApi = foreignContext
+                        .getCapabilityRuntimeAPI(PROVIDERS_API_CAPABILITY, this.otherProviders, ExceptionFunction.class);
+                otherProviders = providerApi.apply(foreignContext);
+            } else {
+                otherProviders = null;
+            }
+
+            CredentialSource credentialSource = getCredentialSource(foreignContext, CREDENTIAL_REFERENCE, model);
+
+            try {
+                CredentialStore credentialStore = getCredentialStoreInstance(providers);
+
+                CredentialSourceProtectionParameter protectionParamter = resolveCredentialStoreProtectionParameter(name, credentialSource);
+                reloader = new ExceptionRunnable<GeneralSecurityException>() {
+
+                    @Override
+                    public void run() throws GeneralSecurityException {
+                        synchronized (EmptyProvider.getInstance()) {
+                            credentialStore.initialize(credentialStoreAttributes, protectionParamter, otherProviders);
+                        }
+                    }
+                };
+                reloader.run();
+
+                return credentialStore;
+            } catch (GeneralSecurityException | IOException e) {
+                throw LOGGER.unableToInitialiseCredentialStore(e);
+            }
+
+        }
+
+        @Override
+        protected void reload(OperationContext context) throws GeneralSecurityException, OperationFailedException {
+            if (reloader != null) {
+                reloader.run();
+            } else {
+                super.apply(context);
+            }
+        }
+
+        private CredentialStore getCredentialStoreInstance(Provider[] injectedProviders) throws CredentialStoreException, NoSuchAlgorithmException, NoSuchProviderException {
+            String resolvedType = type != null ? type : KeyStoreCredentialStore.KEY_STORE_CREDENTIAL_STORE;
+            if (providerName != null) {
+                // directly specified provider
+                return CredentialStore.getInstance(resolvedType, providerName);
+            }
+
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.tracef("obtaining CredentialStore %s from providers %s", name, Arrays.toString(injectedProviders));
+            }
+            if (injectedProviders != null) {
+                // injected provider list, select the first provider with corresponding type
+                for (Provider p : injectedProviders) {
+                    try {
+                        return CredentialStore.getInstance(resolvedType, p);
+                    } catch (NoSuchAlgorithmException ignore) {
+                    }
+                }
+
+                throw LOGGER.providerLoaderCannotSupplyProvider(providers, resolvedType);
+            } else {
+                // default provider
+                return CredentialStore.getInstance(resolvedType);
+            }
+        }
+
+        private static CredentialSourceProtectionParameter resolveCredentialStoreProtectionParameter(String name, CredentialSource cs) throws IOException {
+            if (cs != null) {
+                Credential credential = cs.getCredential(PasswordCredential.class);
+
+                LOGGER.tracef("resolving CredentialStore %s ProtectionParameter from %s", name, credential);
+                return credentialToCredentialSourceProtectionParameter(credential);
+            } else {
+                throw LOGGER.credentialStoreProtectionParameterCannotBeResolved(name);
+            }
+        }
+
+        private static CredentialSourceProtectionParameter credentialToCredentialSourceProtectionParameter(Credential credential) {
+            return new CredentialSourceProtectionParameter(IdentityCredentials.NONE.withCredential(credential));
+        }
+
+    }
+}
