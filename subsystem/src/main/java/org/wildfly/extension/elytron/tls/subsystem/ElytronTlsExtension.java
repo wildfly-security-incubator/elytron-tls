@@ -78,6 +78,7 @@ public class ElytronTlsExtension implements Extension {
         return new StandardResourceDescriptionResolver(prefix.toString(), RESOURCE_NAME, ElytronTlsExtension.class.getClassLoader(), true, useUnprefixedChildTypes);
     }
 
+    @SuppressWarnings("unchecked")
     static <T> ServiceController<T> getRequiredService(ServiceRegistry serviceRegistry, ServiceName serviceName, Class<T> serviceType) {
         ServiceController<?> controller = serviceRegistry.getRequiredService(serviceName);
         return (ServiceController<T>) controller;
