@@ -17,6 +17,7 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.capability.RuntimeCapability.buildDynamicCapabilityName;
+import static org.jboss.as.controller.AbstractControllerService.PATH_MANAGER_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.*;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
@@ -336,7 +337,6 @@ public class SSLContextDefinitions {
 
     static final SimpleAttributeDefinition KEY_MANAGER_REFERENCE = new SimpleAttributeDefinitionBuilder(Constants.KEY_MANAGER_REFERENCE, ModelType.STRING, true)
             .setMinSize(1)
-            .setRequired(true)
             .setAlternatives(Constants.KEY_MANAGER)
             .setCapabilityReference(KEY_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
             .setAllowExpression(false)
@@ -344,7 +344,6 @@ public class SSLContextDefinitions {
             .build();
 
     static ObjectTypeAttributeDefinition KEY_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_MANAGER, KEY_STORE, KEY_STORE_REFERENCE, CREDENTIAL_REFERENCE, ALGORITHM, ALIAS_FILTER, PROVIDER_NAME, PROVIDERS)
-            .setRequired(true)
             .setAlternatives(Constants.KEY_MANAGER_REFERENCE)
             .setAllowExpression(false)
             .setRestartAllServices()
@@ -355,7 +354,6 @@ public class SSLContextDefinitions {
 
     static final SimpleAttributeDefinition TRUST_MANAGER_REFERENCE = new SimpleAttributeDefinitionBuilder(Constants.TRUST_MANAGER_REFERENCE, ModelType.STRING, true)
             .setMinSize(1)
-            .setRequired(true)
             .setAlternatives(Constants.TRUST_MANAGER)
             .setCapabilityReference(TRUST_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
             .setAllowExpression(false)
@@ -363,16 +361,10 @@ public class SSLContextDefinitions {
             .build();
 
     static final ObjectTypeAttributeDefinition TRUST_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.TRUST_MANAGER, KEY_STORE, KEY_STORE_REFERENCE, ALIAS_FILTER, ALGORITHM, MAXIMUM_CERT_PATH, ONLY_LEAF_CERT, SOFT_FAIL, PROVIDER_NAME, PROVIDERS, OCSP, CERTIFICATE_REVOCATION_LIST, CERTIFICATE_REVOCATION_LISTS)
-            .setRequired(true)
             .setAlternatives(Constants.TRUST_MANAGER_REFERENCE)
             .setAllowExpression(false)
             .setRestartAllServices()
             .build();
-
-
-    static final AttributeDefinition[] CLIENT_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE,/* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE, PROVIDER_NAME};
-
-    static final AttributeDefinition[] SERVER_ATTRIBUTES = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES, PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE,/* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE, PROVIDER_NAME, WANT_CLIENT_AUTH, NEED_CLIENT_AUTH, USE_CIPHER_SUITES_ORDER, MAXIMUM_SESSION_CACHE_SIZE, SESSION_TIMEOUT, WRAP};
 
     private static final SimpleAttributeDefinition ACTIVE_SESSION_COUNT = new SimpleAttributeDefinitionBuilder(Constants.ACTIVE_SESSION_COUNT, ModelType.INT)
             .setStorageRuntime()
@@ -380,29 +372,49 @@ public class SSLContextDefinitions {
 
     static ResourceDefinition createClientSSLContextDefinition() {
         // TODO: implement
+        final AttributeDefinition[] attributes = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES,
+                PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE, /* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE,
+                PROVIDER_NAME};
+
         return null;
+    }
+
+    private static <T> Supplier<T> addRequirement(String baseName, SimpleAttributeDefinition attribute, Class<T> type,
+                                      ServiceBuilder<SSLContext> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
+
+        String dynamicNameElement = attribute.resolveModelAttribute(context, model).asStringOrNull();
+        Supplier<T> supplier = () -> null;
+
+        if (dynamicNameElement != null) {
+            supplier = serviceBuilder.requires(context.getCapabilityServiceName(
+                    RuntimeCapability.buildDynamicCapabilityName(baseName, dynamicNameElement), type));
+        }
+        return supplier;
     }
 
     static ResourceDefinition createServerSSLContextDefinition(boolean serverOrHostController) {
 
         final SimpleAttributeDefinition providersDefinition = new SimpleAttributeDefinitionBuilder(PROVIDERS)
                 .setCapabilityReference(PROVIDERS_CAPABILITY, SSL_CONTEXT_CAPABILITY)
-                .setAllowExpression(false)
                 .setRestartAllServices()
                 .build();
 
-        final SimpleAttributeDefinition keyManagerDefinition = new SimpleAttributeDefinitionBuilder(KEY_MANAGER)
-                .setRequired(true)
-                .setRestartAllServices()
-                .build();
+        final AttributeDefinition[] attributes = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES,
+                PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE,/* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE, PROVIDER_NAME,
+                providersDefinition, WANT_CLIENT_AUTH, NEED_CLIENT_AUTH, USE_CIPHER_SUITES_ORDER, MAXIMUM_SESSION_CACHE_SIZE,
+                SESSION_TIMEOUT, WRAP};
 
 
-
-        AbstractAddStepHandler add = new TrivialAddHandler<SSLContext>(SSLContext.class, ServiceController.Mode.ACTIVE, ServiceController.Mode.PASSIVE, SERVER_ATTRIBUTES, SSL_CONTEXT_RUNTIME_CAPABILITY) {
+        AbstractAddStepHandler add = new TrivialAddHandler<SSLContext>(SSLContext.class, ServiceController.Mode.ACTIVE, ServiceController.Mode.PASSIVE, attributes, SSL_CONTEXT_RUNTIME_CAPABILITY) {
 
             @Override
             protected ValueSupplier<SSLContext> getValueSupplier(ServiceBuilder<SSLContext> serviceBuilder,
                                                                                 OperationContext context, ModelNode model) throws OperationFailedException {
+
+                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, providersDefinition, Provider[].class, serviceBuilder, context, model);
+                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                ExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
+                ExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
 
                 final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
                 final List<String> protocols = PROTOCOLS.unwrap(context, model);
@@ -418,26 +430,20 @@ public class SSLContextDefinitions {
                 final ModelNode keyManagerNode = KEY_MANAGER.resolveModelAttribute(context, model);
                 final ModelNode trustManagerNode = TRUST_MANAGER.resolveModelAttribute(context, model);
 
-                ExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
-                ExceptionSupplier<TrustManager, Exception> trustManagerSupplier = null;
-
+                // TODO: acquire service builders for key/trust manager and key store
+                ServiceBuilder<KeyManager> keyManagerServiceBuilder = null;
                 ServiceBuilder<TrustManager> trustManagerServiceBuilder = null;
 
-                // TODO: implement properly when creating key stores is enabled
-//                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
-
                 if (keyManagerNode.isDefined()) {
-                    keyManagerSupplier = createKeyManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
+                    keyManagerSupplier = createKeyManager(keyManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
-                    String keyManagerReference = KEY_MANAGER_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
-                    keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();
+                    keyManagerSupplier = () -> addRequirement(KEY_MANAGER_CAPABILITY, KEY_MANAGER, KeyManager.class, serviceBuilder, context, model).get();
                 }
 
                 if (trustManagerNode.isDefined()) {
                     trustManagerSupplier = createTrustManager(trustManagerServiceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
-                    String keyManagerReference = KEY_MANAGER_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
-                    keyManagerSupplier = () -> (KeyManager) serviceBuilder.requires(context.getCapabilityServiceName(RuntimeCapability.buildDynamicCapabilityName(KEY_MANAGER_CAPABILITY, keyManagerReference), KeyManager.class)).get();
+                    trustManagerSupplier = () -> addRequirement(TRUST_MANAGER_CAPABILITY, TRUST_MANAGER, TrustManager.class, serviceBuilder, context, model).get();
                 }
 
                 final ExceptionSupplier<KeyManager, Exception> finalKeyManagerSupplier = keyManagerSupplier;
@@ -503,7 +509,7 @@ public class SSLContextDefinitions {
 
         };
 
-        return createSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, SERVER_ATTRIBUTES, serverOrHostController);
+        return createSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, attributes, serverOrHostController);
     }
 
 
@@ -779,7 +785,7 @@ public class SSLContextDefinitions {
         };
     }
 
-    private static ExceptionSupplier<KeyManager, Exception> createKeyManager(ServiceBuilder<TrustManager> serviceBuilder, OperationContext context, ModelNode model, Supplier<PathManager> pathManager) throws OperationFailedException {
+    private static ExceptionSupplier<KeyManager, Exception> createKeyManager(ServiceBuilder<KeyManager> serviceBuilder, OperationContext context, ModelNode model, Supplier<PathManager> pathManager) throws OperationFailedException {
         final ModelNode keyStoreNode = KEY_STORE.resolveModelAttribute(context, model);
         final String keyStoreReference = KEY_STORE_REFERENCE.resolveModelAttribute(context, model).asStringOrNull();
         final ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier = CredentialReference.getCredentialSourceSupplier(context, CREDENTIAL_REFERENCE, model, serviceBuilder);
@@ -979,7 +985,7 @@ public class SSLContextDefinitions {
         }
     }
 
-    private static ExceptionSupplier<KeyStore, Exception> createKeyStore(ServiceBuilder<TrustManager> serviceBuilder, OperationContext context, ModelNode model, Supplier<PathManager> pathManager) throws OperationFailedException {
+    private static ExceptionSupplier<KeyStore, Exception> createKeyStore(ServiceBuilder<KeyStore> serviceBuilder, OperationContext context, ModelNode model, Supplier<PathManager> pathManager) throws OperationFailedException {
         final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
         final String type = TYPE.resolveModelAttribute(context, model).asStringOrNull();
         final String aliasFilter = ALIAS_FILTER.resolveModelAttribute(context, model).asStringOrNull();
