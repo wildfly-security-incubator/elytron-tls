@@ -14,7 +14,7 @@ class ManagerParser {
             .addAttribute(SSLContextDefinitions.KEY_STORE_REFERENCE)
             .addAttribute(SSLContextDefinitions.ALIAS_FILTER)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
-//            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
 //            .addAttribute(SSLContextDefinitions.GENERATE_SELF_SIGNED_CERTIFICATE_HOST); // new
             .addAttribute(CredentialReference.getAttributeDefinition())
             .build();
@@ -24,7 +24,7 @@ class ManagerParser {
             .addAttribute(SSLContextDefinitions.KEY_STORE)
             .addAttribute(SSLContextDefinitions.KEY_STORE_REFERENCE)
             .addAttribute(SSLContextDefinitions.ALIAS_FILTER)
-//            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(SSLContextDefinitions.CERTIFICATE_REVOCATION_LIST)
             .addAttribute(SSLContextDefinitions.OCSP)

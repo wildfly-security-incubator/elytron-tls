@@ -38,7 +38,6 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
 
     PersistentResourceXMLDescription getKeyManagerParser() {
         return new ManagerParser().keyManagerParser_1_0;
-
     }
     PersistentResourceXMLDescription getTrustManagerParser() {
         return new ManagerParser().trustManagerParser_1_0;

@@ -79,7 +79,7 @@ import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
 import org.jboss.as.controller.services.path.PathManager;
-import org.jboss.as.controller.services.path.PathManagerService;
+//import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -214,7 +214,16 @@ public class SSLContextDefinitions {
 
     /** KeyStore definitions **/
 
+    static final SimpleAttributeDefinition PROVIDERS_IMPL = new SimpleAttributeDefinitionBuilder(PROVIDERS)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .build();
+
+    static final SimpleAttributeDefinition PROVIDER_NAME_IMPL = new SimpleAttributeDefinitionBuilder(PROVIDER_NAME)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
+            .build();
+
     static final SimpleAttributeDefinition TYPE = new SimpleAttributeDefinitionBuilder(Constants.TYPE, ModelType.STRING, true)
+            .setAttributeGroup(Constants.IMPLEMENTATION)
             .setMinSize(1)
             .setRestartAllServices()
             .setAllowExpression(false)
@@ -223,6 +232,7 @@ public class SSLContextDefinitions {
     static final SimpleAttributeDefinition REQUIRED = new SimpleAttributeDefinitionBuilder(Constants.REQUIRED, ModelType.BOOLEAN, true)
             .setDefaultValue(ModelNode.FALSE)
             .setAllowExpression(true)
+            .setAttributeGroup(Constants.FILE)
             .setRequires(Constants.PATH)
             .setRestartAllServices()
             .build();
@@ -233,7 +243,7 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
-    static final ObjectTypeAttributeDefinition KEY_STORE = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_STORE, TYPE, PATH, RELATIVE_TO, REQUIRED, CREDENTIAL_REFERENCE, ALIAS_FILTER, PROVIDER_NAME)
+    static final ObjectTypeAttributeDefinition KEY_STORE = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_STORE, TYPE, PATH, RELATIVE_TO, REQUIRED, CREDENTIAL_REFERENCE, ALIAS_FILTER, PROVIDER_NAME_IMPL, PROVIDERS_IMPL)
             .setMinSize(1)
             .setRestartAllServices()
             .setAlternatives(Constants.KEY_STORE_REFERENCE)
@@ -260,7 +270,7 @@ public class SSLContextDefinitions {
             .setRequires(Constants.RESPONDER_CERTIFICATE)
             .build();
 
-    static final ObjectTypeAttributeDefinition RESPONDER_KEYSTORE = new ObjectTypeAttributeDefinition.Builder(Constants.RESPONDER_KEYSTORE, TYPE, PATH, RELATIVE_TO, REQUIRED, CREDENTIAL_REFERENCE, ALIAS_FILTER, PROVIDER_NAME)
+    static final ObjectTypeAttributeDefinition RESPONDER_KEYSTORE = new ObjectTypeAttributeDefinition.Builder(Constants.RESPONDER_KEYSTORE, TYPE, PATH, RELATIVE_TO, REQUIRED, CREDENTIAL_REFERENCE, ALIAS_FILTER, PROVIDER_NAME_IMPL, PROVIDERS_IMPL)
             .setRequired(false)
             .setMinSize(1)
             .setAlternatives(Constants.RESPONDER_KEYSTORE_REFERENCE)
@@ -315,6 +325,7 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
+// Temporarily disable self-signed certificates
 //    static final SimpleAttributeDefinition GENERATE_SELF_SIGNED_CERTIFICATE_HOST = new SimpleAttributeDefinitionBuilder(Constants.GENERATE_SELF_SIGNED_CERTIFICATE_HOST, ModelType.STRING, true)
 //            .setAllowExpression(true)
 //            .setMinSize(1)
@@ -325,13 +336,14 @@ public class SSLContextDefinitions {
 
     static final SimpleAttributeDefinition KEY_MANAGER_REFERENCE = new SimpleAttributeDefinitionBuilder(Constants.KEY_MANAGER_REFERENCE, ModelType.STRING, true)
             .setMinSize(1)
-            .setCapabilityReference(KEY_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
-            .setRestartAllServices()
-            .setAllowExpression(false)
+            .setRequired(true)
             .setAlternatives(Constants.KEY_MANAGER)
+            .setCapabilityReference(KEY_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
+            .setAllowExpression(false)
+            .setRestartAllServices()
             .build();
 
-    static ObjectTypeAttributeDefinition KEY_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_MANAGER, KEY_STORE, KEY_STORE_REFERENCE, CREDENTIAL_REFERENCE, ALGORITHM, ALIAS_FILTER, PROVIDER_NAME)
+    static ObjectTypeAttributeDefinition KEY_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_MANAGER, KEY_STORE, KEY_STORE_REFERENCE, CREDENTIAL_REFERENCE, ALGORITHM, ALIAS_FILTER, PROVIDER_NAME, PROVIDERS)
             .setRequired(true)
             .setAlternatives(Constants.KEY_MANAGER_REFERENCE)
             .setAllowExpression(false)
@@ -343,13 +355,14 @@ public class SSLContextDefinitions {
 
     static final SimpleAttributeDefinition TRUST_MANAGER_REFERENCE = new SimpleAttributeDefinitionBuilder(Constants.TRUST_MANAGER_REFERENCE, ModelType.STRING, true)
             .setMinSize(1)
-            .setCapabilityReference(TRUST_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
-            .setRestartAllServices()
-            .setAllowExpression(false)
+            .setRequired(true)
             .setAlternatives(Constants.TRUST_MANAGER)
+            .setCapabilityReference(TRUST_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
+            .setAllowExpression(false)
+            .setRestartAllServices()
             .build();
 
-    static final ObjectTypeAttributeDefinition TRUST_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.TRUST_MANAGER, KEY_STORE, KEY_STORE_REFERENCE, ALIAS_FILTER, ALGORITHM, MAXIMUM_CERT_PATH, ONLY_LEAF_CERT, SOFT_FAIL, PROVIDER_NAME, OCSP, CERTIFICATE_REVOCATION_LIST, CERTIFICATE_REVOCATION_LISTS)
+    static final ObjectTypeAttributeDefinition TRUST_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.TRUST_MANAGER, KEY_STORE, KEY_STORE_REFERENCE, ALIAS_FILTER, ALGORITHM, MAXIMUM_CERT_PATH, ONLY_LEAF_CERT, SOFT_FAIL, PROVIDER_NAME, PROVIDERS, OCSP, CERTIFICATE_REVOCATION_LIST, CERTIFICATE_REVOCATION_LISTS)
             .setRequired(true)
             .setAlternatives(Constants.TRUST_MANAGER_REFERENCE)
             .setAllowExpression(false)
@@ -382,6 +395,8 @@ public class SSLContextDefinitions {
                 .setRequired(true)
                 .setRestartAllServices()
                 .build();
+
+
 
         AbstractAddStepHandler add = new TrivialAddHandler<SSLContext>(SSLContext.class, ServiceController.Mode.ACTIVE, ServiceController.Mode.PASSIVE, SERVER_ATTRIBUTES, SSL_CONTEXT_RUNTIME_CAPABILITY) {
 
@@ -1066,7 +1081,7 @@ public class SSLContextDefinitions {
         protected void executeRuntimeStep(OperationContext context, ModelNode operation) throws OperationFailedException {
             ServiceName serviceName = getSSLContextServiceUtil().serviceName(operation);
 
-            ServiceController<SSLContext> serviceController = getRequiredService(context.getServiceRegistry(false), serviceName, SSLContext.class);
+            ServiceController<SSLContext> serviceController = `getRequiredService(context.getServiceRegistry(false), serviceName, SSLContext.class);
             ServiceController.State serviceState;
             if ((serviceState = serviceController.getState()) != ServiceController.State.UP) {
                 throw LOGGER.requiredServiceNotUp(serviceName, serviceState);
