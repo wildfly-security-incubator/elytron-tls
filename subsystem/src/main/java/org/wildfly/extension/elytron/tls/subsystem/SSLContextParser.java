@@ -34,7 +34,7 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.KEY_MANAGER_REFERENCE)
 //            .addAttribute(SSLContextDefinitions.TRUST_MANAGER)
             .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
-//            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(SSLContextDefinitions.WANT_CLIENT_AUTH)
             .addAttribute(SSLContextDefinitions.NEED_CLIENT_AUTH)
@@ -61,7 +61,7 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.KEY_MANAGER_REFERENCE)
 //            .addAttribute(SSLContextDefinitions.TRUST_MANAGER)
             .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
-//            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .build();
 
