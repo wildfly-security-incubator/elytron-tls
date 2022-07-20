@@ -19,6 +19,7 @@ package org.wildfly.extension.elytron.tls.subsystem._private;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
+import org.jboss.as.controller.ExpressionResolver;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.logging.BasicLogger;
@@ -27,6 +28,7 @@ import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
@@ -47,25 +49,32 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1, value = "Activating Elytron TLS Subsystem")
     void activatingSubsystem();
 
-
     @Message(id = 2, value = "Deployment %s requires use of the '%s' capability but it is not currently registered")
     DeploymentUnitProcessingException deploymentRequiresCapability(String deploymentName, String capabilityName);
 
-    @Message(id = 1017, value = "Invalid value for cipher-suite-filter. %s")
-    OperationFailedException invalidCipherSuiteFilter(@Cause Throwable cause, String causeMessage);
+    @Message(id = 3, value = "The operation did not contain an address with a value for '%s'.")
+    IllegalArgumentException operationAddressMissingKey(final String key);
 
-    @Message(id = 1061, value = "Invalid value of host context map: '%s' is not valid hostname pattern.")
-    OperationFailedException invalidHostContextMapValue(String hostname);
+    /**
+     * A {@link StartException} if it is not possible to initialise the {@link Service}.
+     *
+     * @param cause the cause of the failure.
+     * @return The {@link StartException} for the error.
+     */
+    @Message(id = 4, value = "Unable to start the service.")
+    StartException unableToStartService(@Cause Exception cause);
 
-
-    @Message(id = 1066, value = "Invalid value for cipher-suite-names. %s")
-    OperationFailedException invalidCipherSuiteNames(@Cause Throwable cause, String causeMessage);
+    @Message(id = 7, value = "The required service '%s' is not UP, it is currently '%s'.")
+    OperationFailedException requiredServiceNotUp(ServiceName serviceName, ServiceController.State state);
 
     @Message(id = 12, value = "No suitable provider found for type '%s'")
     StartException noSuitableProvider(String type);
 
-    @Message(id = 1080, value = "Non existing key store needs to have defined type.")
-    OperationFailedException nonexistingKeyStoreMissingType();
+    @Message(id = 18, value = "Unable to create %s for algorithm '%s'.")
+    StartException unableToCreateManagerFactory(final String type, final String algorithm);
+
+    @Message(id = 19, value = "No '%s' found in injected value.")
+    StartException noTypeFound(final String type);
 
     @Message(id = 22, value = "KeyStore file '%s' does not exist and required.")
     StartException keyStoreFileNotExists(final String file);
@@ -74,41 +83,47 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 23, value = "KeyStore file '%s' does not exist. Used blank.")
     void keyStoreFileNotExistsButIgnored(final String file);
 
-    @Message(id = 910, value = "Password cannot be resolved for key-store '%s'")
-    IOException keyStorePasswordCannotBeResolved(String path);
-
-    @Message(id = 3, value = "The operation did not contain an address with a value for '%s'.")
-    IllegalArgumentException operationAddressMissingKey(final String key);
-
-    @Message(id = 7, value = "The required service '%s' is not UP, it is currently '%s'.")
-    OperationFailedException requiredServiceNotUp(ServiceName serviceName, ServiceController.State state);
-
-    @Message(id = 1059, value = "Unable to detect KeyStore '%s'")
-    StartException unableToDetectKeyStore(String path);
-
-    @Message(id = 1085, value = "Multiple keystore definitions.")
-    OperationFailedException multipleKeystoreDefinitions();
-    @Message(id = 1086, value = "Missing keystore definition.")
-    OperationFailedException missingKeyStoreDefinition();
-
-    @Message(id = 18, value = "Unable to create %s for algorithm '%s'.")
-    StartException unableToCreateManagerFactory(final String type, final String algorithm);
-
-    @Message(id = 19, value = "No '%s' found in injected value.")
-    StartException noTypeFound(final String type);
-
-    @Message(id = 1064, value = "Failed to load OCSP responder certificate '%s'.")
-    StartException failedToLoadResponderCert(String alias, @Cause Exception exception);
-
     @Message(id = 31, value = "Unable to access CRL file.")
     StartException unableToAccessCRL(@Cause Exception cause);
-
-    @Message(id = 39, value = "Unable to reload CRL file - TrustManager is not reloadable")
-    OperationFailedException unableToReloadCRLNotReloadable();
 
     @Message(id = 32, value = "Unable to reload CRL file.")
     RuntimeException unableToReloadCRL(@Cause Exception cause);
 
     @Message(id = 37, value = "Injected value is not of '%s' type.")
     StartException invalidTypeInjected(final String type);
+
+    @Message(id = 39, value = "Unable to reload CRL file - TrustManager is not reloadable")
+    OperationFailedException unableToReloadCRLNotReloadable();
+
+    @Message(id = 43, value = "A cycle has been detected initialising the resources - %s")
+    OperationFailedException cycleDetected(String cycle);
+
+    @Message(id = 910, value = "Password cannot be resolved for key-store '%s'")
+    IOException keyStorePasswordCannotBeResolved(String path);
+
+    @Message(id = 1017, value = "Invalid value for cipher-suite-filter. %s")
+    OperationFailedException invalidCipherSuiteFilter(@Cause Throwable cause, String causeMessage);
+
+    @Message(id = 1059, value = "Unable to detect KeyStore '%s'")
+    StartException unableToDetectKeyStore(String path);
+
+    @Message(id = 1061, value = "Invalid value of host context map: '%s' is not valid hostname pattern.")
+    OperationFailedException invalidHostContextMapValue(String hostname);
+
+    @Message(id = 1064, value = "Failed to load OCSP responder certificate '%s'.")
+    StartException failedToLoadResponderCert(String alias, @Cause Exception exception);
+
+    @Message(id = 1066, value = "Invalid value for cipher-suite-names. %s")
+    OperationFailedException invalidCipherSuiteNames(@Cause Throwable cause, String causeMessage);
+
+    @Message(id = 1080, value = "Non existing key store needs to have defined type.")
+    OperationFailedException nonexistingKeyStoreMissingType();
+
+    @Message(id = 1085, value = "Multiple keystore definitions.")
+    OperationFailedException multipleKeystoreDefinitions();
+    @Message(id = 1086, value = "Missing keystore definition.")
+    OperationFailedException missingKeyStoreDefinition();
+
+    @Message(id = 1210, value = "Initialisation of an %s without an active management OperationContext is not allowed.")
+    ExpressionResolver.ExpressionResolutionServerException illegalNonManagementInitialization(Class<?> initialzingClass);
 }
