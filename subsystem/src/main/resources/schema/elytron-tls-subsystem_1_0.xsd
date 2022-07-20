@@ -29,6 +29,8 @@
 
     <xs:complexType name="subsystemType">
         <xs:all>
+            <xs:element name="security-properties" type="securityPropertiesType" minOccurs="0" />
+            <xs:element name="providers" type="providersType" minOccurs="0" />
             <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
             <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
         </xs:all>
@@ -42,6 +44,151 @@
         </xs:attribute>
     </xs:complexType>
 
+    <!--
+        Security Properties
+     -->
+
+    <xs:complexType name="securityPropertiesType">
+        <xs:annotation>
+            <xs:documentation>
+                Type to contain a list of security properties to be set.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="security-property" type="propertyType" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="propertyType">
+        <xs:annotation>
+            <xs:documentation>
+                Representation of a key/value property pair.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The key for this property.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="value" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The value for this property.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        Providers
+     -->
+
+    <xs:complexType name="providersType">
+        <xs:annotation>
+            <xs:documentation>
+                Container of Provider configuration.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice maxOccurs="unbounded">
+            <xs:element name="aggregate-providers" type="aggregateProvidersType" />
+            <xs:element name="provider-loader" type="providerLoaderType" />
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="aggregateProvidersType">
+        <xs:annotation>
+            <xs:documentation>
+                A PrincipalDecoder definition that is actually an aggregation of other PrincipalDecoders.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="providers" type="providersRefType" minOccurs="2" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The name to use to represent this provider loader in the management model.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="providersRefType">
+        <xs:annotation>
+            <xs:documentation>
+                A reference to a Provider[] resource.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="providerLoaderType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single provider loader.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="configuration" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="property" type="propertyType" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The name to use to represent this provider loader in the management model.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="module" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the module to use to load the providers.
+
+                    If this is not specified the ClassLoader used to load the service will be used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="class-names" type="stringListType">
+            <xs:annotation>
+                <xs:documentation>
+                    The fully qualified class names of the providers to load.
+
+                    If this attribute is not specified then service loader based discovery will be used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="path" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The path to the configuration to use to initialise the provider.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    A reference to a previously defined path that the path of the configuration is
+                    relative to.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="argument" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Argument to pass into the constructor as the Provider is instantiated.
+
+                    Can only be used where the class names to load are specified.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
 
     <xs:complexType name="serverSSLContextsType">
         <xs:annotation>

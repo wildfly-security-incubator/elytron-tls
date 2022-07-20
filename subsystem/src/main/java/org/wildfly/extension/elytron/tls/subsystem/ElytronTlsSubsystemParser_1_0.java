@@ -16,8 +16,12 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import org.jboss.as.controller.AttributeMarshallers;
+import org.jboss.as.controller.AttributeParsers;
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 import org.jboss.as.controller.PersistentResourceXMLParser;
+
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.SECURITY_PROPERTY;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
@@ -43,6 +47,10 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
         return new ManagerParser().trustManagerParser_1_0;
     }
 
+    PersistentResourceXMLDescription getProviderParser() {
+        return new ProviderParser().parser;
+    }
+
     String getNameSpace() {
         return ElytronTlsExtension.NAMESPACE_1_0;
     }
@@ -50,11 +58,18 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
     @Override
     public PersistentResourceXMLDescription getParserDescription() {
         return PersistentResourceXMLDescription.builder(ElytronTlsExtension.SUBSYSTEM_PATH, getNameSpace())
+                .addAttribute(ElytronTlsSubsystemDefinition.SECURITY_PROPERTIES,
+                        new AttributeParsers.PropertiesParser(null, SECURITY_PROPERTY, true),
+                        new AttributeMarshallers.PropertiesAttributeMarshaller(null, SECURITY_PROPERTY, true))
+                .addAttribute(ElytronTlsSubsystemDefinition.INITIAL_PROVIDERS)
+                .addAttribute(ElytronTlsSubsystemDefinition.FINAL_PROVIDERS)
+                .addAttribute(ElytronTlsSubsystemDefinition.DISALLOWED_PROVIDERS)
                 .addChild(getServerSSLContextParser())
                 .addChild(getClientSSLContextParser())
                 .addChild(getKeyStoreParser())
                 .addChild(getKeyManagerParser())
                 .addChild(getTrustManagerParser())
+                .addChild(getProviderParser())
                 .build();
     }
 
