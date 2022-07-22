@@ -69,7 +69,7 @@ abstract class TrivialAddHandler<T> extends BaseAddHandler {
     @Override
     protected final void performRuntime(OperationContext context, ModelNode operation, Resource resource)
             throws OperationFailedException {
-        TrivialService<T> trivialService = new TrivialService<T>();
+        TrivialService<T> trivialService = new TrivialService<>();
 
         ServiceBuilder<T> serviceBuilder = (ServiceBuilder<T>)context.getCapabilityServiceTarget().addCapability(runtimeCapability);
         serviceBuilder.setInstance(trivialService);

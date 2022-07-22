@@ -90,6 +90,12 @@ class Capabilities {
 
     static final String CREDENTIAL_STORE_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "credential-store";
 
+    /*
+     * A variant of the credential-store capability which also provides access to the underlying
+     * {@code CredentialStore} as a runtime API from a {@code ExceptionFunction<OperationContext, CredentialStore, OperationFailedException>}.
+     */
+    static final String CREDENTIAL_STORE_API_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "credential-store-api";
+
     static final RuntimeCapability<Void> CREDENTIAL_STORE_RUNTIME_CAPABILITY =  RuntimeCapability
             .Builder.of(CREDENTIAL_STORE_CAPABILITY, true, CredentialStore.class)
             .build();
@@ -252,4 +258,8 @@ class Capabilities {
     static final RuntimeCapability<Void> TRUST_MANAGER_RUNTIME_CAPABILITY =  RuntimeCapability
             .Builder.of(TRUST_MANAGER_CAPABILITY, true, TrustManager.class)
             .build();
+
+
+    static final String EXPRESSION_RESOLVER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "expression-resolver";
+
 }

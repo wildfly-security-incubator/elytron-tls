@@ -34,6 +34,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
 
 import java.io.IOException;
+import java.security.NoSuchProviderException;
 
 /**
  * Log messages for Elytron TLS subsystem
@@ -67,6 +68,25 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 7, value = "The required service '%s' is not UP, it is currently '%s'.")
     OperationFailedException requiredServiceNotUp(ServiceName serviceName, ServiceController.State state);
 
+    /**
+     * An {@link OperationFailedException} where the name of the operation does not match the expected names.
+     *
+     * @param actualName the operation name contained within the request.
+     * @param expectedNames the expected operation names.
+     * @return The {@link OperationFailedException} for the error.
+     */
+    @Message(id = 8, value = "Invalid operation name '%s', expected one of '%s'")
+    OperationFailedException invalidOperationName(String actualName, String... expectedNames);
+
+    /**
+     * An {@link RuntimeException} where an operation can not be completed.
+     *
+     * @param cause the underlying cause of the failure.
+     * @return The {@link RuntimeException} for the error.
+     */
+    @Message(id = 9, value = "Unable to complete operation. '%s'")
+    RuntimeException unableToCompleteOperation(@Cause Throwable cause, String causeMessage);
+
     @Message(id = 12, value = "No suitable provider found for type '%s'")
     StartException noSuitableProvider(String type);
 
@@ -98,8 +118,54 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 43, value = "A cycle has been detected initialising the resources - %s")
     OperationFailedException cycleDetected(String cycle);
 
+    /*
+     * Credential Store Section.
+     */
+
+    @Message(id = 909, value = "Credential store '%s' does not support given credential store entry type '%s'")
+    OperationFailedException credentialStoreEntryTypeNotSupported(String credentialStoreName, String entryType);
+
     @Message(id = 910, value = "Password cannot be resolved for key-store '%s'")
     IOException keyStorePasswordCannotBeResolved(String path);
+
+    @Message(id = 911, value = "Credential store '%s' protection parameter cannot be resolved")
+    IOException credentialStoreProtectionParameterCannotBeResolved(String name);
+
+    @Message(id = 913, value = "Credential alias '%s' of credential type '%s' already exists in the store")
+    OperationFailedException credentialAlreadyExists(String alias, String credentialType);
+
+    @Message(id = 914, value = "Provider loader '%s' cannot supply Credential Store provider of type '%s'")
+    NoSuchProviderException providerLoaderCannotSupplyProvider(String providerLoader, String type);
+
+    @Message(id = 920, value = "Credential alias '%s' of credential type '%s' does not exist in the store")
+    OperationFailedException credentialDoesNotExist(String alias, String credentialType);
+
+    @Message(id = 921, value = "Location parameter is not specified for filebased keystore type '%s'")
+    OperationFailedException filebasedKeystoreLocationMissing(String type);
+
+    @Message(id = Message.NONE, value = "Reload dependent services which might already have cached the secret value")
+    String reloadDependantServices();
+
+    @Message(id = Message.NONE, value = "Update dependent resources as alias '%s' does not exist anymore")
+    String updateDependantServices(String alias);
+
+    @Message(id = 922, value = "Unable to load credential from credential store.")
+    ExpressionResolver.ExpressionResolutionUserException unableToLoadCredential(@Cause Throwable cause);
+
+    @Message(id = 923, value = "Unable to encrypt the supplied clear text.")
+    OperationFailedException unableToEncryptClearText(@Cause Throwable cause);
+
+    @Message(id = 924, value = "Unable to create immediately available credential store.")
+    OperationFailedException unableToCreateCredentialStoreImmediately(@Cause Throwable cause);
+
+    @Message(id = 925, value = "Unable to reload the credential store.")
+    OperationFailedException unableToReloadCredentialStore(@Cause Throwable cause);
+
+    @Message(id = 926, value = "Unable to initialize the credential store.")
+    OperationFailedException unableToInitialiseCredentialStore(@Cause Throwable cause);
+
+    @Message(id = 927, value = "The secret key operation '%s' failed to complete due to '%s'.")
+    OperationFailedException secretKeyOperationFailed(String operationName, String error, @Cause Throwable cause);
 
     @Message(id = 1017, value = "Invalid value for cipher-suite-filter. %s")
     OperationFailedException invalidCipherSuiteFilter(@Cause Throwable cause, String causeMessage);
@@ -123,6 +189,36 @@ public interface ElytronTLSLogger extends BasicLogger {
     OperationFailedException multipleKeystoreDefinitions();
     @Message(id = 1086, value = "Missing keystore definition.")
     OperationFailedException missingKeyStoreDefinition();
+
+    @Message(id = 1200, value = "The name of the resolver to use was not specified and no default-resolver has been defined.")
+    OperationFailedException noResolverSpecifiedAndNoDefault();
+
+    @Message(id = 1201, value = "No expression resolver has been defined with the name '%s'.")
+    OperationFailedException noResolverWithSpecifiedName(String name);
+
+    @Message(id = 1202, value = "A cycle has been detected initialising the expression resolver for '%s' and '%s'.")
+    ExpressionResolver.ExpressionResolutionUserException cycleDetectedInitialisingExpressionResolver(String firstExpression, String secondExpression);
+
+    @Message(id = 1203, value = "Expression resolver initialisation has already failed.")
+    ExpressionResolver.ExpressionResolutionUserException expressionResolverInitialisationAlreadyFailed(@Cause Throwable cause);
+
+    @Message(id = 1204, value = "The expression '%s' does not specify a resolver and no default is defined.")
+    ExpressionResolver.ExpressionResolutionUserException expressionResolutionWithoutResolver(String expression);
+
+    @Message(id = 1205, value = "The expression '%s' specifies a resolver configuration which does not exist.")
+    ExpressionResolver.ExpressionResolutionUserException invalidResolver(String expression);
+
+    @Message(id = 1206, value = "Unable to decrypt expression '%s'.")
+    ExpressionResolver.ExpressionResolutionUserException unableToDecryptExpression(String expression, @Cause Throwable cause);
+
+    @Message(id = 1207, value = "Resolution of credential store expressions is not supported in the MODEL stage of operation execution.")
+    ExpressionResolver.ExpressionResolutionServerException modelStageResolutionNotSupported(@Cause IllegalStateException cause);
+
+    @Message(id = 1208, value = "Unable to resolve CredentialStore %s -- %s")
+    ExpressionResolver.ExpressionResolutionServerException unableToResolveCredentialStore(String storeName, String details, @Cause Exception cause);
+
+    @Message(id = 1209, value = "Unable to initialize CredentialStore %s -- %s")
+    ExpressionResolver.ExpressionResolutionUserException unableToInitializeCredentialStore(String storeName, String details, @Cause Exception cause);
 
     @Message(id = 1210, value = "Initialisation of an %s without an active management OperationContext is not allowed.")
     ExpressionResolver.ExpressionResolutionServerException illegalNonManagementInitialization(Class<?> initialzingClass);

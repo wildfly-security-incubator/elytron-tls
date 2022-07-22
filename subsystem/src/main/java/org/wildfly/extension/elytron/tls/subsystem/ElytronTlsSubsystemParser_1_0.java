@@ -39,6 +39,9 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
     PersistentResourceXMLDescription getKeyStoreParser() {
         return new KeyStoreParser().keyStoreParser_1_0;
     }
+    PersistentResourceXMLDescription getCredentialStoresParser() {
+        return new CredentialStoreParser().credentialStoresParser_1_0;
+    }
 
     PersistentResourceXMLDescription getKeyManagerParser() {
         return new ManagerParser().keyManagerParser_1_0;
@@ -48,7 +51,11 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
     }
 
     PersistentResourceXMLDescription getProviderParser() {
-        return new ProviderParser().parser;
+        return new ProviderParser().providerParser_1_0;
+    }
+
+    PersistentResourceXMLDescription getExpressionResolverParser() {
+        return new ExpressionResolverParser().expressionResolverParser_1_0;
     }
 
     String getNameSpace() {
@@ -67,9 +74,11 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
                 .addChild(getServerSSLContextParser())
                 .addChild(getClientSSLContextParser())
                 .addChild(getKeyStoreParser())
+                .addChild(getCredentialStoresParser())
                 .addChild(getKeyManagerParser())
                 .addChild(getTrustManagerParser())
                 .addChild(getProviderParser())
+                .addChild(getExpressionResolverParser())
                 .build();
     }
 

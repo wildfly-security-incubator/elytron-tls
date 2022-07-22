@@ -18,14 +18,16 @@ package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.jboss.as.controller.Extension;
 import org.jboss.as.controller.ExtensionContext;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
-import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
+import org.jboss.as.controller.extension.ExpressionResolverExtension;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
@@ -45,6 +47,10 @@ public class ElytronTlsExtension implements Extension {
 
     public static final String NAMESPACE_1_0 = "urn:wildfly:elytron-tls-subsystem:1.0";
 
+    public static final String CURRENT_NAMESPACE = NAMESPACE_1_0;
+
+    private static final ElytronTlsSubsystemParser_1_0 CURRENT_PARSER = new ElytronTlsSubsystemParser_1_0();
+
     /**
      * The name of our subsystem within the model.
      */
@@ -61,27 +67,19 @@ public class ElytronTlsExtension implements Extension {
     protected static final ModelVersion VERSION_1_0_0 = ModelVersion.create(1, 0, 0);
     private static final ModelVersion CURRENT_MODEL_VERSION = VERSION_1_0_0;
 
-    private static final ElytronTlsSubsystemParser_1_0 CURRENT_PARSER = new ElytronTlsSubsystemParser_1_0();
-
     static final String ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
-    static ResourceDescriptionResolver getResourceDescriptionResolver(final String... keyPrefix) {
+    static StandardResourceDescriptionResolver getResourceDescriptionResolver(final String... keyPrefix) {
         return getResourceDescriptionResolver(false, keyPrefix);
 
     }
 
-    static ResourceDescriptionResolver getResourceDescriptionResolver(final boolean useUnprefixedChildTypes, final String... keyPrefix) {
+    static StandardResourceDescriptionResolver getResourceDescriptionResolver(final boolean useUnprefixedChildTypes, final String... keyPrefix) {
         StringBuilder prefix = new StringBuilder(ElytronTlsExtension.SUBSYSTEM_NAME);
         for (String kp : keyPrefix) {
             prefix.append('.').append(kp);
         }
         return new StandardResourceDescriptionResolver(prefix.toString(), RESOURCE_NAME, ElytronTlsExtension.class.getClassLoader(), true, useUnprefixedChildTypes);
-    }
-
-    @SuppressWarnings("unchecked")
-    static <T> ServiceController<T> getRequiredService(ServiceRegistry serviceRegistry, ServiceName serviceName, Class<T> serviceType) {
-        ServiceController<?> controller = serviceRegistry.getRequiredService(serviceName);
-        return (ServiceController<T>) controller;
     }
 
     static boolean isServerOrHostController(ImmutableManagementResourceRegistration resourceRegistration) {
@@ -91,9 +89,19 @@ public class ElytronTlsExtension implements Extension {
     @Override
     public void initialize(ExtensionContext extensionContext) {
         final SubsystemRegistration sr =  extensionContext.registerSubsystem(SUBSYSTEM_NAME, CURRENT_MODEL_VERSION);
-        sr.registerXMLElementWriter(CURRENT_PARSER);
-        final ManagementResourceRegistration root = sr.registerSubsystemModel(new ElytronTlsSubsystemDefinition());
+
+        AtomicReference<ExpressionResolverExtension> resolverRef = new AtomicReference<>();
+        final ManagementResourceRegistration root = sr.registerSubsystemModel(new ElytronTlsSubsystemDefinition(resolverRef));
         root.registerOperationHandler(GenericSubsystemDescribeHandler.DEFINITION, GenericSubsystemDescribeHandler.INSTANCE, false);
+        sr.registerXMLElementWriter(CURRENT_PARSER);
+
+        extensionContext.registerExpressionResolverExtension(resolverRef::get, ExpressionResolverResourceDefinition.INITIAL_PATTERN, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    static <T> ServiceController<T> getRequiredService(ServiceRegistry serviceRegistry, ServiceName serviceName, Class<T> serviceType) {
+        ServiceController<?> controller = serviceRegistry.getRequiredService(serviceName);
+        return (ServiceController<T>) controller;
     }
 
     @Override
