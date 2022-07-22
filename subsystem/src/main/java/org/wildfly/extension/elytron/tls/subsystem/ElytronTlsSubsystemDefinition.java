@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
 import org.jboss.as.controller.AbstractRemoveStepHandler;
@@ -43,6 +44,7 @@ import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.StringListAttributeDefinition;
+import org.jboss.as.controller.extension.ExpressionResolverExtension;
 import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
@@ -90,7 +92,9 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
             .setAllowExpression(true)
             .build();
 
-    public ElytronTlsSubsystemDefinition() {
+    private final AtomicReference<ExpressionResolverExtension> resolverRef;
+
+    public ElytronTlsSubsystemDefinition(AtomicReference<ExpressionResolverExtension> resolverRef) {
         super(
                 new SimpleResourceDefinition.Parameters(
                         ElytronTlsExtension.SUBSYSTEM_PATH,
@@ -99,14 +103,27 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                 .setRemoveHandler(new ElytronTlsRemove())
                 .setCapabilities(ELYTRON_TLS_RUNTIME_CAPABILITY)
         );
+        this.resolverRef = resolverRef;
     }
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
         final boolean serverOrHostController = isServerOrHostController(resourceRegistration);
 
-//        resourceRegistration.registerSubModel(SSLContextDefinitions.createClientSSLContextDefinition());
-        resourceRegistration.registerSubModel(SSLContextDefinitions.createServerSSLContextDefinition(serverOrHostController));
+        // Expression Resolver
+        resourceRegistration.registerSubModel(ExpressionResolverResourceDefinition.getExpressionResolverDefinition(resourceRegistration.getPathAddress(), resolverRef));
+
+        // Provider Loader
+        resourceRegistration.registerSubModel(ProviderDefinitions.getAggregateProvidersDefinition());
+        resourceRegistration.registerSubModel(ProviderDefinitions.getProviderLoaderDefinition(serverOrHostController));
+
+        // Credential Store Block
+        resourceRegistration.registerSubModel(new CredentialStoreResourceDefinition());
+        resourceRegistration.registerSubModel(new SecretKeyCredentialStoreDefinition());
+
+        // TLS Builders
+//        resourceRegistration.registerSubModel(SSLContextDefinitions.getClientSSLContextDefinition());
+        resourceRegistration.registerSubModel(SSLContextDefinitions.getServerSSLContextDefinition(serverOrHostController));
     }
     @Override
     public Collection<AttributeDefinition> getAttributes() {

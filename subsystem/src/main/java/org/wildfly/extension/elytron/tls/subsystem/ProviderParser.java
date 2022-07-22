@@ -44,7 +44,7 @@ class ProviderParser {
                     new AttributeParsers.NamedStringListParser(PROVIDERS),
                     new AttributeMarshallers.NamedStringListMarshaller(PROVIDERS))
             .build();
-    final PersistentResourceXMLDescription parser = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.PROVIDERS))
+    final PersistentResourceXMLDescription providerParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.PROVIDERS))
             .addChild(aggregateProviders)
             .addChild(providerLoaderParser)
             .build();

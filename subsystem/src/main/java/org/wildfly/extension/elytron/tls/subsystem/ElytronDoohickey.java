@@ -26,6 +26,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import org.jboss.as.controller.CapabilityServiceBuilder;
 import org.jboss.as.controller.OperationContext;
@@ -47,12 +48,9 @@ import org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.Path
  */
 abstract class ElytronDoohickey<T> implements ExceptionFunction<OperationContext, T, OperationFailedException> {
 
-    private static final ThreadLocal<Deque<PathAddress>> CALL_STACK = new ThreadLocal() {
-        @Override
-        protected Deque<PathAddress> initialValue() {
-            return new ArrayDeque<>();
-        }
-    };
+    private static final Supplier<Deque<PathAddress>> CALL_STACK_SUPPLIER = ArrayDeque::new;
+
+    private static final ThreadLocal<Deque<PathAddress>> CALL_STACK = ThreadLocal.withInitial(CALL_STACK_SUPPLIER);
 
     /*
      * As each Thread tracks the addresses of the relevent resources we could likely implement some form of
@@ -65,6 +63,7 @@ abstract class ElytronDoohickey<T> implements ExceptionFunction<OperationContext
 
     private volatile boolean modelResolved = false;
     private volatile ExceptionSupplier<T, StartException> serviceValueSupplier;
+    protected volatile Supplier<PathManagerService> pathManagerSupplier;
 
     private volatile T value;
 
@@ -165,8 +164,9 @@ abstract class ElytronDoohickey<T> implements ExceptionFunction<OperationContext
         PathResolver pathResolver = pathResolver();
         pathResolver.path(path);
         if (relativeTo != null) {
-            PathManager pathManager = (PathManager) foreignContext.getServiceRegistry(false)
-                    .getRequiredService(PathManagerService.SERVICE_NAME).getValue();
+//            PathManager pathManager = (PathManager) foreignContext.getServiceRegistry(false)
+//                    .getRequiredService(PATH_MANAGER_CAPABILITY.getCapabilityServiceName()).getValue();
+            PathManager pathManager = pathManagerSupplier.get();
             pathResolver.relativeTo(relativeTo, pathManager);
         }
         File resolved = pathResolver.resolve();

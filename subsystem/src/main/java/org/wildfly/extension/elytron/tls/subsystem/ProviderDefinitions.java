@@ -18,6 +18,7 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.jboss.as.controller.AbstractControllerService.PATH_MANAGER_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_API_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.ClassLoadingAttributeDefinitions.CLASS_NAMES;
@@ -63,7 +64,6 @@ import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleMapAttributeDefinition;
-import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.modules.Module;
@@ -165,12 +165,11 @@ class ProviderDefinitions {
                     @Override
                     protected ExceptionSupplier<Provider[], StartException> prepareServiceSupplier(OperationContext context,
                             CapabilityServiceBuilder<?> serviceBuilder) throws OperationFailedException {
-                        final Supplier<PathManagerService> pathManager;
                         if (properties == null && relativeTo != null) {
-                            pathManager = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
+                            pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
                             serviceBuilder.requires(pathName(relativeTo));
                         } else {
-                            pathManager = null;
+                            pathManagerSupplier = null;
                         }
 
                         return new ExceptionSupplier<Provider[], StartException>() {
@@ -181,8 +180,8 @@ class ProviderDefinitions {
                                 if (properties == null && relativeTo != null) {
                                     PathResolver pathResolver = pathResolver();
                                     pathResolver.path(path);
-                                    if (relativeTo != null) {
-                                        pathResolver.relativeTo(relativeTo, pathManager.get());
+                                    if (relativeTo != null && pathManagerSupplier != null) {
+                                        pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
                                     }
                                     resolved = pathResolver.resolve();
                                     pathResolver.clear();

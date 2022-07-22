@@ -369,7 +369,7 @@ public class SSLContextDefinitions {
             .setStorageRuntime()
             .build();
 
-    static ResourceDefinition createClientSSLContextDefinition() {
+    static ResourceDefinition getClientSSLContextDefinition() {
         // TODO: implement
         final AttributeDefinition[] attributes = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES,
                 PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE, /* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE,
@@ -378,7 +378,7 @@ public class SSLContextDefinitions {
         return null;
     }
 
-    static ResourceDefinition createServerSSLContextDefinition(boolean serverOrHostController) {
+    static ResourceDefinition getServerSSLContextDefinition(boolean serverOrHostController) {
 
         final SimpleAttributeDefinition providersDefinition = new SimpleAttributeDefinitionBuilder(PROVIDERS)
                 .setCapabilityReference(PROVIDERS_CAPABILITY, SSL_CONTEXT_CAPABILITY)
@@ -493,7 +493,7 @@ public class SSLContextDefinitions {
 
         };
 
-        return createSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, attributes, serverOrHostController);
+        return getSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, attributes, serverOrHostController);
     }
 
 
@@ -1109,7 +1109,7 @@ public class SSLContextDefinitions {
         protected abstract ServiceUtil<SSLContext> getSSLContextServiceUtil();
     }
 
-    private static ResourceDefinition createSSLContextDefinition(String pathKey, boolean server, AbstractAddStepHandler addHandler, AttributeDefinition[] attributes, boolean serverOrHostController) {
+    private static ResourceDefinition getSSLContextDefinition(String pathKey, boolean server, AbstractAddStepHandler addHandler, AttributeDefinition[] attributes, boolean serverOrHostController) {
         /* The original method used SimpleResourceDefinition and would return an object from SSLContextResourceDefinition(parameters, attributes)
          * This was likely planned to replace a variety of other classes (like TrivialResourceDefinition) */
         // TODO: Simplify and reimplement _Trivial_ classes with native subsystem versions
