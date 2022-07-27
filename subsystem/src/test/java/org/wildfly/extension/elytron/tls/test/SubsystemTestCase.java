@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.wildfly.extension.elytron.tls.subsystem;
+package org.wildfly.extension.elytron.tls.test;
 
 import java.io.IOException;
 
 import org.jboss.as.subsystem.test.AbstractSubsystemBaseTest;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
+import org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
@@ -33,7 +34,7 @@ public class SubsystemTestCase extends AbstractSubsystemBaseTest {
     @Override
     protected String getSubsystemXml() throws IOException {
         //test configuration put in standalone.xml
-        return readResource("template-subsystem-test.xml");
+        return readResource("elytron-tls-subsystem-test.xml");
     }
 
     @Override

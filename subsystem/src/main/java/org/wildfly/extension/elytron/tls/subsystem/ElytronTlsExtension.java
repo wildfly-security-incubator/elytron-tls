@@ -60,7 +60,7 @@ public class ElytronTlsExtension implements Extension {
 
     static final ServiceName BASE_SERVICE_NAME = ServiceName.of(SUBSYSTEM_NAME);
 
-    static final String WELD_CAPABILITY_NAME = "org.wildfly.weld";
+    public static final String WELD_CAPABILITY_NAME = "org.wildfly.weld";
 
     private static final String RESOURCE_NAME = ElytronTlsExtension.class.getPackage().getName() + ".LocalDescriptions";
 
