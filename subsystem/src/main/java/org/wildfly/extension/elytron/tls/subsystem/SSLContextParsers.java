@@ -18,13 +18,13 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.PersistentResourceXMLDescription;
-
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXTS;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXTS;
 
-class SSLContextParser {
+import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.PersistentResourceXMLDescription;
+
+class SSLContextParsers {
 
     final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.CLIENT_SSL_CONTEXT))
             .setXmlWrapperElement(CLIENT_SSL_CONTEXTS)
@@ -37,13 +37,6 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
             .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
-            .addAttribute(SSLContextDefinitions.WANT_CLIENT_AUTH)
-            .addAttribute(SSLContextDefinitions.NEED_CLIENT_AUTH)
-            .addAttribute(SSLContextDefinitions.AUTHENTICATION_OPTIONAL)
-            .addAttribute(SSLContextDefinitions.USE_CIPHER_SUITES_ORDER)
-            .addAttribute(SSLContextDefinitions.MAXIMUM_SESSION_CACHE_SIZE)
-            .addAttribute(SSLContextDefinitions.SESSION_TIMEOUT)
-            .addAttribute(SSLContextDefinitions.WRAP)
             .build();
 
     final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.SERVER_SSL_CONTEXT))

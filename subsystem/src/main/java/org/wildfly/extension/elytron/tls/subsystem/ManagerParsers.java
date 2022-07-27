@@ -1,14 +1,18 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.KEY_MANAGER;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.KEY_MANAGERS;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.TRUST_MANAGER;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.TRUST_MANAGERS;
+
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 import org.jboss.as.controller.security.CredentialReference;
 
-import static org.wildfly.extension.elytron.tls.subsystem.Constants.*;
-
-class ManagerParser {
+class ManagerParsers {
 
     final PersistentResourceXMLDescription keyManagerParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(KEY_MANAGER))
+            .setXmlWrapperElement(KEY_MANAGERS)
             .addAttribute(SSLContextDefinitions.ALGORITHM)
             .addAttribute(SSLContextDefinitions.KEY_STORE)
             .addAttribute(SSLContextDefinitions.KEY_STORE_REFERENCE)
@@ -20,6 +24,7 @@ class ManagerParser {
             .build();
 
     final PersistentResourceXMLDescription trustManagerParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(TRUST_MANAGER))
+            .setXmlWrapperElement(TRUST_MANAGERS)
             .addAttribute(SSLContextDefinitions.ALGORITHM)
             .addAttribute(SSLContextDefinitions.KEY_STORE)
             .addAttribute(SSLContextDefinitions.KEY_STORE_REFERENCE)

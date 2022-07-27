@@ -16,12 +16,12 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.SECURITY_PROPERTY;
+
 import org.jboss.as.controller.AttributeMarshallers;
 import org.jboss.as.controller.AttributeParsers;
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 import org.jboss.as.controller.PersistentResourceXMLParser;
-
-import static org.wildfly.extension.elytron.tls.subsystem.Constants.SECURITY_PROPERTY;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
@@ -29,25 +29,25 @@ import static org.wildfly.extension.elytron.tls.subsystem.Constants.SECURITY_PRO
 public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
 
     PersistentResourceXMLDescription getServerSSLContextParser() {
-        return new SSLContextParser().serverSslContextParser_1_0;
+        return new SSLContextParsers().serverSslContextParser_1_0;
     }
 
     PersistentResourceXMLDescription getClientSSLContextParser() {
-        return new SSLContextParser().clientSslContextParser_1_0;
+        return new SSLContextParsers().clientSslContextParser_1_0;
     }
 
     PersistentResourceXMLDescription getKeyStoreParser() {
         return new KeyStoreParser().keyStoreParser_1_0;
     }
     PersistentResourceXMLDescription getCredentialStoresParser() {
-        return new CredentialStoreParser().credentialStoresParser_1_0;
+        return new CredentialStoresParser().credentialStoresParser_1_0;
     }
 
     PersistentResourceXMLDescription getKeyManagerParser() {
-        return new ManagerParser().keyManagerParser_1_0;
+        return new ManagerParsers().keyManagerParser_1_0;
     }
     PersistentResourceXMLDescription getTrustManagerParser() {
-        return new ManagerParser().trustManagerParser_1_0;
+        return new ManagerParsers().trustManagerParser_1_0;
     }
 
     PersistentResourceXMLDescription getProviderParser() {
@@ -71,6 +71,7 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
                 .addAttribute(ElytronTlsSubsystemDefinition.INITIAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.FINAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.DISALLOWED_PROVIDERS)
+                .addAttribute(ElytronTlsSubsystemDefinition.DEFAULT_SSL_CONTEXT)
                 .addChild(getServerSSLContextParser())
                 .addChild(getClientSSLContextParser())
                 .addChild(getKeyStoreParser())

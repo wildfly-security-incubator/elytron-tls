@@ -110,19 +110,91 @@
             <artifactId>wildfly-elytron-x500-principal</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-subsystem-test</artifactId>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-subsystem-test</artifactId>
+            <type>pom</type>
+        </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>xml-maven-plugin</artifactId>
+                <version>${version.xml.plugin}</version>
+                <configuration>
+                    <validationSets>
+                        <validationSet>
+                            <dir>src/test/resources/org/wildfly/extension/elytron/tls/subsystem</dir>
+                            <includes>
+                                <include>*.xml</include>
+                            </includes>
+                            <excludes>
+                            </excludes>
+                            <systemId>src/main/resources/schema/elytron-tls-subsystem_1_0.xsd</systemId>
+                        </validationSet>
+                        <validationSet>
+                            <dir>src/main/resources/subsystem-templates</dir>
+                        </validationSet>
+                        <validationSet>
+                            <dir>src/main/resources/schema</dir>
+                        </validationSet>
+                    </validationSets>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>xml-validation</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>validate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
+            <plugin><!-- to obtain jmockit jar path -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${version.dependency.plugin}</version>
+                <executions>
+                    <execution>
+                        <id>getClasspathFilenames</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.surefire.plugin}</version>
+                <configuration>
+                    <reuseForks>false</reuseForks>
+                    <argLine>-javaagent:@{org.jmockit:jmockit:jar} ${surefire.jacoco.args} ${modular.jdk.args} -Dorg.wildfly.extension.elytron.restore-default-ssl-context=true -Dauthconfigprovider.factory=org.wildfly.security.auth.jaspi.ElytronAuthConfigFactory</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -27,8 +27,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.jboss.msc.inject.Injector;
 import org.jboss.msc.Service;
+import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;

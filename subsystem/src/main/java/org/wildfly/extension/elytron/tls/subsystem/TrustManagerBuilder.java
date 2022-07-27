@@ -1,9 +1,10 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import org.wildfly.common.function.ExceptionSupplier;
+import java.security.KeyStore;
 
 import javax.net.ssl.TrustManager;
-import java.security.KeyStore;
+
+import org.wildfly.common.function.ExceptionSupplier;
 
 public class TrustManagerBuilder {
     private ExceptionSupplier<KeyStore, Exception> keyStoreSupplier;

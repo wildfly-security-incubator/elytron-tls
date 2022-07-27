@@ -19,6 +19,9 @@ package org.wildfly.extension.elytron.tls.subsystem._private;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
+import java.io.IOException;
+import java.security.NoSuchProviderException;
+
 import org.jboss.as.controller.ExpressionResolver;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
@@ -32,9 +35,6 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
-
-import java.io.IOException;
-import java.security.NoSuchProviderException;
 
 /**
  * Log messages for Elytron TLS subsystem

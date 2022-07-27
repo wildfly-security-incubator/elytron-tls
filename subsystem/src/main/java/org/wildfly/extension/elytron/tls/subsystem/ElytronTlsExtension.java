@@ -60,7 +60,7 @@ public class ElytronTlsExtension implements Extension {
 
     static final ServiceName BASE_SERVICE_NAME = ServiceName.of(SUBSYSTEM_NAME);
 
-    static final String WELD_CAPABILITY_NAME = "org.wildfly.weld";
+    public static final String WELD_CAPABILITY_NAME = "org.wildfly.weld";
 
     private static final String RESOURCE_NAME = ElytronTlsExtension.class.getPackage().getName() + ".LocalDescriptions";
 
@@ -106,6 +106,12 @@ public class ElytronTlsExtension implements Extension {
 
     @Override
     public void initializeParsers(ExtensionParsingContext extensionParsingContext) {
-        extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, ElytronTlsExtension.NAMESPACE_1_0, CURRENT_PARSER);
+        extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, CURRENT_NAMESPACE, CURRENT_PARSER);
+    }
+
+    static public String getCurrentXsdPath() {
+        StringBuilder xsdPath = new StringBuilder("schema/elytron-tls-subsystem_");
+        String pathVersionNumber = CURRENT_NAMESPACE.split(":")[3].replace('.', '_');
+        return xsdPath.append(pathVersionNumber).append(".xsd").toString();
     }
 }
