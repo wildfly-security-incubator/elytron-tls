@@ -110,10 +110,18 @@
             <artifactId>wildfly-elytron-x500-principal</artifactId>
         </dependency>
 
+        <!-- Test dependencies -->
+
         <dependency>
             <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-subsystem-test</artifactId>
             <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-core-testsuite-shared</artifactId>
             <scope>test</scope>
         </dependency>
 
