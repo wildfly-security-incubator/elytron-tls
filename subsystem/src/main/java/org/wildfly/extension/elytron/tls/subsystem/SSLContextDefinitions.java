@@ -377,13 +377,106 @@ public class SSLContextDefinitions {
             .setStorageRuntime()
             .build();
 
-    static ResourceDefinition getClientSSLContextDefinition() {
-        // TODO: implement
+    static ResourceDefinition getClientSSLContextDefinition(boolean serverOrHostController) {
+
+        final SimpleAttributeDefinition providersDefinition = new SimpleAttributeDefinitionBuilder(PROVIDERS)
+                .setCapabilityReference(PROVIDERS_CAPABILITY, SSL_CONTEXT_CAPABILITY)
+                .setAllowExpression(false)
+                .setRestartAllServices()
+                .build();
+
         final AttributeDefinition[] attributes = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES,
                 PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER_REFERENCE, /* TRUST_MANAGER,*/ TRUST_MANAGER_REFERENCE,
-                PROVIDER_NAME};
+                PROVIDER_NAME, providersDefinition};
 
-        return null;
+        AbstractAddStepHandler add = new TrivialAddHandler<SSLContext>(SSLContext.class, attributes, SSL_CONTEXT_RUNTIME_CAPABILITY) {
+            @Override
+            protected ValueSupplier<SSLContext> getValueSupplier(ServiceBuilder<SSLContext> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
+                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
+                                                                            context, providersDefinition, model);
+                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                SSLContextExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
+                SSLContextExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
+
+                final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
+                final List<String> protocols = PROTOCOLS.unwrap(context, model);
+                final String cipherSuiteFilter = CIPHER_SUITE_FILTER.resolveModelAttribute(context, model).asString();
+                final String cipherSuiteNames = CIPHER_SUITE_NAMES.resolveModelAttribute(context, model).asStringOrNull();
+
+                final ModelNode keyManagerNode = KEY_MANAGER.resolveModelAttribute(context, model);
+                final ModelNode trustManagerNode = TRUST_MANAGER.resolveModelAttribute(context, model);
+
+                if (keyManagerNode.isDefined()) {
+                    keyManagerSupplier = (SSLContextExceptionSupplier<KeyManager, Exception>) createKeyManager(serviceBuilder, context, keyManagerNode, pathManagerSupplier);
+                } else {
+                    keyManagerSupplier = new SSLContextExceptionSupplier<>(KEY_MANAGER_CAPABILITY, KeyManager.class, serviceBuilder,
+                            context, KEY_MANAGER_REFERENCE, model);
+                }
+
+                if (trustManagerNode.isDefined()) {
+                    trustManagerSupplier = (SSLContextExceptionSupplier<TrustManager, Exception>) createTrustManager(serviceBuilder, context, trustManagerNode, pathManagerSupplier);
+                } else {
+                    trustManagerSupplier = new SSLContextExceptionSupplier<>(TRUST_MANAGER_CAPABILITY, TrustManager.class, serviceBuilder,
+                            context, TRUST_MANAGER_REFERENCE, model);
+                }
+
+                final SSLContextExceptionSupplier<KeyManager, Exception> finalKeyManagerSupplier = keyManagerSupplier;
+                final SSLContextExceptionSupplier<TrustManager, Exception> finalTrustManagerSupplier = trustManagerSupplier;
+
+                return () -> {
+                    X509ExtendedKeyManager keyManager = getX509KeyManager(finalKeyManagerSupplier.get());
+                    X509ExtendedTrustManager trustManager = getX509TrustManager(finalTrustManagerSupplier.get());
+                    Provider[] providers = filterProviders(providersSupplier.get(), providerName);
+
+                    DomainlessSSLContextBuilder builder = new DomainlessSSLContextBuilder();
+                    if (keyManager != null) builder.setKeyManager(keyManager);
+                    if (trustManager != null) builder.setTrustManager(trustManager);
+                    if (providers != null) builder.setProviderSupplier(() -> providers);
+                    builder.setCipherSuiteSelector(CipherSuiteSelector.aggregate(cipherSuiteNames != null ? CipherSuiteSelector.fromNamesString(cipherSuiteNames) : null, CipherSuiteSelector.fromString(cipherSuiteFilter)));
+                    if (!protocols.isEmpty()) {
+                        List<Protocol> list = new ArrayList<>();
+                        for (String protocol : protocols) {
+                            Protocol forName = Protocol.forName(protocol);
+                            list.add(forName);
+                        }
+                        builder.setProtocolSelector(ProtocolSelector.empty().add(
+                                EnumSet.copyOf(list)
+                        ));
+                    }
+                    builder.setClientMode(true)
+                            .setWrap(false);
+
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.tracef(
+                                "ClientSSLContext supplying:  keyManager = %s  trustManager = %s  providers = %s  " +
+                                        "cipherSuiteFilter = %s cipherSuiteNames = %s protocols = %s",
+                                keyManager, trustManager, Arrays.toString(providers), cipherSuiteFilter, cipherSuiteNames,
+                                Arrays.toString(protocols.toArray())
+                        );
+                    }
+
+                    try {
+                        return builder.build().create();
+                    } catch (GeneralSecurityException e) {
+                        throw new StartException(e);
+                    }
+                };
+            }
+
+            @Override
+            protected Resource createResource(OperationContext context) {
+                SSLContextResource resource = new SSLContextResource(Resource.Factory.create(), false);
+                context.addResource(PathAddress.EMPTY_ADDRESS, resource);
+                return resource;
+            }
+
+            @Override
+            protected void installedForResource(ServiceController<SSLContext> serviceController, Resource resource) {
+                ((SSLContextResource) resource).setSSLContextServiceController(serviceController);
+            }
+        };
+
+        return createSSLContextDefinition(Constants.CLIENT_SSL_CONTEXT, false, add, attributes, serverOrHostController);
     }
 
     static ResourceDefinition getServerSSLContextDefinition(boolean serverOrHostController) {
@@ -425,8 +518,6 @@ public class SSLContextDefinitions {
                 final ModelNode keyManagerNode = KEY_MANAGER.resolveModelAttribute(context, model);
                 final ModelNode trustManagerNode = TRUST_MANAGER.resolveModelAttribute(context, model);
 
-                // TODO: acquire service builders for key/trust manager and key store
-
                 if (keyManagerNode.isDefined()) {
                     keyManagerSupplier = (SSLContextExceptionSupplier<KeyManager, Exception>) createKeyManager(serviceBuilder, context, keyManagerNode, pathManagerSupplier);
                 } else {
@@ -450,12 +541,9 @@ public class SSLContextDefinitions {
                     Provider[] providers = filterProviders(providersSupplier.get(), providerName);
 
                     DomainlessSSLContextBuilder builder = new DomainlessSSLContextBuilder();
-                    if (keyManager != null)
-                        builder.setKeyManager(keyManager);
-                    if (trustManager != null)
-                        builder.setTrustManager(trustManager);
-                    if (providers != null)
-                        builder.setProviderSupplier(() -> providers);
+                    if (keyManager != null) builder.setKeyManager(keyManager);
+                    if (trustManager != null) builder.setTrustManager(trustManager);
+                    if (providers != null) builder.setProviderSupplier(() -> providers);
                     builder.setCipherSuiteSelector(CipherSuiteSelector.aggregate(cipherSuiteNames != null ? CipherSuiteSelector.fromNamesString(cipherSuiteNames) : null, CipherSuiteSelector.fromString(cipherSuiteFilter)));
                     if (!protocols.isEmpty()) {
                         List<Protocol> list = new ArrayList<>();
@@ -504,7 +592,7 @@ public class SSLContextDefinitions {
 
         };
 
-        return getSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, attributes, serverOrHostController);
+        return createSSLContextDefinition(Constants.SERVER_SSL_CONTEXT, true, add, attributes, serverOrHostController);
     }
 
 
@@ -1149,7 +1237,7 @@ public class SSLContextDefinitions {
         protected abstract ServiceUtil<SSLContext> getSSLContextServiceUtil();
     }
 
-    private static ResourceDefinition getSSLContextDefinition(String pathKey, boolean server, AbstractAddStepHandler addHandler, AttributeDefinition[] attributes, boolean serverOrHostController) {
+    private static ResourceDefinition createSSLContextDefinition(String pathKey, boolean server, AbstractAddStepHandler addHandler, AttributeDefinition[] attributes, boolean serverOrHostController) {
         /* The original method used SimpleResourceDefinition and would return an object from SSLContextResourceDefinition(parameters, attributes)
          * This was likely planned to replace a variety of other classes (like TrivialResourceDefinition) */
         // TODO: Simplify and reimplement _Trivial_ classes with native subsystem versions

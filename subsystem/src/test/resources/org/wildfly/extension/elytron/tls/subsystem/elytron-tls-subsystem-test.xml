@@ -13,5 +13,4 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!-- TODO The namespace should match what you used in SubsystemParser_1_0 and the elytron-tls-subsystem_1_0.xsd -->
 <subsystem xmlns="urn:wildfly:elytron-tls-subsystem:1.0"/>

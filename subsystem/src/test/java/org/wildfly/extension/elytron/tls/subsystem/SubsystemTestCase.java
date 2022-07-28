@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.extension.elytron.tls.test;
+package org.wildfly.extension.elytron.tls.subsystem;
 
 import java.io.IOException;
 

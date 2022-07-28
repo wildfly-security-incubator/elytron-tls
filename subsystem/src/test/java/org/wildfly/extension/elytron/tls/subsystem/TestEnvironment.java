@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.extension.elytron.tls.test;
+package org.wildfly.extension.elytron.tls.subsystem;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,9 +46,6 @@ import org.jboss.msc.service.ServiceName;
 import org.wildfly.security.x500.cert.BasicConstraintsExtension;
 import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 import org.wildfly.security.x500.cert.X509CertificateBuilder;
-
-import mockit.Mock;
-import mockit.MockUp;
 
 class TestEnvironment extends AdditionalInitialization {
 
@@ -167,30 +164,6 @@ class TestEnvironment extends AdditionalInitialization {
         return initializer;
     }
 
-    public static void startLdapService() {
-        try {
-            setUpKeyStores();
-            LdapService.builder()
-                    .setWorkingDir(new File("./target/apache-ds/working1"))
-                    .createDirectoryService("TestService1")
-                    .addPartition("Elytron", "dc=elytron,dc=wildfly,dc=org", 5, "uid")
-                    .importLdif(TestEnvironment.class.getResourceAsStream("ldap-schemas.ldif"))
-                    .importLdif(TestEnvironment.class.getResourceAsStream("ldap-data.ldif"))
-                    .addTcpServer("Default TCP", "localhost", LDAPS1_PORT, "localhost.keystore", "Elytron")
-                    .start();
-            LdapService.builder()
-                    .setWorkingDir(new File("./target/apache-ds/working2"))
-                    .createDirectoryService("TestService2")
-                    .addPartition("Elytron", "dc=elytron,dc=wildfly,dc=org", 5, "uid")
-                    .importLdif(TestEnvironment.class.getResourceAsStream("ldap-schemas.ldif"))
-                    .importLdif(TestEnvironment.class.getResourceAsStream("ldap-referred.ldif"))
-                    .addTcpServer("Default TCP", "localhost", LDAPS2_PORT, "localhost.keystore", "Elytron")
-                    .start();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not start LDAP embedded server.", e);
-        }
-    }
-
     private void emptyDirectory(Path directory) throws IOException {
         Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
             @Override
@@ -205,18 +178,6 @@ class TestEnvironment extends AdditionalInitialization {
                 return FileVisitResult.CONTINUE;
             }
         });
-    }
-
-    // classloader obtaining mock to load classes from testsuite
-    private static class ClassLoadingAttributeDefinitionsMock extends MockUp<ClassLoadingAttributeDefinitions> {
-        @Mock
-        static ClassLoader resolveClassLoader(String module) {
-            return SaslTestCase.class.getClassLoader();
-        }
-    }
-
-    static void mockCallerModuleClassloader() {
-        new ClassLoadingAttributeDefinitionsMock();
     }
 
     static void activateService(KernelServices services, RuntimeCapability capability, String... dynamicNameElements) throws InterruptedException {

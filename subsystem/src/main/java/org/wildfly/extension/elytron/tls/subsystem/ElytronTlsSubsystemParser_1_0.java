@@ -71,6 +71,7 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
                 .addAttribute(ElytronTlsSubsystemDefinition.INITIAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.FINAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.DISALLOWED_PROVIDERS)
+                .addAttribute(ElytronTlsSubsystemDefinition.DEFAULT_SSL_CONTEXT)
                 .addChild(getServerSSLContextParser())
                 .addChild(getClientSSLContextParser())
                 .addChild(getKeyStoreParser())

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.extension.elytron.tls.test;
+package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILED;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
@@ -88,7 +88,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension;
 import org.wildfly.security.WildFlyElytronProvider;
 import org.wildfly.security.ssl.X509RevocationTrustManager;
 import org.wildfly.security.x500.cert.BasicConstraintsExtension;
@@ -105,8 +104,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     private final int TESTING_PORT = 18201;
 
-    private static final String WORKING_DIRECTORY_LOCATION = "./target/test-classes/org/wildfly/extension/elytron";
-    private static final char[] GENERATED_KEYSTORE_PASSWORD = "Elytron".toCharArray();
+    private static final String WORKING_DIRECTORY_LOCATION = "./target/test-classes/org/wildfly/extension/elytron/tls/subsystem";
+    private static final char[] GENERATED_KEYSTORE_PASSWORD = "ElytronTLS".toCharArray();
     private static final X500Principal ISSUER_DN = new X500Principal("O=Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=Elytron, CN=Elytron CA ");
     private static final X500Principal OTHER_ISSUER_DN = new X500Principal("O= Other Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=WildFly, CN=WildFly CA ");
     private static final X500Principal FIREFLY_DN = new X500Principal("OU=Elytron, O=Elytron, C=UK, ST=Elytron, CN=Firefly");
@@ -524,8 +523,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Assert.assertNotNull(trustManager);
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, "trust-with-crl");
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.RELOAD_CERTIFICATE_REVOCATION_LIST);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl");
+        operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(SUCCESS));
     }
 
@@ -536,8 +535,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Assert.assertNotNull(trustManager);
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, "trust-with-multiple-crls");
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.RELOAD_CERTIFICATE_REVOCATION_LIST);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-multiple-crls");
+        operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(SUCCESS));
     }
 
@@ -559,8 +558,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
         MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, "trust-with-crl-dp");
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.RELOAD_CERTIFICATE_REVOCATION_LIST);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl-dp");
+        operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(FAILED)); // not realoadable
     }
 
@@ -571,8 +570,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
         MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, "trust-with-crl-dp-deprecated-max-cert-path");
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.RELOAD_CERTIFICATE_REVOCATION_LIST);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl-dp-deprecated-max-cert-path");
+        operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(FAILED)); // not reloadable
     }
 
@@ -586,8 +585,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
         MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, "trust-with-crls-dp");
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.RELOAD_CERTIFICATE_REVOCATION_LIST);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crls-dp");
+        operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(FAILED)); // not realoadable
     }
 
@@ -610,17 +609,17 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Files.copy(Paths.get(TRUST_FILE.toString()), Paths.get(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE), StandardCopyOption.REPLACE_EXISTING);
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.KEY_STORE, INIT_TEST_TRUSTSTORE);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE, INIT_TEST_TRUSTSTORE);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
-        operation.get(ElytronDescriptionConstants.PATH).set(resources + INIT_TEST_FILE);
-        operation.get(ElytronDescriptionConstants.TYPE).set("JKS");
+        operation.get(Constants.PATH).set(resources + INIT_TEST_FILE);
+        operation.get(Constants.TYPE).set("JKS");
         operation.get(CredentialReference.CREDENTIAL_REFERENCE).get(CredentialReference.CLEAR_TEXT).set("Elytron");
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, INIT_TEST_TRUSTMANAGER);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, INIT_TEST_TRUSTMANAGER);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
-        operation.get(ElytronDescriptionConstants.KEY_STORE).set(INIT_TEST_TRUSTSTORE);
+        operation.get(Constants.KEY_STORE).set(INIT_TEST_TRUSTSTORE);
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         ServiceName serviceName = Capabilities.TRUST_MANAGER_RUNTIME_CAPABILITY.getCapabilityServiceName(INIT_TEST_TRUSTMANAGER);
@@ -642,13 +641,13 @@ public class TlsTestCase extends AbstractSubsystemTest {
         createTemporaryKeyStoreFile(trustStore, new File(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE));
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.KEY_STORE, INIT_TEST_TRUSTSTORE);
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.LOAD);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE, INIT_TEST_TRUSTSTORE);
+        operation.get(ClientConstants.OP).set(Constants.LOAD);
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.TRUST_MANAGER, INIT_TEST_TRUSTMANAGER);
-        operation.get(ClientConstants.OP).set(ElytronDescriptionConstants.INIT);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, INIT_TEST_TRUSTMANAGER);
+        operation.get(ClientConstants.OP).set(Constants.INIT);
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         Assert.assertEquals(1, trustManager.getAcceptedIssuers().length);
@@ -794,55 +793,55 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     private void testSessionsReading(String serverContextName, String clientContextName, String expectedServerPrincipal, String expectedClientPrincipal) {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.SERVER_SSL_CONTEXT, serverContextName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.SERVER_SSL_CONTEXT, serverContextName);
         operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(ElytronDescriptionConstants.ACTIVE_SESSION_COUNT);
+        operation.get(ClientConstants.NAME).set(Constants.ACTIVE_SESSION_COUNT);
         Assert.assertEquals("active session count", 1, services.executeOperation(operation).get(ClientConstants.RESULT).asInt());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.SERVER_SSL_CONTEXT, serverContextName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.SERVER_SSL_CONTEXT, serverContextName);
         operation.get(ClientConstants.OP).set(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
-        operation.get(ClientConstants.CHILD_TYPE).set(ElytronDescriptionConstants.SSL_SESSION);
+        operation.get(ClientConstants.CHILD_TYPE).set(Constants.SSL_SESSION);
         List<ModelNode> sessions = services.executeOperation(operation).get(ClientConstants.RESULT).asList();
         Assert.assertEquals("session count in list", 1, sessions.size());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.SERVER_SSL_CONTEXT, serverContextName).add(ElytronDescriptionConstants.SSL_SESSION, sessions.get(0).asString());
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.SERVER_SSL_CONTEXT, serverContextName).add(Constants.SSL_SESSION, sessions.get(0).asString());
         operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(ElytronDescriptionConstants.PEER_CERTIFICATES);
+        operation.get(ClientConstants.NAME).set(Constants.PEER_CERTIFICATES);
         ModelNode result = services.executeOperation(operation).get(ClientConstants.RESULT);
         System.out.println("server's peer certificates:");
         System.out.println(result);
         if (expectedClientPrincipal == null) {
-            Assert.assertFalse(result.get(0).get(ElytronDescriptionConstants.SUBJECT).isDefined());
+            Assert.assertFalse(result.get(0).get(Constants.SUBJECT).isDefined());
         } else {
-            Assert.assertEquals(expectedClientPrincipal, result.get(0).get(ElytronDescriptionConstants.SUBJECT).asString());
+            Assert.assertEquals(expectedClientPrincipal, result.get(0).get(Constants.SUBJECT).asString());
         }
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.CLIENT_SSL_CONTEXT, clientContextName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.CLIENT_SSL_CONTEXT, clientContextName);
         operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(ElytronDescriptionConstants.ACTIVE_SESSION_COUNT);
+        operation.get(ClientConstants.NAME).set(Constants.ACTIVE_SESSION_COUNT);
         Assert.assertEquals("active session count", 1, services.executeOperation(operation).get(ClientConstants.RESULT).asInt());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.CLIENT_SSL_CONTEXT, clientContextName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.CLIENT_SSL_CONTEXT, clientContextName);
         operation.get(ClientConstants.OP).set(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
-        operation.get(ClientConstants.CHILD_TYPE).set(ElytronDescriptionConstants.SSL_SESSION);
+        operation.get(ClientConstants.CHILD_TYPE).set(Constants.SSL_SESSION);
         sessions = services.executeOperation(operation).get(ClientConstants.RESULT).asList();
         Assert.assertEquals("session count in list", 1, sessions.size());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(ElytronDescriptionConstants.CLIENT_SSL_CONTEXT, clientContextName).add(ElytronDescriptionConstants.SSL_SESSION, sessions.get(0).asString());
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.CLIENT_SSL_CONTEXT, clientContextName).add(Constants.SSL_SESSION, sessions.get(0).asString());
         operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(ElytronDescriptionConstants.PEER_CERTIFICATES);
+        operation.get(ClientConstants.NAME).set(Constants.PEER_CERTIFICATES);
         result = services.executeOperation(operation).get(ClientConstants.RESULT);
         System.out.println("client's peer certificates:");
         System.out.println(result);
         if (expectedServerPrincipal == null) {
-            Assert.assertFalse(result.get(0).get(ElytronDescriptionConstants.SUBJECT).isDefined());
+            Assert.assertFalse(result.get(0).get(Constants.SUBJECT).isDefined());
         } else {
-            Assert.assertEquals(expectedServerPrincipal, result.get(0).get(ElytronDescriptionConstants.SUBJECT).asString());
+            Assert.assertEquals(expectedServerPrincipal, result.get(0).get(Constants.SUBJECT).asString());
         }
     }
 }
