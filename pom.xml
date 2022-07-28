@@ -42,17 +42,20 @@
         <version.org.wildfly.component.matrix>26.1.1.Final</version.org.wildfly.component.matrix>
         <version.org.wildfly.core>18.1.1.Final</version.org.wildfly.core>
         <version.org.wildfly.common>1.6.0.Final</version.org.wildfly.common>
+        <version.org.wildfly.security.elytron>1.19.1.CR1-SNAPSHOT</version.org.wildfly.security.elytron>
 
 
         <!-- Other dependency versions -->
+        <version.org.bouncycastle>1.69</version.org.bouncycastle>
         <version.org.jboss.arquillian.junit>1.6.0.Final</version.org.jboss.arquillian.junit>
         <version.org.jboss.galleon>4.2.8.Final</version.org.jboss.galleon>
-        <version.org.wildfly.security.elytron>1.19.1.CR1-SNAPSHOT</version.org.wildfly.security.elytron>
+        <version.org.jmockit>1.39</version.org.jmockit>
 
 
         <!-- Plugin versions and their dependency versions -->
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.galleon-plugins>5.2.11.Final</version.org.wildfly.galleon-plugins>
+        <version.xml.plugin>1.0.1</version.xml.plugin>
 
 
         <!-- Misc. -->
@@ -263,10 +266,47 @@
 
             <!-- Test dependencies -->
             <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk15on</artifactId>
+                <version>${version.org.bouncycastle}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>${version.org.bouncycastle}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.jboss.arquillian.junit</groupId>
                 <artifactId>arquillian-junit-core</artifactId>
                 <scope>test</scope>
                 <version>${version.org.jboss.arquillian.junit}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jmockit</groupId>
+                <artifactId>jmockit</artifactId>
+                <version>${version.org.jmockit}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-core-test-runner</artifactId>
+                <version>${version.org.wildfly.core}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-subsystem-test</artifactId>
+                <version>${version.org.wildfly.core}</version>
+                <type>pom</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.openssl</groupId>
+                <artifactId>wildfly-openssl-java</artifactId>
+                <version>2.2.1.Final</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.wildfly.security</groupId>
@@ -279,6 +319,11 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>xml-maven-plugin</artifactId>
+                    <version>${version.xml.plugin}</version>
+                </plugin>
                 <plugin>
                     <groupId>org.jboss.galleon</groupId>
                     <artifactId>galleon-maven-plugin</artifactId>
