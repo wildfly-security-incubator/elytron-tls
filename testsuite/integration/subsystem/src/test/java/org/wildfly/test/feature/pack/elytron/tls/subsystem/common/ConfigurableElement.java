@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.extension.elytron.tls.test.common;
+package org.wildfly.test.feature.pack.elytron.tls.subsystem.common;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.test.integration.management.util.CLIWrapper;
