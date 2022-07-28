@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.extension.elytron.tls.test;
+package org.wildfly.extension.elytron.tls.subsystem;
 
 /**
  * @author <a href="mailto:ropalka@redhat.com">Richard Opalka</a>
