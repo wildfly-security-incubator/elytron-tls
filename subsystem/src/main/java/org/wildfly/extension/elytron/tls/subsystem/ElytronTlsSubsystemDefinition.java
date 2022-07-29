@@ -20,6 +20,7 @@ import static org.jboss.as.controller.OperationContext.Stage.RUNTIME;
 import static org.jboss.as.server.deployment.Phase.DEPENDENCIES;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.ELYTRON_TLS_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 
 import java.security.Provider;
@@ -28,6 +29,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import javax.net.ssl.SSLContext;
 
 import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
 import org.jboss.as.controller.AbstractRemoveStepHandler;
@@ -72,6 +77,11 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
     private static final OperationContext.AttachmentKey<SecurityPropertyService> SECURITY_PROPERTY_SERVICE_KEY = OperationContext.AttachmentKey.create(SecurityPropertyService.class);
 
+
+    static final SimpleAttributeDefinition DEFAULT_SSL_CONTEXT = new SimpleAttributeDefinitionBuilder(Constants.DEFAULT_SSL_CONTEXT, ModelType.STRING, true)
+            .setCapabilityReference(SSL_CONTEXT_CAPABILITY, ELYTRON_TLS_RUNTIME_CAPABILITY)
+            .setRestartAllServices()
+            .build();
 
     static final SimpleAttributeDefinition INITIAL_PROVIDERS = new SimpleAttributeDefinitionBuilder(Constants.INITIAL_PROVIDERS, ModelType.STRING, true)
             .setCapabilityReference(PROVIDERS_CAPABILITY, ELYTRON_TLS_RUNTIME_CAPABILITY)
@@ -122,7 +132,7 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         resourceRegistration.registerSubModel(new SecretKeyCredentialStoreDefinition());
 
         // TLS Builders
-//        resourceRegistration.registerSubModel(SSLContextDefinitions.getClientSSLContextDefinition());
+        resourceRegistration.registerSubModel(SSLContextDefinitions.getClientSSLContextDefinition(serverOrHostController));
         resourceRegistration.registerSubModel(SSLContextDefinitions.getServerSSLContextDefinition(serverOrHostController));
     }
     @Override
@@ -134,6 +144,27 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
         OperationStepHandler writeHandler = new ReloadRequiredWriteAttributeHandler(INITIAL_PROVIDERS, FINAL_PROVIDERS, DISALLOWED_PROVIDERS);
         resourceRegistration.registerReadWriteAttribute(SECURITY_PROPERTIES, null, new SecurityPropertiesWriteHandler(SECURITY_PROPERTIES));
+        resourceRegistration.registerReadWriteAttribute(DEFAULT_SSL_CONTEXT, null, new ElytronWriteAttributeHandler<Void>(DEFAULT_SSL_CONTEXT) {
+            @Override
+            protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
+                                                   ModelNode resolvedValue, ModelNode currentValue,
+                                                   HandbackHolder<Void> handbackHolder) throws OperationFailedException {
+                if (!resolvedValue.isDefined() && currentValue.isDefined()) {
+                    // We can not capture the existing default as by doing so we would trigger it's initialisation which
+                    // could fail in a variety of ways as well as the wasted initialisation, if the attribute is being
+                    // changed from defined to undefined the only option is to completely restart the process.
+                    context.restartRequired();
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
+                                                 ModelNode valueToRestore, ModelNode valueToRevert,
+                                                 Void handback) throws OperationFailedException {}
+
+        });
         resourceRegistration.registerReadWriteAttribute(INITIAL_PROVIDERS, null, writeHandler);
         resourceRegistration.registerReadWriteAttribute(FINAL_PROVIDERS, null, writeHandler);
         resourceRegistration.registerReadWriteAttribute(DISALLOWED_PROVIDERS, null, writeHandler);
@@ -176,12 +207,13 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
     private static class ElytronTlsAdd extends AbstractBoottimeAddStepHandler implements ElytronOperationStepHandler  {
 
         private ElytronTlsAdd() {
-            super(SECURITY_PROPERTIES);
+            super(INITIAL_PROVIDERS, FINAL_PROVIDERS, DISALLOWED_PROVIDERS, SECURITY_PROPERTIES, DEFAULT_SSL_CONTEXT);
         }
 
         @Override
         protected void performBoottime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
             Map<String, String> securityProperties = SECURITY_PROPERTIES.unwrap(context, model);
+            final String defaultSSLContext = DEFAULT_SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
 
             ServiceTarget target = context.getServiceTarget();
             installService(SecurityPropertyService.SERVICE_NAME, new SecurityPropertyService(securityProperties), target);
@@ -204,6 +236,18 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                         context.getCapabilityServiceName(PROVIDERS_CAPABILITY, finalProviders, Provider[].class));
             }
             builder.install();
+
+            if (defaultSSLContext != null) {
+                ServiceBuilder<?> serviceBuilder = target
+                        .addService(DefaultSSLContextService.SERVICE_NAME)
+                        .setInitialMode(Mode.ACTIVE);
+                Supplier<SSLContext> defaultSSLContextSupplier = serviceBuilder.requires(
+                        context.getCapabilityServiceName(SSL_CONTEXT_CAPABILITY, defaultSSLContext, SSLContext.class));
+                Consumer<SSLContext> valueConsumer = serviceBuilder.provides(DefaultSSLContextService.SERVICE_NAME);
+
+                DefaultSSLContextService defaultSSLContextService = new DefaultSSLContextService(defaultSSLContextSupplier, valueConsumer);
+                serviceBuilder.setInstance(defaultSSLContextService).install();
+            }
 
             context.addStep(new AbstractDeploymentChainStep() {
                 public void execute(DeploymentProcessorTarget processorTarget) {

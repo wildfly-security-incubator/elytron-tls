@@ -37,13 +37,6 @@ class SSLContextParser {
             .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
             .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
-            .addAttribute(SSLContextDefinitions.WANT_CLIENT_AUTH)
-            .addAttribute(SSLContextDefinitions.NEED_CLIENT_AUTH)
-            .addAttribute(SSLContextDefinitions.AUTHENTICATION_OPTIONAL)
-            .addAttribute(SSLContextDefinitions.USE_CIPHER_SUITES_ORDER)
-            .addAttribute(SSLContextDefinitions.MAXIMUM_SESSION_CACHE_SIZE)
-            .addAttribute(SSLContextDefinitions.SESSION_TIMEOUT)
-            .addAttribute(SSLContextDefinitions.WRAP)
             .build();
 
     final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.SERVER_SSL_CONTEXT))

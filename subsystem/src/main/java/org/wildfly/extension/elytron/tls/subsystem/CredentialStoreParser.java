@@ -9,6 +9,8 @@ public class CredentialStoreParser {
 
     final PersistentResourceXMLDescription credentialStoreParser_1_0 = builder(PathElement.pathElement(Constants.CREDENTIAL_STORE))
             .setUseElementsForGroups(false)
+            .addAttribute(CredentialStoreResourceDefinition.IMPLEMENTATION_PROPERTIES)
+            .addAttribute(CredentialStoreResourceDefinition.CREDENTIAL_REFERENCE)
             .addAttribute(CredentialStoreResourceDefinition.TYPE)
             .addAttribute(CredentialStoreResourceDefinition.PROVIDER_NAME)
             .addAttribute(CredentialStoreResourceDefinition.PROVIDERS)
@@ -18,8 +20,6 @@ public class CredentialStoreParser {
             .addAttribute(CredentialStoreResourceDefinition.PATH)
             .addAttribute(CredentialStoreResourceDefinition.MODIFIABLE)
             .addAttribute(CredentialStoreResourceDefinition.CREATE)
-            .addAttribute(CredentialStoreResourceDefinition.IMPLEMENTATION_PROPERTIES)
-            .addAttribute(CredentialStoreResourceDefinition.CREDENTIAL_REFERENCE)
             .build();
 
     final PersistentResourceXMLDescription secretKeyCredentialStoreParser_1_0 = builder(PathElement.pathElement(Constants.SECRET_KEY_CREDENTIAL_STORE))

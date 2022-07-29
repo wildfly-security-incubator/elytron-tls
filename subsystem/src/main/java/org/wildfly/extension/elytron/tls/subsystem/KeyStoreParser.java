@@ -9,14 +9,14 @@ import org.jboss.as.controller.security.CredentialReference;
 class KeyStoreParser {
 
     final PersistentResourceXMLDescription keyStoreParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(KEY_STORE))
-            .addAttribute(SSLContextDefinitions.TYPE)
-            .addAttribute(SSLContextDefinitions.PROVIDERS)
-            .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(SSLContextDefinitions.CREDENTIAL_REFERENCE)
-            .addAttribute(SSLContextDefinitions.ALIAS_FILTER)
-            .addAttribute(SSLContextDefinitions.REQUIRED)
+            .addAttribute(SSLContextDefinitions.TYPE)
             .addAttribute(FileAttributeDefinitions.PATH)
             .addAttribute(FileAttributeDefinitions.RELATIVE_TO)
+            .addAttribute(SSLContextDefinitions.ALIAS_FILTER)
+            .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
+            .addAttribute(SSLContextDefinitions.PROVIDERS)
+            .addAttribute(SSLContextDefinitions.REQUIRED)
             .addAttribute(CredentialReference.getAttributeDefinition())
             .build();
 }
