@@ -1,5 +1,5 @@
 <!-- for needs of SaslTestCase and KeyStoresTestCase -->
-<subsystem xmlns="urn:wildfly:elytron:15.1" default-ssl-context="ClientSslContextNoAuth">
+<subsystem xmlns="urn:wildfly:elytron-tls-subsystem:1.0" default-ssl-context="ClientSslContextNoAuth">
     <providers>
         <provider-loader name="ManagerProviderLoader" class-names="com.sun.net.ssl.internal.ssl.Provider" />
         <provider-loader name="openssl" module="org.wildfly.openssl"/>
@@ -34,18 +34,18 @@
                 <implementation type="JKS" />
                 <file path="localhost.keystore" relative-to="jboss.server.config.dir" required="true"/>
             </key-store>
-            <key-store name="ElytronCaTruststore" >
-                <credential-reference clear-text="Elytron"/>
+            <key-store name="ElytronTLSCaTruststore" >
+                <credential-reference clear-text="ElytronTLS"/>
                 <implementation type="JKS" />
-                <file path="target/test-classes/org/wildfly/extension/elytron/ca.truststore"/>
+                <file path="target/test-classes/org/wildfly/extension/elytron/tls/subsystem/ca.truststore"/>
             </key-store>
             <key-store name="NewKeyStore" >
-                <credential-reference clear-text="Elytron"/>
+                <credential-reference clear-text="ElytronTLS"/>
                 <implementation type="JKS" />
                 <file path="target/not-existing.keystore" required="false"/>
             </key-store>
             <key-store name="AutomaticKeystore" >
-                <credential-reference clear-text="Elytron"/>
+                <credential-reference clear-text="ElytronTLS"/>
                 <implementation/>
                 <file path="firefly.keystore" relative-to="jboss.server.config.dir"/>
             </key-store>
@@ -56,39 +56,39 @@
                 <credential-reference store="test" alias="the-key-alias"/>
             </key-manager>
             <key-manager name="ClientKeyManager" algorithm="SunX509" key-store="FireflyKeystore">
-                <credential-reference clear-text="Elytron"/>
+                <credential-reference clear-text="ElytronTLS"/>
             </key-manager>
             <key-manager name="MyKeyManager" algorithm="SunX509" key-store="FireflyKeystore" providers="ManagerProviderLoader" provider-name="SunJSSE">
                 <credential-reference store="test" alias="the-key-alias"/>
             </key-manager>
         </key-managers>
         <trust-managers>
-            <trust-manager name="CaTrustManager" algorithm="SunX509" key-store="ElytronCaTruststore" alias-filter="NONE:+mykey"/>
-            <trust-manager name="MyTrustManager" algorithm="SunX509" key-store="ElytronCaTruststore" providers="ManagerProviderLoader" provider-name="SunJSSE"/>
-            <trust-manager name="ProviderTrustManager" algorithm="SunX509" key-store="ElytronCaTruststore" providers="ManagerProviderLoader" provider-name="SunJSSE"/>
-            <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="CaTrustManager" algorithm="SunX509" key-store="ElytronTLSCaTruststore" alias-filter="NONE:+mykey"/>
+            <trust-manager name="MyTrustManager" algorithm="SunX509" key-store="ElytronTLSCaTruststore" providers="ManagerProviderLoader" provider-name="SunJSSE"/>
+            <trust-manager name="ProviderTrustManager" algorithm="SunX509" key-store="ElytronTLSCaTruststore" providers="ManagerProviderLoader" provider-name="SunJSSE"/>
+            <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronTLSCaTruststore">
                 <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir" maximum-cert-path="2"/>
             </trust-manager>
-            <trust-manager name="trust-with-multiple-crls" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-multiple-crls" algorithm="PKIX" key-store="ElytronTLSCaTruststore">
                 <certificate-revocation-lists>
                     <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir"/>
                     <certificate-revocation-list path="crl-new.pem" relative-to="jboss.server.config.dir" />
                 </certificate-revocation-lists>
             </trust-manager>
-            <trust-manager name="trust-with-crl-dp" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-crl-dp" algorithm="PKIX" key-store="ElytronTLSCaTruststore">
                 <certificate-revocation-list />
             </trust-manager>
-            <trust-manager name="trust-with-crl-dp-deprecated-max-cert-path" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-crl-dp-deprecated-max-cert-path" algorithm="PKIX" key-store="ElytronTLSCaTruststore">
                 <certificate-revocation-list maximum-cert-path="1"/>
             </trust-manager>
-            <trust-manager name="trust-with-crls-dp" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-crls-dp" algorithm="PKIX" key-store="ElytronTLSCaTruststore">
                 <certificate-revocation-lists />
             </trust-manager>
-            <trust-manager name="trust-with-ocsp-crl" algorithm="PKIX" key-store="ElytronCaTruststore" soft-fail="true" only-leaf-cert="true">
+            <trust-manager name="trust-with-ocsp-crl" algorithm="PKIX" key-store="ElytronTLSCaTruststore" soft-fail="true" only-leaf-cert="true">
                 <certificate-revocation-list />
                 <ocsp responder="http://localhost/ocsp"/>
             </trust-manager>
-            <trust-manager name="trust-with-ocsp-simple" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-ocsp-simple" algorithm="PKIX" key-store="ElytronTLSCaTruststore">
                 <ocsp/>
             </trust-manager>
         </trust-managers>

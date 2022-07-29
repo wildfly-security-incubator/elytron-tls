@@ -104,8 +104,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     private final int TESTING_PORT = 18201;
 
-    private static final String WORKING_DIRECTORY_LOCATION = "./target/test-classes/org/wildfly/extension/elytron";
-    private static final char[] GENERATED_KEYSTORE_PASSWORD = "Elytron".toCharArray();
+    private static final String WORKING_DIRECTORY_LOCATION = "./target/test-classes/org/wildfly/extension/elytron/tls/subsystem";
+    private static final char[] GENERATED_KEYSTORE_PASSWORD = "ElytronTLS".toCharArray();
     private static final X500Principal ISSUER_DN = new X500Principal("O=Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=Elytron, CN=Elytron CA ");
     private static final X500Principal OTHER_ISSUER_DN = new X500Principal("O= Other Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=WildFly, CN=WildFly CA ");
     private static final X500Principal FIREFLY_DN = new X500Principal("OU=Elytron, O=Elytron, C=UK, ST=Elytron, CN=Firefly");
