@@ -1,27 +1,9 @@
-/*
- * JBoss, Home of Professional Open Source
- *
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILED;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -52,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -94,44 +77,39 @@ import org.wildfly.security.x500.cert.BasicConstraintsExtension;
 import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 import org.wildfly.security.x500.cert.X509CertificateBuilder;
 
-/**
- * @author <a href="mailto:jkalina@redhat.com">Jan Kalina</a>
- */
 public class TlsTestCase extends AbstractSubsystemTest {
 
     private static final Provider wildFlyElytronProvider = new WildFlyElytronProvider();
-    private static CredentialStoreUtility csUtil = null;
+    private final int TESTING_PORT = 18202;
 
-    private final int TESTING_PORT = 18201;
+    private static CredentialStoreUtility csUtil = null;
+    private KernelServices services = null;
+
 
     private static final String WORKING_DIRECTORY_LOCATION = "./target/test-classes/org/wildfly/extension/elytron/tls/subsystem";
-    private static final char[] GENERATED_KEYSTORE_PASSWORD = "ElytronTLS".toCharArray();
-    private static final X500Principal ISSUER_DN = new X500Principal("O=Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=Elytron, CN=Elytron CA ");
-    private static final X500Principal OTHER_ISSUER_DN = new X500Principal("O= Other Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=WildFly, CN=WildFly CA ");
-    private static final X500Principal FIREFLY_DN = new X500Principal("OU=Elytron, O=Elytron, C=UK, ST=Elytron, CN=Firefly");
-    private static final X500Principal LOCALHOST_DN = new X500Principal("OU=Elytron, O=Elytron, C=CZ, ST=Elytron, CN=localhost");
-    private static final X500Principal MUNERASOFT_DN = new X500Principal("C=BR, ST=DF, O=MuneraSoft.io, CN=MuneraSoft.io Intermediate CA, emailAddress=contact@munerasoft.com");
-    private static final X500Principal NEW_DN = new X500Principal("O=Root Certificate Authority New, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=Elytron, CN=Elytron CA");
     private static final File TRUST_FILE = new File(WORKING_DIRECTORY_LOCATION, "ca.truststore");
     private static final File FIREFLY_FILE = new File(WORKING_DIRECTORY_LOCATION, "firefly.keystore");
     private static final File LOCALHOST_FILE = new File(WORKING_DIRECTORY_LOCATION, "localhost.keystore");
     private static final File CRL_FILE = new File(WORKING_DIRECTORY_LOCATION, "crl.pem");
     private static final File CRL_FILE_NEW = new File(WORKING_DIRECTORY_LOCATION, "crl-new.pem");
-    private static final String PROTOCOLS_SERVER = "enabledProtocolsServer";
-    private static final String PROTOCOLS_CLIENT = "enabledProtocolsClient";
-    private static final String NEGOTIATED_PROTOCOL = "negotiatedProtocol";
-
     private static final String INIT_TEST_FILE = "/trust-manager-reload-test.truststore";
     private static final String INIT_TEST_TRUSTSTORE = "myTS";
     private static final String INIT_TEST_TRUSTMANAGER = "myTM";
-    public static String disabledAlgorithms;
 
+    private static final char[] GENERATED_KEYSTORE_PASSWORD = "ElytronTLS".toCharArray();
+    private static final String PROTOCOLS_SERVER = "enabledProtocolsServer";
+    private static final String PROTOCOLS_CLIENT = "enabledProtocolsClient";
+    private static final String NEGOTIATED_PROTOCOL = "negotiatedProtocol";
+    private static final X500Principal ISSUER_DN = new X500Principal("O=Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=Elytron, CN=Elytron CA ");
+    private static final X500Principal OTHER_ISSUER_DN = new X500Principal("O= Other Root Certificate Authority, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=WildFly, CN=WildFly CA ");
+    private static final X500Principal FIREFLY_DN = new X500Principal("OU=Elytron, O=Elytron, C=UK, ST=Elytron, CN=Firefly");
+    private static final X500Principal LOCALHOST_DN = new X500Principal("OU=Elytron, O=Elytron, C=CZ, ST=Elytron, CN=localhost");
+    private static final X500Principal NEW_DN = new X500Principal("O=Root Certificate Authority New, EMAILADDRESS=elytron@wildfly.org, C=UK, ST=Elytron, CN=Elytron CA");
+    public static String disabledAlgorithms;
 
     public TlsTestCase() {
         super(ElytronTlsExtension.SUBSYSTEM_NAME, new ElytronTlsExtension());
     }
-
-    private KernelServices services = null;
 
     private static KeyStore loadKeyStore() throws Exception{
         KeyStore ks = KeyStore.getInstance("JKS");
@@ -254,7 +232,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
     }
 
     private static void createTemporaryCRLFile(X509CRLHolder crlHolder, File outputFile) throws Exception {
-        try (PemWriter output = new PemWriter(new OutputStreamWriter(new FileOutputStream(outputFile)))){
+        try (PemWriter output = new PemWriter(new OutputStreamWriter(Files.newOutputStream(outputFile.toPath())))){
             output.writeObject(new MiscPEMGenerator(crlHolder));
         }
     }
@@ -267,8 +245,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     private static void setUpKeyStores() throws Exception {
         File workingDir = new File(WORKING_DIRECTORY_LOCATION);
-        if (workingDir.exists() == false) {
-            workingDir.mkdirs();
+        if (!workingDir.exists()) {
+            Assert.assertTrue(workingDir.mkdirs());
         }
 
         SelfSignedX509CertificateAndSigningKey issuerSelfSignedX509CertificateAndSigningKey = createIssuer(ISSUER_DN);
@@ -303,7 +281,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         };
         for (File file : testFiles) {
             if (file.exists()) {
-                file.delete();
+                Assert.assertTrue(file.delete());
             }
         }
     }
@@ -356,7 +334,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
             Assert.fail(services.getBootError().toString());
         }
     }
-
 
     @Test
     public void testSslServiceNoAuth() throws Throwable {
@@ -418,13 +395,9 @@ public class TlsTestCase extends AbstractSubsystemTest {
     public void testSslServiceAuthProtocolMismatchSSLv2Hello() throws Throwable {
         Assume.assumeFalse("Skipping testSslServiceAuthSSLv2Hello as IBM JDK does not support enabling SSLv2Hello " +
                 "in the client", JdkUtils.isIbmJdk());
-        try {
-            testCommunication("ServerSslContextTLS12Only", "ClientSslContextSSLv2Hello", false, "OU=Elytron,O=Elytron,C=CZ,ST=Elytron,CN=localhost",
-                    "OU=Elytron,O=Elytron,C=UK,ST=Elytron,CN=Firefly");
-            fail("Excepted SSLHandshakeException not thrown");
-        } catch (SSLHandshakeException e) {
-
-        }
+        testCommunication("ServerSslContextTLS12Only", "ClientSslContextSSLv2Hello", false, "OU=Elytron,O=Elytron,C=CZ,ST=Elytron,CN=localhost",
+                "OU=Elytron,O=Elytron,C=UK,ST=Elytron,CN=Firefly");
+        fail("Excepted SSLHandshakeException not thrown");
     }
 
     @Test
@@ -525,7 +498,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
-        Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(SUCCESS));
+        assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
     }
 
     @Test
@@ -537,7 +510,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-multiple-crls");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
-        Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(SUCCESS));
+        assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
     }
 
     /**
@@ -560,7 +533,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl-dp");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
-        Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(FAILED)); // not realoadable
+        assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not realoadable
     }
 
     @Test
@@ -572,7 +545,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl-dp-deprecated-max-cert-path");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
-        Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(FAILED)); // not reloadable
+        assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not reloadable
     }
 
     /**
@@ -587,7 +560,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crls-dp");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
-        Assert.assertTrue(services.executeOperation(operation).get(OUTCOME).asString().equals(FAILED)); // not realoadable
+        assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not realoadable
     }
 
 
@@ -605,8 +578,9 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     @Test
     public void testReloadTrustManager() throws Throwable {
-        Path resources = Paths.get(TlsTestCase.class.getResource(".").toURI());
-        Files.copy(Paths.get(TRUST_FILE.toString()), Paths.get(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE), StandardCopyOption.REPLACE_EXISTING);
+        Path resources = Paths.get(Objects.requireNonNull(TlsTestCaseOld.class.getResource(".")).toURI());
+        Path initTestFilePath = Paths.get(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE);
+        Files.copy(Paths.get(TRUST_FILE.toString()), initTestFilePath, StandardCopyOption.REPLACE_EXISTING);
 
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE, INIT_TEST_TRUSTSTORE);
@@ -656,7 +630,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         X509Certificate newFoundDN = trustManager.getAcceptedIssuers()[0];
         Assert.assertEquals(newFoundDN.getIssuerX500Principal().getName(), NEW_DN.getName());
 
-        Files.delete(Paths.get(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE));
+        Files.delete(initTestFilePath);
     }
 
     @Test
@@ -760,8 +734,8 @@ public class TlsTestCase extends AbstractSubsystemTest {
                 Assert.assertEquals("TLSv1.3", serverSocket.getSession().getProtocol());
                 Assert.assertEquals("TLSv1.3", clientSocket.getSession().getProtocol());
             } else {
-                Assert.assertFalse(serverSocket.getSession().getProtocol().equals("TLSv1.3")); // since TLS 1.3 is not enabled by default (WFCORE-4789)
-                Assert.assertFalse(clientSocket.getSession().getProtocol().equals("TLSv1.3")); // since TLS 1.3 is not enabled by default
+                Assert.assertNotEquals("TLSv1.3", serverSocket.getSession().getProtocol()); // since TLS 1.3 is not enabled by default (WFCORE-4789)
+                Assert.assertNotEquals("TLSv1.3", clientSocket.getSession().getProtocol()); // since TLS 1.3 is not enabled by default
             }
         } catch (ExecutionException e) {
             if (e.getCause() != null && e.getCause() instanceof RuntimeException && e.getCause().getCause() != null) {
@@ -783,15 +757,14 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Set<String> enabledClient = new HashSet<>(Arrays.asList(protocolChecker.get(PROTOCOLS_CLIENT)));
 
         // Check enabled protocols match the ones we configured
-        assertTrue(enabledServer.equals(serverProtocols));
-        assertTrue(enabledClient.equals(clientProtocols));
+        assertEquals(enabledServer, serverProtocols);
+        assertEquals(enabledClient, clientProtocols);
 
         // Check negotiated protocol is the one we expected
         assertEquals(protocolChecker.get(NEGOTIATED_PROTOCOL)[0], serverSocket.getSession().getProtocol());
-        assertEquals(protocolChecker.get(NEGOTIATED_PROTOCOL)[0], clientSocket.getSession().getProtocol());
     }
 
-    private void testSessionsReading(String serverContextName, String clientContextName, String expectedServerPrincipal, String expectedClientPrincipal) {
+        private void testSessionsReading(String serverContextName, String clientContextName, String expectedServerPrincipal, String expectedClientPrincipal) {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.SERVER_SSL_CONTEXT, serverContextName);
         operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);

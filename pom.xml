@@ -42,11 +42,10 @@
         <version.org.wildfly.component.matrix>26.1.1.Final</version.org.wildfly.component.matrix>
         <version.org.wildfly.core>18.1.1.Final</version.org.wildfly.core>
         <version.org.wildfly.common>1.6.0.Final</version.org.wildfly.common>
-        <version.org.wildfly.security.elytron>1.19.1.CR1-SNAPSHOT</version.org.wildfly.security.elytron>
+        <version.org.wildfly.security.elytron>1.20.1.CR1-SNAPSHOT</version.org.wildfly.security.elytron>
 
 
         <!-- Other dependency versions -->
-        <version.org.apache.ds>2.0.0-M15</version.org.apache.ds>
         <version.org.bouncycastle>1.69</version.org.bouncycastle>
         <version.org.jboss.arquillian.junit>1.6.0.Final</version.org.jboss.arquillian.junit>
         <version.org.jboss.galleon>4.2.8.Final</version.org.jboss.galleon>
@@ -313,50 +312,6 @@
 
 
             <!-- Test dependencies -->
-            <dependency>
-                <groupId>org.apache.directory.server</groupId>
-                <artifactId>apacheds-core-annotations</artifactId>
-                <version>2.0.0-M24</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-collections</groupId>
-                        <artifactId>commons-collections</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.directory.server</groupId>
-                <artifactId>apacheds-protocol-ldap</artifactId>
-                <version>2.0.0-M24</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-collections</groupId>
-                        <artifactId>commons-collections</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.directory.api</groupId>
-                <artifactId>api-ldap-codec-standalone</artifactId>
-                <version>1.0.0</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15on</artifactId>

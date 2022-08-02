@@ -1,7 +1,7 @@
 <!-- for needs of SaslTestCase and KeyStoresTestCase -->
 <subsystem xmlns="urn:wildfly:elytron-tls-subsystem:1.0" default-ssl-context="ClientSslContextNoAuth">
     <providers>
-        <provider-loader name="ManagerProviderLoader" class-names="com.sun.net.ssl.internal.ssl.Provider" />
+        <provider-loader name="ManagerProviderLoader" class-names="com.ibm.crypto.provider.IBMJCE com.ibm.jsse.IBMJSSEProvider com.ibm.jsse2.IBMJSSEProvider2 com.ibm.security.jgss.IBMJGSSProvider com.ibm.security.cert.IBMCertPath com.ibm.security.cmskeystore.CMSProvider com.ibm.security.jgss.mech.spnego.IBMSPNEGO" />
         <provider-loader name="openssl" module="org.wildfly.openssl"/>
     </providers>
     <credential-stores>
@@ -39,23 +39,24 @@
                 <implementation/>
                 <file path="firefly.keystore" relative-to="jboss.server.config.dir"/>
             </key-store>
+            <!-- TODO: reenable when filtering key stores are added -->
             <!-- <filtering-key-store name="FilteringKeyStore" key-store="FireflyKeystore" alias-filter="NONE:+firefly"/> -->
         </key-stores>
         <key-managers>
-            <key-manager name="ServerKeyManager" algorithm="SunX509" key-store="LocalhostKeystore" alias-filter="NONE:+localhost">
+            <key-manager name="ServerKeyManager" algorithm="IbmX509" key-store="LocalhostKeystore" alias-filter="NONE:+localhost">
                 <credential-reference store="test" alias="the-key-alias"/>
             </key-manager>
-            <key-manager name="ClientKeyManager" algorithm="SunX509" key-store="FireflyKeystore">
+            <key-manager name="ClientKeyManager" algorithm="IbmX509" key-store="FireflyKeystore">
                 <credential-reference clear-text="Elytron"/>
             </key-manager>
-            <key-manager name="MyKeyManager" algorithm="SunX509" key-store="FireflyKeystore" providers="ManagerProviderLoader" provider-name="SunJSSE">
+            <key-manager name="MyKeyManager" algorithm="IbmX509" key-store="FireflyKeystore" providers="ManagerProviderLoader" provider-name="IBMJSSE">
                 <credential-reference store="test" alias="the-key-alias"/>
             </key-manager>
         </key-managers>
         <trust-managers>
-            <trust-manager name="CaTrustManager" algorithm="SunX509" key-store="ElytronTlsCaTruststore" alias-filter="NONE:+mykey"/>
-            <trust-manager name="MyTrustManager" algorithm="SunX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="SunJSSE"/>
-            <trust-manager name="ProviderTrustManager" algorithm="SunX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="SunJSSE"/>
+            <trust-manager name="CaTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" alias-filter="NONE:+mykey"/>
+            <trust-manager name="MyTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
+            <trust-manager name="ProviderTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
             <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir" maximum-cert-path="2"/>
             </trust-manager>
@@ -86,18 +87,18 @@
             <server-ssl-context name="ServerSslContextNoAuth" key-manager="ServerKeyManager" trust-manager="CaTrustManager"/>
             <server-ssl-context name="ServerSslContextAuth" protocols="TLSv1.3 TLSv1.2 TLSv1.1" key-manager="ServerKeyManager" trust-manager="CaTrustManager"
                                 want-client-auth="true" need-client-auth="true" authentication-optional="false" use-cipher-suites-order="false"
-                                providers="ManagerProviderLoader" provider-name="SunJSSE" session-timeout="321" maximum-session-cache-size="123"/>
+                                providers="ManagerProviderLoader" provider-name="IBMJSSE2" session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextTLS13" protocols="TLSv1.3 TLSv1.2 TLSv1.1" cipher-suite-names="TLS_AES_128_CCM_8_SHA256:TLS_AES_256_GCM_SHA384"
                                 key-manager="ServerKeyManager" trust-manager="CaTrustManager" want-client-auth="true" need-client-auth="true"
-                                authentication-optional="false" use-cipher-suites-order="false" providers="ManagerProviderLoader" provider-name="SunJSSE"
+                                authentication-optional="false" use-cipher-suites-order="false" providers="ManagerProviderLoader" provider-name="IBMJSSE2"
                                 session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextTLS13Only" protocols="TLSv1.3" cipher-suite-names="TLS_AES_128_CCM_8_SHA256:TLS_AES_256_GCM_SHA384"
                                 key-manager="ServerKeyManager" trust-manager="CaTrustManager" want-client-auth="true" need-client-auth="true"
-                                authentication-optional="false" use-cipher-suites-order="false" providers="ManagerProviderLoader" provider-name="SunJSSE"
+                                authentication-optional="false" use-cipher-suites-order="false" providers="ManagerProviderLoader" provider-name="IBMJSSE2"
                                 session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextTLS12Only" protocols="TLSv1.2" key-manager="ServerKeyManager" trust-manager="CaTrustManager"
                                 want-client-auth="true" need-client-auth="true" authentication-optional="false" providers="ManagerProviderLoader"
-                                provider-name="SunJSSE" session-timeout="321" maximum-session-cache-size="123"/>
+                                provider-name="IBMJSSE2" session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextTLS13OpenSsl" protocols="TLSv1.3 TLSv1.2 TLSv1.1" cipher-suite-names="TLS_AES_128_CCM_8_SHA256:TLS_AES_256_GCM_SHA384"
                                 key-manager="ServerKeyManager" trust-manager="CaTrustManager" want-client-auth="true" need-client-auth="true"
                                 authentication-optional="false" use-cipher-suites-order="false" providers="openssl"
@@ -115,18 +116,15 @@
                                 session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextSSLv2Hello" protocols="TLSv1 SSLv2Hello"
                                 key-manager="ServerKeyManager" trust-manager="CaTrustManager" want-client-auth="true" need-client-auth="true"
-                                authentication-optional="false" providers="ManagerProviderLoader" provider-name="SunJSSE"
+                                authentication-optional="false" providers="ManagerProviderLoader" provider-name="IBMJSSE2"
                                 session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextMultipleProtocolsNoSSLv2Hello"
                                 key-manager="ServerKeyManager" trust-manager="CaTrustManager" want-client-auth="true" need-client-auth="true"
-                                authentication-optional="false" providers="ManagerProviderLoader" provider-name="SunJSSE"
+                                authentication-optional="false" providers="ManagerProviderLoader" provider-name="IBMJSSE2"
                                 session-timeout="321" maximum-session-cache-size="123"
                                 protocols="TLSv1 TLSv1.1 TLSv1.2"/>
-            <server-ssl-context name="SeverSslContextSSLv2HelloOpenSsl" protocols="TLSv1 SSLv2Hello"
-                                key-manager="ServerKeyManager" trust-manager="CaTrustManager" want-client-auth="true" need-client-auth="true"
-                                authentication-optional="false" providers="openssl" session-timeout="321" maximum-session-cache-size="123"/>
             <server-ssl-context name="ServerSslContextSSLv2HelloOneWay" protocols="TLSv1 SSLv2Hello"
-                                key-manager="ServerKeyManager" providers="ManagerProviderLoader" provider-name="SunJSSE"
+                                key-manager="ServerKeyManager" providers="ManagerProviderLoader" provider-name="IBMJSSE2"
                                 session-timeout="321" maximum-session-cache-size="123"/>
         </server-ssl-contexts>
         <client-ssl-contexts>
@@ -143,14 +141,12 @@
             <client-ssl-context name="ClientSslContextNoTLS13CipherSuites" protocols="TLSv1.2 TLSv1.3"
                                 key-manager="ClientKeyManager" trust-manager="CaTrustManager" providers="openssl"/>
             <client-ssl-context name="ClientWithMultipleCRLs" key-manager="ClientKeyManager" trust-manager="trust-with-multiple-crls" />
-            <client-ssl-context name="ClientSslContextSSLv2Hello" protocols="SSLv2Hello TLSv1" key-manager="ClientKeyManager"
-                                trust-manager="CaTrustManager" providers="ManagerProviderLoader"/>
             <client-ssl-context name="ClientSslContextOnlyTLS1" protocols="TLSv1" key-manager="ClientKeyManager"
                                 trust-manager="CaTrustManager" providers="ManagerProviderLoader" />
             <client-ssl-context name="ClientSslContextMultipleProtocolsNoSSLv2Hello" key-manager="ClientKeyManager"
                                 trust-manager="CaTrustManager" providers="ManagerProviderLoader" protocols="TLSv1 TLSv1.1 TLSv1.2"/>
-            <client-ssl-context name="ClientSslContextSSLv2HelloOpenSsl" protocols="SSLv2Hello TLSv1" key-manager="ClientKeyManager"
-                                trust-manager="CaTrustManager" providers="openssl"/>
+            <client-ssl-context name="ClientSslContextSSLv2Hello" protocols="SSLv2Hello TLSv1" key-manager="ClientKeyManager"
+                                trust-manager="CaTrustManager" providers="ManagerProviderLoader"/>
             <client-ssl-context name="ClientSslContextSSLv2HelloOneWay" protocols="SSLv2Hello TLSv1"
                                 trust-manager="CaTrustManager" providers="ManagerProviderLoader"/>
         </client-ssl-contexts>
