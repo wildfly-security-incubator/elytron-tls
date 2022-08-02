@@ -39,7 +39,7 @@ import org.junit.Test;
 public class SubsystemParsingTestCase extends AbstractSubsystemBaseTest {
 
     public SubsystemParsingTestCase() {
-        super(ElytronExtension.SUBSYSTEM_NAME, new ElytronExtension());
+        super(ElytronTlsExtension.SUBSYSTEM_NAME, new ElytronTlsExtension());
     }
 
 

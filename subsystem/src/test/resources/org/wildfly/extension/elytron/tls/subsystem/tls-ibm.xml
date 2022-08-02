@@ -4,16 +4,6 @@
         <provider-loader name="ManagerProviderLoader" class-names="com.ibm.crypto.provider.IBMJCE com.ibm.jsse.IBMJSSEProvider com.ibm.jsse2.IBMJSSEProvider2 com.ibm.security.jgss.IBMJGSSProvider com.ibm.security.cert.IBMCertPath com.ibm.security.cmskeystore.CMSProvider com.ibm.security.jgss.mech.spnego.IBMSPNEGO" />
         <provider-loader name="openssl" module="org.wildfly.openssl"/>
     </providers>
-    <security-domains>
-        <security-domain name="MyDomain" default-realm="FileRealm">
-            <realm name="FileRealm"/>
-        </security-domain>
-    </security-domains>
-    <security-realms>
-        <filesystem-realm name="FileRealm" levels="2">
-            <file path="filesystem-realm" relative-to="jboss.server.config.dir" />
-        </filesystem-realm>
-    </security-realms>
     <credential-stores>
         <credential-store name="test" location="target/tlstest.keystore">
             <implementation-properties>
@@ -34,10 +24,10 @@
                 <implementation type="JKS" />
                 <file path="localhost.keystore" relative-to="jboss.server.config.dir" required="true"/>
             </key-store>
-            <key-store name="ElytronCaTruststore" >
+            <key-store name="ElytronTlsCaTruststore" >
                 <credential-reference clear-text="Elytron"/>
                 <implementation type="JKS" />
-                <file path="target/test-classes/org/wildfly/extension/elytron/ca.truststore"/>
+                <file path="target/test-classes/org/wildfly/extension/elytron/tls/subsystem/ca.truststore"/>
             </key-store>
             <key-store name="NewKeyStore" >
                 <credential-reference clear-text="Elytron"/>
@@ -49,7 +39,8 @@
                 <implementation/>
                 <file path="firefly.keystore" relative-to="jboss.server.config.dir"/>
             </key-store>
-            <filtering-key-store name="FilteringKeyStore" key-store="FireflyKeystore" alias-filter="NONE:+firefly"/>
+            <!-- TODO: reenable when filtering key stores are added -->
+            <!-- <filtering-key-store name="FilteringKeyStore" key-store="FireflyKeystore" alias-filter="NONE:+firefly"/> -->
         </key-stores>
         <key-managers>
             <key-manager name="ServerKeyManager" algorithm="IbmX509" key-store="LocalhostKeystore" alias-filter="NONE:+localhost">
@@ -63,32 +54,32 @@
             </key-manager>
         </key-managers>
         <trust-managers>
-            <trust-manager name="CaTrustManager" algorithm="IbmX509" key-store="ElytronCaTruststore" alias-filter="NONE:+mykey"/>
-            <trust-manager name="MyTrustManager" algorithm="IbmX509" key-store="ElytronCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
-            <trust-manager name="ProviderTrustManager" algorithm="IbmX509" key-store="ElytronCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
-            <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="CaTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" alias-filter="NONE:+mykey"/>
+            <trust-manager name="MyTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
+            <trust-manager name="ProviderTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
+            <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir" maximum-cert-path="2"/>
             </trust-manager>
-            <trust-manager name="trust-with-multiple-crls" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-multiple-crls" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <certificate-revocation-lists>
                     <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir"/>
                     <certificate-revocation-list path="crl-new.pem" relative-to="jboss.server.config.dir" />
                 </certificate-revocation-lists>
             </trust-manager>
-            <trust-manager name="trust-with-crl-dp" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-crl-dp" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <certificate-revocation-list />
             </trust-manager>
-            <trust-manager name="trust-with-crl-dp-deprecated-max-cert-path" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-crl-dp-deprecated-max-cert-path" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <certificate-revocation-list maximum-cert-path="1"/>
             </trust-manager>
-            <trust-manager name="trust-with-crls-dp" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-crls-dp" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <certificate-revocation-lists />
             </trust-manager>
-            <trust-manager name="trust-with-ocsp-crl" algorithm="PKIX" key-store="ElytronCaTruststore" soft-fail="true" only-leaf-cert="true">
+            <trust-manager name="trust-with-ocsp-crl" algorithm="PKIX" key-store="ElytronTlsCaTruststore" soft-fail="true" only-leaf-cert="true">
                 <certificate-revocation-list />
                 <ocsp responder="http://localhost/ocsp"/>
             </trust-manager>
-            <trust-manager name="trust-with-ocsp-simple" algorithm="PKIX" key-store="ElytronCaTruststore">
+            <trust-manager name="trust-with-ocsp-simple" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
                 <ocsp/>
             </trust-manager>
         </trust-managers>
