@@ -17,33 +17,50 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.jboss.as.subsystem.test.AbstractSubsystemBaseTest;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
-import org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension;
+import org.jboss.as.subsystem.test.KernelServices;
+import org.jboss.dmr.ModelNode;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class SubsystemTestCase extends AbstractSubsystemBaseTest {
+public class ElytronTlsSubsystemTestCase extends AbstractSubsystemBaseTest {
 
-    public SubsystemTestCase() {
+    public ElytronTlsSubsystemTestCase() {
         super(ElytronTlsExtension.SUBSYSTEM_NAME, new ElytronTlsExtension());
     }
 
     @Override
     protected String getSubsystemXml() throws IOException {
-        //test configuration put in standalone.xml
         return readResource("elytron-tls-subsystem-test.xml");
     }
 
     @Override
-    protected String getSubsystemXsdPath() throws Exception {
-        return "schema/elytron-tls-subsystem_1_0.xsd";
+    protected String getSubsystemXsdPath() {
+        return ElytronTlsExtension.getCurrentXsdPath();
+    }
+
+    @Test
+    public void testParseAndMarshalModel_TLS() throws Exception {
+        standardSubsystemTest("tls.xml");
+    }
+
+    @Test
+    public void testDisallowedProviders() throws Exception {
+        KernelServices services = standardSubsystemTest("providers.xml", true);
+        List<ModelNode> disallowedProviders = services.readWholeModel().get("subsystem", "elytron-tls", "disallowed-providers").asList();
+        Assert.assertNotNull(disallowedProviders);
+        Assert.assertEquals(3, disallowedProviders.size());
     }
 
     protected AdditionalInitialization createAdditionalInitialization() {
-        return AdditionalInitialization.withCapabilities(ElytronTlsExtension.WELD_CAPABILITY_NAME);
+        // Our use of the expression=encryption resource requires kernel capability setup that TestEnvironment provides
+        return TestEnvironment.asAdmin();
     }
 
 }

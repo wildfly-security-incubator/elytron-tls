@@ -329,7 +329,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         } else {
             subsystemXml = JdkUtils.getJavaSpecVersion() <= 12 ? "tls-sun.xml" : "tls-oracle13plus.xml";
         }
-        services = super.createKernelServicesBuilder(new TestEnvironment()).setSubsystemXmlResource(subsystemXml).build();
+        services = super.createKernelServicesBuilder(TestEnvironment.asNormal()).setSubsystemXmlResource(subsystemXml).build();
         if (!services.isSuccessfulBoot()) {
             Assert.fail(services.getBootError().toString());
         }
@@ -578,7 +578,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     @Test
     public void testReloadTrustManager() throws Throwable {
-        Path resources = Paths.get(Objects.requireNonNull(TlsTestCaseOld.class.getResource(".")).toURI());
+        Path resources = Paths.get(Objects.requireNonNull(TlsTestCase.class.getResource(".")).toURI());
         Path initTestFilePath = Paths.get(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE);
         Files.copy(Paths.get(TRUST_FILE.toString()), initTestFilePath, StandardCopyOption.REPLACE_EXISTING);
 

@@ -33,6 +33,9 @@
             <xs:element name="providers" type="providersType" minOccurs="0" />
             <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
             <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
+            <xs:element name="trust-manager" type="trustManagerType" minOccurs="0" />
+            <xs:element name="key-manager" type="keyManagerType" minOccurs="0" />
+            <xs:element name="key-store" type="keyStoreType" minOccurs="0" />
             <xs:element name="credential-stores" type="credentialStoresType" minOccurs="0" />
             <xs:element name="expression-resolver" type="expressionResolverType" minOccurs="0" />
         </xs:all>

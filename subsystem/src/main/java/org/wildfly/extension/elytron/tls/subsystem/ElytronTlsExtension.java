@@ -106,6 +106,12 @@ public class ElytronTlsExtension implements Extension {
 
     @Override
     public void initializeParsers(ExtensionParsingContext extensionParsingContext) {
-        extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, ElytronTlsExtension.NAMESPACE_1_0, CURRENT_PARSER);
+        extensionParsingContext.setSubsystemXmlMapping(SUBSYSTEM_NAME, CURRENT_NAMESPACE, CURRENT_PARSER);
+    }
+
+    static public String getCurrentXsdPath() {
+        StringBuilder xsdPath = new StringBuilder("schema/elytron-tls-subsystem_");
+        String pathVersionNumber = CURRENT_NAMESPACE.split(":")[3].replace('.', '_');
+        return xsdPath.append(pathVersionNumber).append(".xsd").toString();
     }
 }
