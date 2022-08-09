@@ -33,9 +33,9 @@
             <xs:element name="providers" type="providersType" minOccurs="0" />
             <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
             <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
-            <xs:element name="trust-manager" type="trustManagerType" minOccurs="0" />
-            <xs:element name="key-manager" type="keyManagerType" minOccurs="0" />
-            <xs:element name="key-store" type="keyStoreType" minOccurs="0" />
+            <xs:element name="trust-managers" type="trustManagersType" minOccurs="0" />
+            <xs:element name="key-managers" type="keyManagersType" minOccurs="0" />
+            <xs:element name="key-stores" type="keyStoresType" minOccurs="0" />
             <xs:element name="credential-stores" type="credentialStoresType" minOccurs="0" />
             <xs:element name="expression-resolver" type="expressionResolverType" minOccurs="0" />
         </xs:all>
@@ -459,6 +459,17 @@
         Managers
     -->
 
+    <xs:complexType name="trustManagersType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for TrustManager definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="trust-manager" type="trustManagerType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:complexType name="trustManagerType">
         <xs:annotation>
             <xs:documentation>
@@ -484,14 +495,14 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-reference" type="xs:string" use="required">
+        <xs:attribute name="key-store-reference" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     Reference to the KeyStore to use with the TrustManager.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store" type="xs:string" use="required">
+        <xs:attribute name="key-store" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     KeyStore to use with the TrustManager.
@@ -586,6 +597,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="maximum-cert-path" type="xs:int" use="optional" default="5">
+            <xs:annotation>
+                <xs:documentation>
+                    The maximum number of non-self-issued intermediate certificates that may exist in a certification path.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="ocspType">
@@ -635,6 +653,17 @@
         End of revocation definitions
     -->
 
+    <xs:complexType name="keyManagersType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for KeyManager definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="key-manager" type="keyManagerType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:complexType name="keyManagerType">
         <xs:annotation>
             <xs:documentation>
@@ -664,14 +693,14 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-reference" type="xs:string" use="required">
+        <xs:attribute name="key-store-reference" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     Reference to the KeyStore to use with the KeyManager.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store" type="xs:string" use="required">
+        <xs:attribute name="key-store" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     KeyStore to use with the KeyManager.
@@ -727,6 +756,21 @@
         Key Store
     -->
 
+    <xs:complexType name="keyStoresType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for the KeyStore definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="key-store" type="keyStoreType" />
+<!--                <xs:element name="ldap-key-store" type="ldapKeyStoreType" />-->
+<!--                <xs:element name="filtering-key-store" type="filteringKeyStoreType" />-->
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:complexType name="keyStoreType">
         <xs:annotation>
             <xs:documentation>
@@ -742,10 +786,10 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="type" type="xs:string" minOccurs="0" maxOccurs="1">
+            <xs:element name="implementation" type="keyStoreImplementationType" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
-                        The KeyStore type, e.g. jks, pkcs#12.
+                        Implementation details
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
@@ -773,6 +817,21 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="keyStoreImplementationType">
+        <xs:annotation>
+            <xs:documentation>
+                keystore implementation details
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="type" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The KeyStore type, e.g. jks, pkcs#12.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="provider-name" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -795,7 +854,6 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
-
 
     <!--
         Credential Store Components

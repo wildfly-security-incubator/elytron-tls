@@ -5,7 +5,7 @@ import static org.jboss.as.controller.PersistentResourceXMLDescription.builder;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 
-public class CredentialStoreParser {
+public class CredentialStoresParser {
 
     final PersistentResourceXMLDescription credentialStoreParser_1_0 = builder(PathElement.pathElement(Constants.CREDENTIAL_STORE))
             .setUseElementsForGroups(false)

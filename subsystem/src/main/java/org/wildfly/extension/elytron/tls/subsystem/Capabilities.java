@@ -16,6 +16,17 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import java.security.KeyStore;
+import java.security.Permissions;
+import java.security.Policy;
+import java.security.Provider;
+import java.util.function.Consumer;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.security.sasl.SaslServerFactory;
+
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.msc.service.ServiceBuilder;
 import org.wildfly.security.auth.client.AuthenticationConfiguration;
@@ -35,16 +46,6 @@ import org.wildfly.security.credential.store.CredentialStore;
 import org.wildfly.security.http.HttpServerAuthenticationMechanismFactory;
 import org.wildfly.security.x500.cert.acme.AcmeAccount;
 import org.wildfly.security.x500.cert.acme.CertificateAuthority;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.security.sasl.SaslServerFactory;
-import java.security.KeyStore;
-import java.security.Permissions;
-import java.security.Policy;
-import java.security.Provider;
-import java.util.function.Consumer;
 
 /**
  * The capabilities provided by and required by this subsystem.

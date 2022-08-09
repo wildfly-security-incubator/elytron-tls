@@ -23,7 +23,9 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.jboss.as.controller.security.CredentialReference.*;
+import static org.jboss.as.controller.security.CredentialReference.applyCredentialReferenceUpdateToRuntime;
+import static org.jboss.as.controller.security.CredentialReference.handleCredentialReferenceUpdate;
+import static org.jboss.as.controller.security.CredentialReference.rollbackCredentialStoreUpdate;
 
 import java.util.Collection;
 

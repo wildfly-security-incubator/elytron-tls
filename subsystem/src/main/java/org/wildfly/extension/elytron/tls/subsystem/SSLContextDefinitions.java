@@ -247,10 +247,14 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
+    /* Since XSD doesn't support providing a choice between 2 attributes, validation is done in the definition.
+     * This applies to all types of key stores, key managers, and trust managers
+     * TODO: potentially move validation into XML schema */
     static final ObjectTypeAttributeDefinition KEY_STORE = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_STORE, TYPE,
                 PATH, RELATIVE_TO, REQUIRED, CREDENTIAL_REFERENCE, ALIAS_FILTER, PROVIDER_NAME_IMPL, PROVIDERS_IMPL)
             .setMinSize(1)
             .setRestartAllServices()
+            .setRequired(true)
             .setAlternatives(Constants.KEY_STORE_REFERENCE)
             .setAllowExpression(false)
             .build();
@@ -260,6 +264,7 @@ public class SSLContextDefinitions {
             .setCapabilityReference(KEY_STORE_CAPABILITY)
             .setRestartAllServices()
             .setAllowExpression(false)
+            .setRequired(true)
             .setAlternatives(Constants.KEY_STORE)
             .build();
 
@@ -283,7 +288,7 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
-    static final ObjectTypeAttributeDefinition CERTIFICATE_REVOCATION_LIST = new ObjectTypeAttributeDefinition.Builder(Constants.CERTIFICATE_REVOCATION_LIST, PATH, RELATIVE_TO)
+    static final ObjectTypeAttributeDefinition CERTIFICATE_REVOCATION_LIST = new ObjectTypeAttributeDefinition.Builder(Constants.CERTIFICATE_REVOCATION_LIST, PATH, RELATIVE_TO, MAXIMUM_CERT_PATH)
             .setRequired(false)
             .setRestartAllServices()
             .setAlternatives(Constants.CERTIFICATE_REVOCATION_LISTS)
@@ -344,12 +349,14 @@ public class SSLContextDefinitions {
             .setMinSize(1)
             .setAlternatives(Constants.KEY_MANAGER)
             .setCapabilityReference(KEY_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
+            .setRequired(true)
             .setAllowExpression(false)
             .setRestartAllServices()
             .build();
 
     static ObjectTypeAttributeDefinition KEY_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_MANAGER, KEY_STORE,
                 KEY_STORE_REFERENCE, CREDENTIAL_REFERENCE, ALGORITHM, ALIAS_FILTER, PROVIDER_NAME, PROVIDERS)
+            .setRequired(true)
             .setAlternatives(Constants.KEY_MANAGER_REFERENCE)
             .setAllowExpression(false)
             .setRestartAllServices()
@@ -360,6 +367,7 @@ public class SSLContextDefinitions {
 
     static final SimpleAttributeDefinition TRUST_MANAGER_REFERENCE = new SimpleAttributeDefinitionBuilder(Constants.TRUST_MANAGER_REFERENCE, ModelType.STRING, true)
             .setMinSize(1)
+            .setRequired(true)
             .setAlternatives(Constants.TRUST_MANAGER)
             .setCapabilityReference(TRUST_MANAGER_CAPABILITY, SSL_CONTEXT_CAPABILITY)
             .setAllowExpression(false)
@@ -368,6 +376,7 @@ public class SSLContextDefinitions {
 
     static final ObjectTypeAttributeDefinition TRUST_MANAGER = new ObjectTypeAttributeDefinition.Builder(Constants.TRUST_MANAGER, KEY_STORE,
                 KEY_STORE_REFERENCE, ALIAS_FILTER, ALGORITHM, MAXIMUM_CERT_PATH, ONLY_LEAF_CERT, SOFT_FAIL, PROVIDER_NAME, PROVIDERS, OCSP, CERTIFICATE_REVOCATION_LIST, CERTIFICATE_REVOCATION_LISTS)
+            .setRequired(true)
             .setAlternatives(Constants.TRUST_MANAGER_REFERENCE)
             .setAllowExpression(false)
             .setRestartAllServices()

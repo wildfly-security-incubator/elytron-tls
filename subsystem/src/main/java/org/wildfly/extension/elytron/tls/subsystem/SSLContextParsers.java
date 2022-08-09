@@ -18,13 +18,13 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.PersistentResourceXMLDescription;
-
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXTS;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXTS;
 
-class SSLContextParser {
+import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.PersistentResourceXMLDescription;
+
+class SSLContextParsers {
 
     final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.CLIENT_SSL_CONTEXT))
             .setXmlWrapperElement(CLIENT_SSL_CONTEXTS)
