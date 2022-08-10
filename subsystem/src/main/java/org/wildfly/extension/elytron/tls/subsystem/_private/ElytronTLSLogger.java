@@ -20,6 +20,7 @@ import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
 import java.io.IOException;
+import java.security.KeyStore;
 import java.security.NoSuchProviderException;
 
 import org.jboss.as.controller.ExpressionResolver;
@@ -65,6 +66,22 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 4, value = "Unable to start the service.")
     StartException unableToStartService(@Cause Exception cause);
 
+    /**
+     * An {@link OperationFailedException} if it is not possible to access the {@link KeyStore} at RUNTIME.
+     *
+     * @param cause the underlying cause of the failure
+     * @return The {@link OperationFailedException} for the error.
+     */
+    @Message(id = 5, value = "Unable to access KeyStore to complete the requested operation.")
+    OperationFailedException unableToAccessKeyStore(@Cause Exception cause);
+
+    /**
+     * An {@link OperationFailedException} where an operation can not proceed as it's required service is not UP.
+     *
+     * @param serviceName the name of the service that is required.
+     * @param state the actual state of the service.
+     * @return The {@link OperationFailedException} for the error.
+     */
     @Message(id = 7, value = "The required service '%s' is not UP, it is currently '%s'.")
     OperationFailedException requiredServiceNotUp(ServiceName serviceName, ServiceController.State state);
 
@@ -87,6 +104,14 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 9, value = "Unable to complete operation. '%s'")
     RuntimeException unableToCompleteOperation(@Cause Throwable cause, String causeMessage);
 
+    /**
+     * An {@link OperationFailedException} where this an attempt to save a KeyStore without a File defined.
+     *
+     * @return The {@link OperationFailedException} for the error.
+     */
+    @Message(id = 10, value = "Unable to save KeyStore - KeyStore file '%s' does not exist.")
+    OperationFailedException cantSaveWithoutFile(final String file);
+
     @Message(id = 12, value = "No suitable provider found for type '%s'")
     StartException noSuitableProvider(String type);
 
@@ -103,6 +128,10 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 23, value = "KeyStore file '%s' does not exist. Used blank.")
     void keyStoreFileNotExistsButIgnored(final String file);
 
+    @LogMessage(level = WARN)
+    @Message(id = 24, value = "Certificate [%s] in KeyStore is not valid")
+    void certificateNotValid(String alias, @Cause Exception cause);
+
     @Message(id = 31, value = "Unable to access CRL file.")
     StartException unableToAccessCRL(@Cause Exception cause);
 
@@ -117,6 +146,9 @@ public interface ElytronTLSLogger extends BasicLogger {
 
     @Message(id = 43, value = "A cycle has been detected initialising the resources - %s")
     OperationFailedException cycleDetected(String cycle);
+
+    @Message(id = 44, value = "Unexpected name of servicename's parent - %s")
+    IllegalStateException invalidServiceNameParent(String canonicalName);
 
     /*
      * Credential Store Section.
@@ -170,11 +202,68 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1017, value = "Invalid value for cipher-suite-filter. %s")
     OperationFailedException invalidCipherSuiteFilter(@Cause Throwable cause, String causeMessage);
 
+    @Message(id = 1027, value = "Key password cannot be resolved for key-store '%s'")
+    IOException keyPasswordCannotBeResolved(String path);
+
+    @Message(id = 1028, value = "Invalid value for not-before. %s")
+    OperationFailedException invalidNotBefore(@Cause Throwable cause, String causeMessage);
+
+    @Message(id = 1029, value = "Alias '%s' does not exist in KeyStore")
+    OperationFailedException keyStoreAliasDoesNotExist(String alias);
+
+    @Message(id = 1030, value = "Alias '%s' does not identify a PrivateKeyEntry in KeyStore")
+    OperationFailedException keyStoreAliasDoesNotIdentifyPrivateKeyEntry(String alias);
+
+    @Message(id = 1031, value = "Unable to obtain PrivateKey for alias '%s'")
+    OperationFailedException unableToObtainPrivateKey(String alias);
+
+    @Message(id = 1032, value = "Unable to obtain Certificate for alias '%s'")
+    OperationFailedException unableToObtainCertificate(String alias);
+
+    @Message(id = 1033, value = "No certificates found in certificate reply")
+    OperationFailedException noCertificatesFoundInCertificateReply();
+
+    @Message(id = 1034, value = "Public key from certificate reply does not match public key from certificate in KeyStore")
+    OperationFailedException publicKeyFromCertificateReplyDoesNotMatchKeyStore();
+
+    @Message(id = 1035, value = "Certificate reply is the same as the certificate from PrivateKeyEntry in KeyStore")
+    OperationFailedException certificateReplySameAsCertificateFromKeyStore();
+
+    @Message(id = 1036, value = "Alias '%s' already exists in KeyStore")
+    OperationFailedException keyStoreAliasAlreadyExists(String alias);
+
+    @Message(id = 1037, value = "Top-most certificate from certificate reply is not trusted. Inspect the certificate carefully and if it is valid, execute import-certificate again with validate set to false.")
+    OperationFailedException topMostCertificateFromCertificateReplyNotTrusted();
+
+    @Message(id = 1038, value = "Trusted certificate is already in KeyStore under alias '%s'")
+    OperationFailedException trustedCertificateAlreadyInKeyStore(String alias);
+
+    @Message(id = 1039, value = "Trusted certificate is already in cacerts KeyStore under alias '%s'")
+    OperationFailedException trustedCertificateAlreadyInCacertsKeyStore(String alias);
+
+    @Message(id = 1040, value = "Unable to determine if the certificate is trusted. Inspect the certificate carefully and if it is valid, execute import-certificate again with validate set to false.")
+    OperationFailedException unableToDetermineIfCertificateIsTrusted();
+
+    @Message(id = 1041, value = "Certificate file does not exist")
+    OperationFailedException certificateFileDoesNotExist(@Cause Exception cause);
+
+    @Message(id = 1042, value = "Unable to obtain Entry for alias '%s'")
+    OperationFailedException unableToObtainEntry(String alias);
+
+    @Message(id = 1051, value = "Invalid certificate revocation reason '%s'")
+    OperationFailedException invalidCertificateRevocationReason(String reason);
+
+    @Message(id = 1052, value = "Unable to instantiate AcmeClientSpi implementation")
+    IllegalStateException unableToInstatiateAcmeClientSpiImplementation();
+
+    @Message(id = 1055, value = "Invalid key size: %d")
+    OperationFailedException invalidKeySize(int keySize);
+
     @Message(id = 1059, value = "Unable to detect KeyStore '%s'")
     StartException unableToDetectKeyStore(String path);
 
-    @Message(id = 1061, value = "Invalid value of host context map: '%s' is not valid hostname pattern.")
-    OperationFailedException invalidHostContextMapValue(String hostname);
+    @Message(id = 1060, value = "Fileless KeyStore needs to have a defined type.")
+    OperationFailedException filelessKeyStoreMissingType();
 
     @Message(id = 1064, value = "Failed to load OCSP responder certificate '%s'.")
     StartException failedToLoadResponderCert(String alias, @Cause Exception exception);
@@ -185,9 +274,27 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1080, value = "Non existing key store needs to have defined type.")
     OperationFailedException nonexistingKeyStoreMissingType();
 
-    @Message(id = 1085, value = "Multiple keystore definitions.")
+    @Message(id = 1081, value = "Failed to lazily initialize key manager")
+    RuntimeException failedToLazilyInitKeyManager(@Cause  Exception e);
+
+    @Message(id = 1082, value = "Failed to store generated self-signed certificate")
+    RuntimeException failedToStoreGeneratedSelfSignedCertificate(@Cause  Exception e);
+
+    @Message(id = 1083, value = "No '%s' found in injected value.")
+    RuntimeException noTypeFoundForLazyInitKeyManager(final String type);
+
+    @Message(id = 1084, value = "KeyStore %s not found, it will be auto generated on first use with a self-signed certificate for host %s")
+    @LogMessage(level = WARN)
+    void selfSignedCertificateWillBeCreated(String file, String host);
+
+    @Message(id = 1085, value = "Generated self-signed certificate at %s. Please note that self-signed certificates are not secure and should only be used for testing purposes. Do not use this self-signed certificate in production.\nSHA-1 fingerprint of the generated key is %s\nSHA-256 fingerprint of the generated key is %s")
+    @LogMessage(level = WARN)
+    void selfSignedCertificateHasBeenCreated(String file, String sha1, String sha256);
+
+    @Message(id = 1089, value = "Multiple keystore definitions.")
     OperationFailedException multipleKeystoreDefinitions();
-    @Message(id = 1086, value = "Missing keystore definition.")
+
+    @Message(id = 1090, value = "Missing keystore definition.")
     OperationFailedException missingKeyStoreDefinition();
 
     @Message(id = 1200, value = "The name of the resolver to use was not specified and no default-resolver has been defined.")

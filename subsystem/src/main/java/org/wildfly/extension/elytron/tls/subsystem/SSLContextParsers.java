@@ -18,7 +18,9 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXT;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXTS;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXT;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXTS;
 
 import org.jboss.as.controller.PathElement;
@@ -26,20 +28,27 @@ import org.jboss.as.controller.PersistentResourceXMLDescription;
 
 class SSLContextParsers {
 
-    final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.CLIENT_SSL_CONTEXT))
+    final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(CLIENT_SSL_CONTEXT))
             .setXmlWrapperElement(CLIENT_SSL_CONTEXTS)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_FILTER)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_NAMES)
             .addAttribute(SSLContextDefinitions.PROTOCOLS)
-//            .addAttribute(SSLContextDefinitions.KEY_MANAGER)
-            .addAttribute(SSLContextDefinitions.KEY_MANAGER_REFERENCE)
-//            .addAttribute(SSLContextDefinitions.TRUST_MANAGER)
-            .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
+            .addAttribute(SSLContextDefinitions.WANT_CLIENT_AUTH)
+            .addAttribute(SSLContextDefinitions.NEED_CLIENT_AUTH)
+            .addAttribute(SSLContextDefinitions.AUTHENTICATION_OPTIONAL)
+            .addAttribute(SSLContextDefinitions.USE_CIPHER_SUITES_ORDER)
+            .addAttribute(SSLContextDefinitions.MAXIMUM_SESSION_CACHE_SIZE)
+            .addAttribute(SSLContextDefinitions.SESSION_TIMEOUT)
+            .addAttribute(SSLContextDefinitions.WRAP)
+            .addAttribute(SSLContextDefinitions.KEY_MANAGER_OBJECT)
+//            .addAttribute(SSLContextDefinitions.KEY_MANAGER_OBJECT)
+            .addAttribute(SSLContextDefinitions.TRUST_MANAGER_OBJECT)
+//            .addAttribute(SSLContextDefinitions.TRUST_MANAGER_OBJECT)
             .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .build();
 
-    final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.SERVER_SSL_CONTEXT))
+    final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(SERVER_SSL_CONTEXT))
             .setXmlWrapperElement(SERVER_SSL_CONTEXTS)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_FILTER)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_NAMES)
@@ -51,12 +60,11 @@ class SSLContextParsers {
             .addAttribute(SSLContextDefinitions.MAXIMUM_SESSION_CACHE_SIZE)
             .addAttribute(SSLContextDefinitions.SESSION_TIMEOUT)
             .addAttribute(SSLContextDefinitions.WRAP)
-//            .addAttribute(SSLContextDefinitions.KEY_MANAGER)
-            .addAttribute(SSLContextDefinitions.KEY_MANAGER_REFERENCE)
-//            .addAttribute(SSLContextDefinitions.TRUST_MANAGER)
-            .addAttribute(SSLContextDefinitions.TRUST_MANAGER_REFERENCE)
+//            .addAttribute(SSLContextDefinitions.KEY_MANAGER_OBJECT)
+            .addAttribute(SSLContextDefinitions.KEY_MANAGER_OBJECT)
+//            .addAttribute(SSLContextDefinitions.TRUST_MANAGER_OBJECT)
+            .addAttribute(SSLContextDefinitions.TRUST_MANAGER_OBJECT)
             .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .build();
-
 }

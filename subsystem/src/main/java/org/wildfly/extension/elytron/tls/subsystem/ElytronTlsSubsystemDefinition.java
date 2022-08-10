@@ -132,6 +132,9 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         resourceRegistration.registerSubModel(new SecretKeyCredentialStoreDefinition());
 
         // TLS Builders
+        resourceRegistration.registerSubModel(AdvancedModifiableKeyStoreDecorator.wrap(new KeyStoreDefinition()));
+        resourceRegistration.registerSubModel(SSLContextDefinitions.getKeyManagerDefinition());
+        resourceRegistration.registerSubModel(SSLContextDefinitions.getTrustManagerDefinition());
         resourceRegistration.registerSubModel(SSLContextDefinitions.getClientSSLContextDefinition(serverOrHostController));
         resourceRegistration.registerSubModel(SSLContextDefinitions.getServerSSLContextDefinition(serverOrHostController));
     }
