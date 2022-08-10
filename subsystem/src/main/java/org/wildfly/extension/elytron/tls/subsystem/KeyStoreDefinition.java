@@ -80,7 +80,7 @@ import org.wildfly.extension.elytron.tls.subsystem.KeyStoreService.LoadKey;
  */
 final class KeyStoreDefinition extends SimpleResourceDefinition {
 
-    static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE, KeyStore.class);
+    static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE_OBJECT, KeyStore.class);
 
     static final SimpleAttributeDefinition TYPE = new SimpleAttributeDefinitionBuilder(Constants.TYPE, ModelType.STRING, true)
         .setAttributeGroup(Constants.IMPLEMENTATION)
@@ -121,7 +121,7 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
 
     // Resource Resolver
 
-    private static final StandardResourceDescriptionResolver RESOURCE_RESOLVER = ElytronTlsExtension.getResourceDescriptionResolver(Constants.KEY_STORE);
+    private static final StandardResourceDescriptionResolver RESOURCE_RESOLVER = ElytronTlsExtension.getResourceDescriptionResolver(Constants.KEY_STORE_OBJECT);
 
     // Runtime Attributes
 
@@ -154,7 +154,7 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
     private static final AbstractWriteAttributeHandler WRITE = new ElytronReloadRequiredWriteAttributeHandler(CONFIG_ATTRIBUTES);
 
     KeyStoreDefinition() {
-        super(new Parameters(PathElement.pathElement(Constants.KEY_STORE), RESOURCE_RESOLVER)
+        super(new Parameters(PathElement.pathElement(Constants.KEY_STORE_OBJECT), RESOURCE_RESOLVER)
             .setAddHandler(ADD)
             .setRemoveHandler(REMOVE)
             .setAddRestartLevel(OperationEntry.Flag.RESTART_RESOURCE_SERVICES)

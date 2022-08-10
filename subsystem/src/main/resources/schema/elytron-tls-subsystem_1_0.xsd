@@ -336,20 +336,6 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-manager-reference" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    Reference to the KeyManager to be used by this SSLContext.
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="trust-manager-reference" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    Reference to the TrustManager to be used by this SSLContext.
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
         <xs:attribute name="key-manager" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -361,6 +347,20 @@
             <xs:annotation>
                 <xs:documentation>
                     Reference to the TrustManager to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyManager object to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    TrustManager object to be used by this SSLContext.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
@@ -426,20 +426,6 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-manager-reference" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    Reference to the KeyManager to be used by this SSLContext.
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="trust-manager-reference" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    Reference to the TrustManager to be used by this SSLContext.
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
         <xs:attribute name="key-manager" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -450,7 +436,21 @@
         <xs:attribute name="trust-manager" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
-                    Reference to the TrustManagers to be used by this SSLContext.
+                    Reference to the TrustManager to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyManager object to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    TrustManager object to be used by this SSLContext.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
@@ -512,17 +512,17 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-reference" type="xs:string">
+        <xs:attribute name="key-store" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     Reference to the KeyStore to use with the TrustManager.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store" type="xs:string">
+        <xs:attribute name="key-store-object" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
-                    KeyStore to use with the TrustManager.
+                    KeyStore object to use with the TrustManager.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
@@ -650,14 +650,14 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="responder-keystore-reference" type="xs:string" use="optional">
+        <xs:attribute name="responder-keystore" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
                     Reference to the keystore for responder-certificate. Keep undefined to use trust-manager keystore. Requires responder-certificate to be defined.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="responder-keystore" type="xs:string" use="optional">
+        <xs:attribute name="responder-keystore-object" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
                     The keystore object for responder-certificate. Keep undefined to use trust-manager keystore. Requires responder-certificate to be defined.
@@ -710,17 +710,17 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-reference" type="xs:string">
+        <xs:attribute name="key-store" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     Reference to the KeyStore to use with the KeyManager.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store" type="xs:string">
+        <xs:attribute name="key-store-object" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
-                    KeyStore to use with the KeyManager.
+                    KeyStore object to use with the KeyManager.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>

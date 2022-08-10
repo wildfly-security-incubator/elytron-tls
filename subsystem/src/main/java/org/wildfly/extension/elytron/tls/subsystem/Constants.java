@@ -273,12 +273,12 @@ interface Constants {
     String KEY_ATTRIBUTE = "key-attribute";
     String KEY_TYPE = "key-type";
     String KEY_MANAGER = "key-manager";
-    String KEY_MANAGER_REFERENCE = "key-manager-reference";
+    String KEY_MANAGER_OBJECT = "key-manager-object";
     String KEY_MANAGERS = "key-managers";
     String KEY_MAP = "key-map";
     String KEY_SIZE = "key-size";
     String KEY_STORE = "key-store";
-    String KEY_STORE_REFERENCE = "key-store-reference";
+    String KEY_STORE_OBJECT = "key-store-object";
     String KEY_STORE_REALM = "key-store-realm";
     String KEY_STORES = "key-stores";
     String KID = "kid";
@@ -464,7 +464,7 @@ interface Constants {
     String RESPONDER = "responder";
     String RESPONDER_CERTIFICATE = "responder-certificate";
     String RESPONDER_KEYSTORE = "responder-keystore";
-    String RESPONDER_KEYSTORE_REFERENCE = "responder-keystore-reference";
+    String RESPONDER_KEYSTORE_OBJECT = "responder-keystore-object";
     String REVERSE = "reverse";
     String REVOKE_CERTIFICATE = "revoke-certificate";
     String RIGHT = "right";
@@ -573,7 +573,7 @@ interface Constants {
     String TRANSPORT = "transport";
     String TRUST_CACERTS = "trust-cacerts";
     String TRUST_MANAGER = "trust-manager";
-    String TRUST_MANAGER_REFERENCE = "trust-manager-reference";
+    String TRUST_MANAGER_OBJECT = "trust-manager-object";
     String TRUST_MANAGERS = "trust-managers";
     String TRUSTED_SECURITY_DOMAINS = "trusted-security-domains";
     String TYPE = "type";

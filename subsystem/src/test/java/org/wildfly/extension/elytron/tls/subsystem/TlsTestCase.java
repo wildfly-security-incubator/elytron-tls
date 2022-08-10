@@ -496,7 +496,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Assert.assertNotNull(trustManager);
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, "trust-with-crl");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
     }
@@ -508,7 +508,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Assert.assertNotNull(trustManager);
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-multiple-crls");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, "trust-with-multiple-crls");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
     }
@@ -531,7 +531,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl-dp");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, "trust-with-crl-dp");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not realoadable
     }
@@ -543,7 +543,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crl-dp-deprecated-max-cert-path");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, "trust-with-crl-dp-deprecated-max-cert-path");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not reloadable
     }
@@ -558,7 +558,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, "trust-with-crls-dp");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, "trust-with-crls-dp");
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not realoadable
     }
@@ -583,7 +583,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Files.copy(Paths.get(TRUST_FILE.toString()), initTestFilePath, StandardCopyOption.REPLACE_EXISTING);
 
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE, INIT_TEST_TRUSTSTORE);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE_OBJECT, INIT_TEST_TRUSTSTORE);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + INIT_TEST_FILE);
         operation.get(Constants.TYPE).set("JKS");
@@ -591,9 +591,9 @@ public class TlsTestCase extends AbstractSubsystemTest {
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, INIT_TEST_TRUSTMANAGER);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, INIT_TEST_TRUSTMANAGER);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
-        operation.get(Constants.KEY_STORE).set(INIT_TEST_TRUSTSTORE);
+        operation.get(Constants.KEY_STORE_OBJECT).set(INIT_TEST_TRUSTSTORE);
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         ServiceName serviceName = Capabilities.TRUST_MANAGER_RUNTIME_CAPABILITY.getCapabilityServiceName(INIT_TEST_TRUSTMANAGER);
@@ -615,12 +615,12 @@ public class TlsTestCase extends AbstractSubsystemTest {
         createTemporaryKeyStoreFile(trustStore, new File(WORKING_DIRECTORY_LOCATION + INIT_TEST_FILE));
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE, INIT_TEST_TRUSTSTORE);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.KEY_STORE_OBJECT, INIT_TEST_TRUSTSTORE);
         operation.get(ClientConstants.OP).set(Constants.LOAD);
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER, INIT_TEST_TRUSTMANAGER);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(Constants.TRUST_MANAGER_OBJECT, INIT_TEST_TRUSTMANAGER);
         operation.get(ClientConstants.OP).set(Constants.INIT);
         Assert.assertEquals(SUCCESS, services.executeOperation(operation).get(OUTCOME).asString());
 
