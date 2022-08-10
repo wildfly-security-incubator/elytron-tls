@@ -18,7 +18,9 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXT;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.CLIENT_SSL_CONTEXTS;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXT;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_CONTEXTS;
 
 import org.jboss.as.controller.PathElement;
@@ -26,7 +28,7 @@ import org.jboss.as.controller.PersistentResourceXMLDescription;
 
 class SSLContextParsers {
 
-    final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.CLIENT_SSL_CONTEXT))
+    final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(CLIENT_SSL_CONTEXT))
             .setXmlWrapperElement(CLIENT_SSL_CONTEXTS)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_FILTER)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_NAMES)
@@ -39,7 +41,7 @@ class SSLContextParsers {
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .build();
 
-    final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(Constants.SERVER_SSL_CONTEXT))
+    final PersistentResourceXMLDescription serverSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(SERVER_SSL_CONTEXT))
             .setXmlWrapperElement(SERVER_SSL_CONTEXTS)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_FILTER)
             .addAttribute(SSLContextDefinitions.CIPHER_SUITE_NAMES)
@@ -58,5 +60,4 @@ class SSLContextParsers {
             .addAttribute(SSLContextDefinitions.PROVIDERS)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .build();
-
 }

@@ -17,6 +17,7 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.SECURITY_PROPERTY;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.TLS;
 
 import org.jboss.as.controller.AttributeMarshallers;
 import org.jboss.as.controller.AttributeParsers;
@@ -62,6 +63,16 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
         return ElytronTlsExtension.NAMESPACE_1_0;
     }
 
+    PersistentResourceXMLDescription getTlsParser() {
+        return PersistentResourceXMLDescription.decorator(TLS)
+                .addChild(getServerSSLContextParser())
+                .addChild(getClientSSLContextParser())
+                .addChild(getKeyStoreParser())
+                .addChild(getKeyManagerParser())
+                .addChild(getTrustManagerParser())
+                .build();
+    }
+
     @Override
     public PersistentResourceXMLDescription getParserDescription() {
         return PersistentResourceXMLDescription.builder(ElytronTlsExtension.SUBSYSTEM_PATH, getNameSpace())
@@ -72,12 +83,8 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
                 .addAttribute(ElytronTlsSubsystemDefinition.FINAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.DISALLOWED_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.DEFAULT_SSL_CONTEXT)
-                .addChild(getServerSSLContextParser())
-                .addChild(getClientSSLContextParser())
-                .addChild(getKeyStoreParser())
+                .addChild(getTlsParser())
                 .addChild(getCredentialStoresParser())
-                .addChild(getKeyManagerParser())
-                .addChild(getTrustManagerParser())
                 .addChild(getProviderParser())
                 .addChild(getExpressionResolverParser())
                 .build();

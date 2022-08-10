@@ -15,21 +15,6 @@
   -->
 <subsystem xmlns="urn:wildfly:elytron-tls-subsystem:1.0" default-ssl-context="server">
     <!-- TODO: ssl-contexts that also create key stores, managers, oscp, etc. -->
-    <server-ssl-contexts>
-        <server-ssl-context name="server" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true"
-                            authentication-optional="true" use-cipher-suites-order="false" maximum-session-cache-size="10"
-                            session-timeout="120" wrap="false" key-manager-reference="serverKey" trust-manager-reference="serverTrust"
-                            providers="custom-loader" provider-name="first"/>
-        <server-ssl-context name="server2" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true"
-                            authentication-optional="true" use-cipher-suites-order="false" maximum-session-cache-size="10"
-                            session-timeout="120" wrap="false" key-manager-reference="serverKey" trust-manager-reference="serverTrust"
-                            providers="custom-loader" provider-name="first"/>
-    </server-ssl-contexts>
-    <client-ssl-contexts>
-        <client-ssl-context name="client" protocols="TLSv1.3 TLSv1.2" key-manager-reference="clientKey" trust-manager-reference="serverTrust"
-                            providers="custom-loader" provider-name="first"/>
-    </client-ssl-contexts>
-    <!-- TODO: server-ssl-sni-context -->
     <credential-stores>
         <credential-store name="test1" relative-to="jboss.server.data.dir" location="test1.store" create="true">
             <implementation-properties>
@@ -46,6 +31,23 @@
         </credential-store>
         <secret-key-credential-store name="test3" relative-to="jboss.server.data.dir" path="test3.cs" create="false" populate="false" key-size="192" default-alias="test3" />
     </credential-stores>
+    <tls>
+        <server-ssl-contexts>
+            <server-ssl-context name="server" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true"
+                                authentication-optional="true" use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager-reference="serverKey" trust-manager-reference="serverTrust"
+                                providers="custom-loader" provider-name="first"/>
+            <server-ssl-context name="server2" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true"
+                                authentication-optional="true" use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager-reference="serverKey" trust-manager-reference="serverTrust"
+                                providers="custom-loader" provider-name="first"/>
+        </server-ssl-contexts>
+        <client-ssl-contexts>
+            <client-ssl-context name="client" protocols="TLSv1.3 TLSv1.2" key-manager-reference="clientKey" trust-manager-reference="serverTrust"
+                                providers="custom-loader" provider-name="first"/>
+        </client-ssl-contexts>
+        <!-- TODO: server-ssl-sni-context -->
+    </tls>
     <expression-resolver default-resolver="A" prefix="G">
         <resolver name="A" credential-store="test1" secret-key="C"/>
         <resolver name="D" credential-store="test2" secret-key="F"/>

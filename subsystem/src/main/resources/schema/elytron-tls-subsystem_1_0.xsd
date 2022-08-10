@@ -31,11 +31,7 @@
         <xs:all>
             <xs:element name="security-properties" type="securityPropertiesType" minOccurs="0" />
             <xs:element name="providers" type="providersType" minOccurs="0" />
-            <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
-            <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
-            <xs:element name="trust-managers" type="trustManagersType" minOccurs="0" />
-            <xs:element name="key-managers" type="keyManagersType" minOccurs="0" />
-            <xs:element name="key-stores" type="keyStoresType" minOccurs="0" />
+            <xs:element name="tls" type="tlsType" minOccurs="0" />
             <xs:element name="credential-stores" type="credentialStoresType" minOccurs="0" />
             <xs:element name="expression-resolver" type="expressionResolverType" minOccurs="0" />
         </xs:all>
@@ -214,6 +210,27 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+
+    <xs:complexType name="tlsType">
+        <xs:annotation>
+            <xs:documentation>
+                Complex type to contain the definitions of the various components needed
+                for SSL, the end result being that these components can be combined together to
+                create a fully defined SSLContext.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
+            <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
+            <xs:element name="trust-managers" type="trustManagersType" minOccurs="0" />
+            <xs:element name="key-managers" type="keyManagersType" minOccurs="0" />
+            <xs:element name="key-stores" type="keyStoresType" minOccurs="0" />
+        </xs:all>
+    </xs:complexType>
+
+    <!---
+        SSL Contexts
+    -->
 
     <xs:complexType name="serverSSLContextsType">
         <xs:annotation>
