@@ -459,17 +459,17 @@ public class SSLContextDefinitions {
             @Override
             protected ValueSupplier<KeyManager> getValueSupplier(ServiceBuilder<KeyManager> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
 
-                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
-                                                                            context, providersKMDefinition, model);
-                Supplier<KeyStore> keyStoreSupplier;
-
                 final String algorithmName = ALGORITHM.resolveModelAttribute(context, model).asStringOrNull();
                 final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
                 final String aliasFilter = ALIAS_FILTER.resolveModelAttribute(context, model).asStringOrNull();
-                String providersName = providersKMDefinition.resolveModelAttribute(context, model).asStringOrNull();
+                final String providersName = providersKMDefinition.resolveModelAttribute(context, model).asStringOrNull();
 
-//                final String keyStoreName = keystoreKMDefinition.resolveModelAttribute(context, model).asStringOrNull();
-
+                
+                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
+                                                                        context, providersName);
+                Supplier<KeyStore> keyStoreSupplier;
+                
+                //                final String keyStoreName = keystoreKMDefinition.resolveModelAttribute(context, model).asStringOrNull();
                 if (keyStoreName != null) {
                     serviceBuilder.addDependency(context.getCapabilityServiceName(
                                     buildDynamicCapabilityName(KEY_STORE_CAPABILITY, keyStoreName), KeyStore.class),
@@ -947,7 +947,7 @@ public class SSLContextDefinitions {
         return builder.build();
     }
 
-    static ResourceDefinition getClientSSLContextDefinition(boolean serverOrHostController) {
+static ResourceDefinition getClientSSLContextDefinition(boolean serverOrHostController) {
 
         final SimpleAttributeDefinition providersDefinition = new SimpleAttributeDefinitionBuilder(PROVIDERS)
                 .setCapabilityReference(PROVIDERS_CAPABILITY, SSL_CONTEXT_CAPABILITY)
@@ -956,38 +956,40 @@ public class SSLContextDefinitions {
                 .build();
 
         final AttributeDefinition[] attributes = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES,
-                PROTOCOLS,/* KEY_MANAGER,*/ KEY_MANAGER, /* TRUST_MANAGER,*/ TRUST_MANAGER,
+                PROTOCOLS, KEY_MANAGER_OBJECT, KEY_MANAGER, TRUST_MANAGER_OBJECT, TRUST_MANAGER,
                 PROVIDER_NAME, providersDefinition};
 
         AbstractAddStepHandler add = new TrivialAddHandler<SSLContext>(SSLContext.class, attributes, SSL_CONTEXT_RUNTIME_CAPABILITY) {
             @Override
             protected ValueSupplier<SSLContext> getValueSupplier(ServiceBuilder<SSLContext> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
-                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
-                                                                            context, providersDefinition, model);
-                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
-                SSLContextExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
-                SSLContextExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
-
                 final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
+                final String providersName = providersDefinition.resolveModelAttribute(context, model).asStringOrNull();
                 final List<String> protocols = PROTOCOLS.unwrap(context, model);
                 final String cipherSuiteFilter = CIPHER_SUITE_FILTER.resolveModelAttribute(context, model).asString();
                 final String cipherSuiteNames = CIPHER_SUITE_NAMES.resolveModelAttribute(context, model).asStringOrNull();
-
-                final ModelNode keyManagerNode = KEY_MANAGER_OBJECT.resolveModelAttribute(context, model);
-                final ModelNode trustManagerNode = TRUST_MANAGER_OBJECT.resolveModelAttribute(context, model);
-
-                if (keyManagerNode.isDefined()) {
-                    keyManagerSupplier = (SSLContextExceptionSupplier<KeyManager, Exception>) createKeyManager(serviceBuilder, context, keyManagerNode, pathManagerSupplier);
-                } else {
+                
+                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
+                                                                            context, providersName);
+                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                SSLContextExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
+                SSLContextExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
+                
+                final String keyManagerName = KEY_MANAGER.resolveModelAttribute(context, model).asStringOrNull();
+                final ModelNode keyManagerObject = KEY_MANAGER_OBJECT.resolveModelAttribute(context, model);
+                if (keyManagerObject.isDefined()) {
+                    keyManagerSupplier = (SSLContextExceptionSupplier<KeyManager, Exception>) createKeyManager(serviceBuilder, context, keyManagerObject, pathManagerSupplier, providersSupplier);
+                } else { // Use reference
                     keyManagerSupplier = new SSLContextExceptionSupplier<>(KEY_MANAGER_CAPABILITY, KeyManager.class, serviceBuilder,
-                            context, KEY_MANAGER, model);
+                    context, keyManagerName);
                 }
 
-                if (trustManagerNode.isDefined()) {
-                    trustManagerSupplier = (SSLContextExceptionSupplier<TrustManager, Exception>) createTrustManager(serviceBuilder, context, trustManagerNode, pathManagerSupplier);
+                final String trustManagerName = TRUST_MANAGER.resolveModelAttribute(context, model).asStringOrNull();
+                final ModelNode trustManagerObject = TRUST_MANAGER_OBJECT.resolveModelAttribute(context, model);
+                if (trustManagerObject.isDefined()) {
+                    trustManagerSupplier = (SSLContextExceptionSupplier<TrustManager, Exception>) createTrustManager(serviceBuilder, context, trustManagerObject, pathManagerSupplier, providersSupplier);
                 } else {
                     trustManagerSupplier = new SSLContextExceptionSupplier<>(TRUST_MANAGER_CAPABILITY, TrustManager.class, serviceBuilder,
-                            context, TRUST_MANAGER, model);
+                            context, trustManagerName);
                 }
 
                 final SSLContextExceptionSupplier<KeyManager, Exception> finalKeyManagerSupplier = keyManagerSupplier;
@@ -1065,7 +1067,7 @@ public class SSLContextDefinitions {
                 .build();
 
         final AttributeDefinition[] attributes = new AttributeDefinition[]{CIPHER_SUITE_FILTER, CIPHER_SUITE_NAMES,
-                PROTOCOLS,/* KEY_MANAGER,*/ keyManagerDefinition,/* TRUST_MANAGER,*/ TRUST_MANAGER, PROVIDER_NAME,
+                PROTOCOLS, KEY_MANAGER_OBJECT, keyManagerDefinition, TRUST_MANAGER_OBJECT, TRUST_MANAGER, PROVIDER_NAME,
                 providersDefinition, WANT_CLIENT_AUTH, NEED_CLIENT_AUTH, AUTHENTICATION_OPTIONAL, USE_CIPHER_SUITES_ORDER, MAXIMUM_SESSION_CACHE_SIZE,
                 SESSION_TIMEOUT, WRAP};
 
@@ -1076,14 +1078,9 @@ public class SSLContextDefinitions {
             @Override
             protected ValueSupplier<SSLContext> getValueSupplier(ServiceBuilder<SSLContext> serviceBuilder,
                                                                                 OperationContext context, ModelNode model) throws OperationFailedException {
-
-                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
-                                                                                        context, providersDefinition, model);
-                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
-                SSLContextExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
-                SSLContextExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
-
+                                                    
                 final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
+                final String providersName = PROVIDERS.resolveModelAttribute(context, model).asStringOrNull();
                 final List<String> protocols = PROTOCOLS.unwrap(context, model);
                 final String cipherSuiteFilter = CIPHER_SUITE_FILTER.resolveModelAttribute(context, model).asString(); // has default value, can't be null
                 final String cipherSuiteNames = CIPHER_SUITE_NAMES.resolveModelAttribute(context, model).asStringOrNull(); // doesn't have a default value yet since we are disabling TLS 1.3 by default
@@ -1094,22 +1091,29 @@ public class SSLContextDefinitions {
                 final int maximumSessionCacheSize = MAXIMUM_SESSION_CACHE_SIZE.resolveModelAttribute(context, model).asInt();
                 final int sessionTimeout = SESSION_TIMEOUT.resolveModelAttribute(context, model).asInt();
                 final boolean wrap = WRAP.resolveModelAttribute(context, model).asBoolean();
+                
+                Supplier<Provider[]> providersSupplier = addRequirement(PROVIDERS_CAPABILITY, Provider[].class, serviceBuilder,
+                                                                                        context, providersName);
+                Supplier<PathManager> pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                SSLContextExceptionSupplier<KeyManager, Exception> keyManagerSupplier;
+                SSLContextExceptionSupplier<TrustManager, Exception> trustManagerSupplier;
 
-                final ModelNode keyManagerNode = KEY_MANAGER_OBJECT.resolveModelAttribute(context, model);
-                final ModelNode trustManagerNode = TRUST_MANAGER_OBJECT.resolveModelAttribute(context, model);
-
-                if (keyManagerNode.isDefined()) {
-                    keyManagerSupplier = (SSLContextExceptionSupplier<KeyManager, Exception>) createKeyManager(serviceBuilder, context, keyManagerNode, pathManagerSupplier);
-                } else {
+                final String keyManagerName = keyManagerDefinition.resolveModelAttribute(context, model).asStringOrNull();
+                final ModelNode keyManagerObject = KEY_MANAGER_OBJECT.resolveModelAttribute(context, model);
+                if (keyManagerObject.isDefined()) {
+                    keyManagerSupplier = (SSLContextExceptionSupplier<KeyManager, Exception>) createKeyManager(serviceBuilder, context, keyManagerObject, pathManagerSupplier, providersSupplier);
+                } else { // Use reference
                     keyManagerSupplier = new SSLContextExceptionSupplier<>(KEY_MANAGER_CAPABILITY, KeyManager.class, serviceBuilder,
-                            context, KEY_MANAGER, model);
+                    context, keyManagerName);
                 }
-
-                if (trustManagerNode.isDefined()) {
-                    trustManagerSupplier = (SSLContextExceptionSupplier<TrustManager, Exception>) createTrustManager(serviceBuilder, context, keyManagerNode, pathManagerSupplier);
+                
+                final String trustManagerName = TRUST_MANAGER.resolveModelAttribute(context, model).asStringOrNull();
+                final ModelNode trustManagerObject = TRUST_MANAGER_OBJECT.resolveModelAttribute(context, model);
+                if (trustManagerObject.isDefined()) {
+                    trustManagerSupplier = (SSLContextExceptionSupplier<TrustManager, Exception>) createTrustManager(serviceBuilder, context, keyManagerObject, pathManagerSupplier, providersSupplier);
                 } else {
                     trustManagerSupplier = new SSLContextExceptionSupplier<>(TRUST_MANAGER_CAPABILITY, TrustManager.class, serviceBuilder,
-                            context, TRUST_MANAGER, model);
+                            context, trustManagerName);
                 }
 
                 final SSLContextExceptionSupplier<KeyManager, Exception> finalKeyManagerSupplier = keyManagerSupplier;
@@ -1148,7 +1152,7 @@ public class SSLContextDefinitions {
                         LOGGER.tracef(
                                 "ServerSSLContext supplying:  keyManager = %s  trustManager = %s  "
                                         + "providers = %s  cipherSuiteFilter = %s  cipherSuiteNames = %s protocols = %s  wantClientAuth = %s  needClientAuth = %s  "
-                                        + "maximumSessionCacheSize = %s  sessionTimeout = %s wrap = %s",
+                                        + "authenticationOptional = %s maximumSessionCacheSize = %s  sessionTimeout = %s wrap = %s",
                                 keyManager, trustManager, Arrays.toString(providers), cipherSuiteFilter, cipherSuiteNames,
                                 Arrays.toString(protocols.toArray()), wantClientAuth, needClientAuth, authenticationOptional,
                                 maximumSessionCacheSize, sessionTimeout, wrap);
@@ -1181,25 +1185,26 @@ public class SSLContextDefinitions {
 
 
     private static ExceptionSupplier<TrustManager, Exception> createTrustManager(ServiceBuilder<SSLContext> serviceBuilder, OperationContext context, ModelNode model,
-                                                                                 Supplier<PathManager> pathManager) throws OperationFailedException {
-        final ModelNode keyStoreNode = KEY_STORE_OBJECT.resolveModelAttribute(context, model);
-        final String keyStoreReference = KEY_STORE.resolveModelAttribute(context, model).asStringOrNull();
+                                                                                 Supplier<PathManager> pathManager,
+                                                                                 Supplier<Provider[]> providersSupplier) throws OperationFailedException {
         final String algorithmName = ALGORITHM.resolveModelAttribute(context, model).asStringOrNull();
         final String aliasFilter = ALIAS_FILTER.resolveModelAttribute(context, model).asStringOrNull();
         final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
+        
+        final ModelNode keyStoreObject = KEY_STORE_OBJECT.resolveModelAttribute(context, model);
+        final String keyStoreName = keystoreTMDefinition.resolveModelAttribute(context, model).asStringOrNull();
+        ExceptionSupplier<KeyStore, Exception> keyStoreSupplier;
 
-        SSLContextExceptionSupplier<KeyStore, Exception> keyStoreSupplier;
-
-        if (keyStoreReference != null) {
-            if (keyStoreNode != null) {
+        if (keyStoreName != null) {
+            if (keyStoreObject != null) {
                 throw LOGGER.multipleKeystoreDefinitions();
             }
-            keyStoreSupplier = new SSLContextExceptionSupplier<>(KEY_STORE_CAPABILITY, KeyStore.class, serviceBuilder, context, KEY_STORE, model);
+            keyStoreSupplier = new SSLContextExceptionSupplier<>(KEY_STORE_CAPABILITY, KeyStore.class, serviceBuilder, context, keyStoreName);
         } else {
-            if (keyStoreNode == null) {
+            if (keyStoreObject == null) {
                 throw LOGGER.missingKeyStoreDefinition();
             }
-            keyStoreSupplier = (SSLContextExceptionSupplier<KeyStore, Exception>) createKeyStore(serviceBuilder, context, keyStoreNode, pathManager);
+            keyStoreSupplier = createKeyStore(serviceBuilder, context, keyStoreObject, pathManager, providersSupplier);
         }
 
         final String algorithm = algorithmName != null ? algorithmName : TrustManagerFactory.getDefaultAlgorithm();
@@ -1210,25 +1215,21 @@ public class SSLContextDefinitions {
 
         DelegatingTrustManager delegatingTrustManager = new DelegatingTrustManager();
         return () -> {
-            TrustManagerFactory trustManagerFactory = null;
-
-            for (Provider current : Security.getProviders()) {
-                if (providerName == null || providerName.equals(current.getName())) {
-                    try {
-                        trustManagerFactory =  TrustManagerFactory.getInstance(algorithm, current);
-                    } catch (NoSuchAlgorithmException ignored) {
-                    }
-                }
-            }
-            if (trustManagerFactory == null) {
-                throw LOGGER.unableToCreateManagerFactory(TrustManagerFactory.class.getSimpleName(), algorithm);
-            }
-
+            Provider[] providers = providersSupplier.get();
+            
+            TrustManagerFactory trustManagerFactory = createTrustManagerFactory(providers, providerName, algorithm);
             KeyStore keyStore = keyStoreSupplier.get();
 
             try {
                 if (aliasFilter != null) {
                     keyStore = FilteringKeyStore.filteringKeyStore(keyStore, AliasFilter.fromString(aliasFilter));
+                }
+
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.tracef(
+                            "TrustManager supplying:  providers = %s  provider = %s  algorithm = %s  trustManagerFactory = %s  keyStoreName = %s  keyStore = %s  aliasFilter = %s  keyStoreSize = %d",
+                            Arrays.toString(providers), providerName, algorithm, trustManagerFactory, keyStoreName, keyStore, aliasFilter, keyStore.size()
+                    );
                 }
 
                 trustManagerFactory.init(keyStore);
@@ -1248,7 +1249,7 @@ public class SSLContextDefinitions {
     }
 
     private static ExceptionSupplier<TrustManager, Exception> createX509RevocationTrustManager(ServiceBuilder<SSLContext> serviceBuilder, OperationContext context,
-                                                                         ModelNode model, String algorithm, String providerName, SSLContextExceptionSupplier<KeyStore, Exception> keyStoreSupplier,
+                                                                         ModelNode model, String algorithm, String providerName, ExceptionSupplier<KeyStore, Exception> keyStoreSupplier,
                                                                          String aliasFilter, Supplier<PathManager> pathManager) throws OperationFailedException {
 
         ModelNode crlNode = CERTIFICATE_REVOCATION_LIST.resolveModelAttribute(context, model);
@@ -1282,10 +1283,10 @@ public class SSLContextDefinitions {
         boolean preferCrls = PREFER_CRLS.resolveModelAttribute(context, ocspNode).asBoolean(false);
         String responder = RESPONDER.resolveModelAttribute(context, ocspNode).asStringOrNull();
         String responderCertAlias = RESPONDER_CERTIFICATE.resolveModelAttribute(context, ocspNode).asStringOrNull();
-        String responderKeystoreReference = RESPONDER_KEYSTORE.resolveModelAttribute(context, ocspNode).asStringOrNull();
+        String responderKeystoreName = RESPONDER_KEYSTORE.resolveModelAttribute(context, ocspNode).asStringOrNull();
 
-        final SSLContextExceptionSupplier<KeyStore, Exception> responderStoreSupplier = (responderKeystoreReference != null)
-                ? new SSLContextExceptionSupplier<>(KEY_STORE_CAPABILITY, KeyStore.class, serviceBuilder, context, responderKeystoreReference)
+        final SSLContextExceptionSupplier<KeyStore, Exception> responderStoreSupplier = (responderKeystoreName != null)
+                ? new SSLContextExceptionSupplier<>(KEY_STORE_CAPABILITY, KeyStore.class, serviceBuilder, context, responderKeystoreName)
                 : keyStoreSupplier;
 
         URI responderUri;
@@ -1384,7 +1385,6 @@ public class SSLContextDefinitions {
                     }
                 }
             }
-
             throw LOGGER.unableToCreateManagerFactory(TrustManagerFactory.class.getSimpleName(), algorithm);
         }
 
@@ -1453,30 +1453,34 @@ public class SSLContextDefinitions {
     }
 
     private static ExceptionSupplier<KeyManager, Exception> createKeyManager(ServiceBuilder<SSLContext> serviceBuilder, OperationContext context,
-                                                                             ModelNode model, Supplier<PathManager> pathManager) throws OperationFailedException {
-        final ModelNode keyStoreNode = KEY_STORE_OBJECT.resolveModelAttribute(context, model);
-        final String keyStoreReference = KEY_STORE.resolveModelAttribute(context, model).asStringOrNull();
+                                                                             ModelNode model, Supplier<PathManager> pathManager,
+                                                                             Supplier<Provider[]> providersSupplier) throws OperationFailedException {
         final ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier = CredentialReference.getCredentialSourceSupplier(context, CREDENTIAL_REFERENCE, model, serviceBuilder);
         final String algorithm = ALGORITHM.resolveModelAttribute(context, model).asStringOrNull();
         final String aliasFilter = ALIAS_FILTER.resolveModelAttribute(context, model).asStringOrNull();
+        final String generateSelfSignedCertificateHost = GENERATE_SELF_SIGNED_CERTIFICATE_HOST.resolveModelAttribute(context, model).asStringOrNull();
         final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
-
+        
+        final ModelNode keyStoreObject = KEY_STORE_OBJECT.resolveModelAttribute(context, model);
+        final String keyStoreName = keystoreKMDefinition.resolveModelAttribute(context, model).asStringOrNull();
+        final ModifiableKeyStoreService keyStoreService = getModifiableKeyStoreService(context, keyStoreName);
         ExceptionSupplier<KeyStore, Exception> keyStoreSupplier;
 
-        if (keyStoreReference != null) {
-            if (keyStoreNode != null) {
+        if (keyStoreName != null) {
+            if (keyStoreObject != null) {
                 throw LOGGER.multipleKeystoreDefinitions();
             }
-            keyStoreSupplier = new SSLContextExceptionSupplier<>(KEY_STORE_CAPABILITY, KeyStore.class, serviceBuilder, context, KEY_STORE, model);
+            keyStoreSupplier = new SSLContextExceptionSupplier<>(KEY_STORE_CAPABILITY, KeyStore.class, serviceBuilder, context, keyStoreName);
         } else {
-            if (keyStoreNode == null) {
+            if (keyStoreObject == null) {
                 throw LOGGER.missingKeyStoreDefinition();
             }
-            keyStoreSupplier = createKeyStore(serviceBuilder, context, keyStoreNode, pathManager);
+            keyStoreSupplier = createKeyStore(serviceBuilder, context, keyStoreObject, pathManager, providersSupplier);
         }
 
+        DelegatingKeyManager delegatingKeyManager = new DelegatingKeyManager();
         return () -> {
-            Provider[] providers = Security.getProviders();
+            Provider[] providers = providersSupplier.get();
             KeyManagerFactory keyManagerFactory = null;
             if (providers != null) {
                 for (Provider current : providers) {
@@ -1505,31 +1509,35 @@ public class SSLContextDefinitions {
                 if (cs != null) {
                     password = cs.getCredential(PasswordCredential.class).getPassword(ClearPassword.class).getPassword();
                 } else {
-                    throw new StartException(LOGGER.keyStorePasswordCannotBeResolved(KEY_STORE.resolveModelAttribute(context, keyStoreNode).asStringOrNull()));
+                    throw new StartException(LOGGER.keyStorePasswordCannotBeResolved(KEY_STORE.resolveModelAttribute(context, keyStoreObject).asStringOrNull()));
+                }
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.tracef(
+                            "KeyManager supplying:  providers = %s  provider = %s  algorithm = %s  keyManagerFactory = %s  " +
+                                    "keyStoreName = %s  aliasFilter = %s  keyStore = %s  keyStoreSize = %d  password (of item) = %b",
+                            Arrays.toString(providers), providerName, algorithm, keyManagerFactory, keyStoreName, aliasFilter, keyStore, keyStore.size(), password != null
+                    );
                 }
             } catch (StartException e) {
                 throw e;
             } catch (Exception e) {
                 throw new StartException(e);
             }
-
-            try {
-                DelegatingKeyManager delegating = new DelegatingKeyManager();
-                if (aliasFilter != null) {
-                    keyStore = FilteringKeyStore.filteringKeyStore(keyStore, AliasFilter.fromString(aliasFilter));
-                }
-                keyManagerFactory.init(keyStore, password);
-                KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-                for (KeyManager keyManager : keyManagers) {
-                    if (keyManager instanceof X509ExtendedKeyManager) {
-                        delegating.setKeyManager((X509ExtendedKeyManager) keyManager);
-                        return delegating;
+            
+            if ((keyStoreService instanceof KeyStoreService) && ((KeyStoreService) keyStoreService).shouldAutoGenerateSelfSignedCertificate(generateSelfSignedCertificateHost)) {
+                LOGGER.selfSignedCertificateWillBeCreated(((KeyStoreService) keyStoreService).getResolvedAbsolutePath(), generateSelfSignedCertificateHost);
+                return new LazyDelegatingKeyManager(keyStoreService, password, keyManagerFactory,
+                        generateSelfSignedCertificateHost, aliasFilter);
+            } else {
+                try {
+                    if (initKeyManagerFactory(keyStore, delegatingKeyManager, aliasFilter, password, keyManagerFactory)) {
+                        return delegatingKeyManager;
                     }
+                } catch (Exception e) {
+                    throw new StartException(e);
                 }
-            } catch (Exception e) {
-                throw new StartException(e);
-            }
-            throw LOGGER.noTypeFound(X509ExtendedKeyManager.class.getSimpleName());
+                throw LOGGER.noTypeFound(X509ExtendedKeyManager.class.getSimpleName());
+            } 
         };
     }
 
@@ -1779,7 +1787,8 @@ public class SSLContextDefinitions {
     }
 
     private static ExceptionSupplier<KeyStore, Exception> createKeyStore(ServiceBuilder<SSLContext> serviceBuilder, OperationContext context,
-                                                                         ModelNode model, Supplier<PathManager> pathManager) throws OperationFailedException {
+                                                                         ModelNode model, Supplier<PathManager> pathManager,
+                                                                         Supplier<Provider[]> providersSupplier) throws OperationFailedException {
         final String providerName = PROVIDER_NAME.resolveModelAttribute(context, model).asStringOrNull();
         final String type = TYPE.resolveModelAttribute(context, model).asStringOrNull();
         final String aliasFilter = ALIAS_FILTER.resolveModelAttribute(context, model).asStringOrNull();
@@ -1795,7 +1804,7 @@ public class SSLContextDefinitions {
             Provider provider = null;
 
             if (type != null) {
-                provider = resolveProviders(providerName, KeyStore.class, type);
+                provider = resolveProviders(providerName, KeyStore.class, type, providersSupplier.get());
                 keyStore = AtomicLoadKeyStore.newInstance(type, provider);
             }
 
@@ -1836,11 +1845,18 @@ public class SSLContextDefinitions {
 
                 char[] password = clearPassword.getPassword();
 
+                LOGGER.tracef(
+                        "starting:  type = %s  provider = %s  path = %s  resolvedPath = %s  password = %b  aliasFilter = %s",
+                        type, provider, path, resolvedPath, password != null, aliasFilter
+                );
+
                 if (is != null) {
                     if (type != null) {
                         keyStore.load(is, password);
                     } else {
-                        KeyStore detected = KeyStoreUtil.loadKeyStore(Security::getProviders, providerName, is, resolvedPath.getPath(), password);
+                        Provider[] resolvedProviders = providersSupplier.get();
+                        Provider[] finalProviders = resolvedProviders == null ? Security.getProviders() : resolvedProviders;
+                        KeyStore detected = KeyStoreUtil.loadKeyStore(() -> finalProviders, providerName, is, resolvedPath.getPath(), password);
 
                         if (detected == null) {
                             throw LOGGER.unableToDetectKeyStore(resolvedPath.getPath());
@@ -1866,8 +1882,9 @@ public class SSLContextDefinitions {
         };
     }
 
-    private static Provider resolveProviders(String name, Class<?> type, String alg) throws StartException {
-        Provider provider = ProviderUtil.findProvider(Security.getProviders(), name, type, alg);
+    private static Provider resolveProviders(String name, Class<?> type, String alg, Provider[] candidates) throws StartException {
+        Supplier<Provider[]> resolveProvidersSupplier = () -> candidates == null ? Security.getProviders() : candidates;
+        Provider provider = ProviderUtil.findProvider(resolveProvidersSupplier, name, type, alg);
         if (provider == null) {
             throw LOGGER.noSuitableProvider(alg);
         }
@@ -1875,13 +1892,6 @@ public class SSLContextDefinitions {
     }
 
     // Derives dynamic name from provided attribute
-    private static <V> Supplier<V> addRequirement(String baseName, Class<V> type, ServiceBuilder<?> serviceBuilder,
-                                                  OperationContext context, SimpleAttributeDefinition attribute, ModelNode model) throws OperationFailedException {
-
-        String dynamicNameElement = attribute.resolveModelAttribute(context, model).asStringOrNull();
-        return addRequirement(baseName, type, serviceBuilder, context, dynamicNameElement);
-    }
-
     private static <V> Supplier<V> addRequirement(String baseName, Class<V> type, ServiceBuilder<?> serviceBuilder,
                                                   OperationContext context, String dynamicNameElement) {
         Supplier<V> supplier = () -> null;
@@ -1910,12 +1920,6 @@ public class SSLContextDefinitions {
     private static class SSLContextExceptionSupplier<T, E extends Exception> implements ExceptionSupplier<T, E> {
         private final Supplier<T> supplier;
         private final ExceptionSupplier<T, E> exceptionSupplier;
-
-        SSLContextExceptionSupplier (String baseName, Class<T> type, ServiceBuilder<SSLContext> serviceBuilder, OperationContext context,
-                                     SimpleAttributeDefinition attribute, ModelNode model) throws OperationFailedException {
-            this.supplier = addRequirement(baseName, type, serviceBuilder, context, attribute, model);
-            this.exceptionSupplier = this.supplier::get;
-        }
 
         SSLContextExceptionSupplier (String baseName, Class<T> type, ServiceBuilder<SSLContext> serviceBuilder,
                                      OperationContext context, String dynamicModelElement) {

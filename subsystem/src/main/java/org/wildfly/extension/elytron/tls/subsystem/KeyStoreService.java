@@ -201,8 +201,8 @@ class KeyStoreService implements ModifiableKeyStoreService {
 
     private Provider resolveProvider() throws StartException {
         Provider[] candidates = providersSupplier.get();
-        Supplier<Provider[]> providersSupplier = () -> candidates == null ? Security.getProviders() : candidates;
-        Provider identified = findProvider(providersSupplier, provider, KeyStore.class, type);
+        Supplier<Provider[]> resolveProvidersSupplier = () -> candidates == null ? Security.getProviders() : candidates;
+        Provider identified = findProvider(resolveProvidersSupplier, provider, KeyStore.class, type);
         if (identified == null) {
             throw LOGGER.noSuitableProvider(type);
         }
