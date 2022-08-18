@@ -211,6 +211,7 @@
         </xs:attribute>
     </xs:complexType>
 
+    <!-- TODO: add objects for key store, trust manager, key stores-->
     <xs:complexType name="tlsType">
         <xs:annotation>
             <xs:documentation>
@@ -222,6 +223,8 @@
         <xs:all>
             <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
             <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
+            <xs:element name="certificate-authorities" type="certificateAuthoritiesType" minOccurs="0" />
+            <xs:element name="certificate-authority-accounts" type="certificateAuthorityAccountsType" minOccurs="0" />
             <xs:element name="key-managers" type="keyManagersType" minOccurs="0" />
             <xs:element name="trust-managers" type="trustManagersType" minOccurs="0" />
             <xs:element name="key-stores" type="keyStoresType" minOccurs="0" />
@@ -470,6 +473,130 @@
         </xs:attribute>
     </xs:complexType>
 
+    <!-- 
+        Certificate Authorities
+    -->
+
+    <xs:complexType name="certificateAuthorityAccountsType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for certificate authority account definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="certificate-authority-account" type="certificateAuthorityAccountType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="certificateAuthorityAccountType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single certificate authority account.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="account-key" type="accountKeyType" minOccurs="1"/>
+        </xs:all>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this certificate authority account.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="certificate-authority" type="xs:string" default="LetsEncrypt">
+            <xs:annotation>
+                <xs:documentation>
+                    The reference to certificate authority to use.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="contact-urls" type="stringListType" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A list of URLs that the certificate authority can contact about any issues related to this account.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="certificateAuthoritiesType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for certificate authority definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="certificate-authority" type="certificateAuthorityType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="certificateAuthorityType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single certificate authority.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this certificate authority.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="url" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    URL of the certificate authority.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="staging-url" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    URL of the certificate authority to use in pre-production.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="accountKeyType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a certificate authority account key.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="credential-reference" type="credential-reference:credentialReferenceType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Credential to be used when accessing the certificate authority account key.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:all>
+        <xs:attribute name="key-store" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the KeyStore that contains the certificate authority account key.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-store-object" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyStore object to use with the KeyManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="alias" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The alias of the certificate authority account key in the KeyStore.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
 
     <!--
         Managers
@@ -559,19 +686,19 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <!--        <xs:attribute name="generate-self-signed-certificate-host" type="xs:string" use="optional">-->
-        <!--            <xs:annotation>-->
-        <!--                <xs:documentation>-->
-        <!--                    If this attribute is set and if the file that backs the KeyStore does not exist, then-->
-        <!--                    a self-signed certificate will be generated on first use and it will be persisted to-->
-        <!--                    the file that backs the KeyStore. The value of this attribute will be used for the-->
-        <!--                    Common Name value in the self-signed certificate.-->
-        <!--    -->
-        <!--                    The use of this attribute is intended for testing purposes only. This attribute is not-->
-        <!--                    intended for production use.-->
-        <!--                </xs:documentation>-->
-        <!--            </xs:annotation>-->
-        <!--        </xs:attribute>-->
+        <xs:attribute name="generate-self-signed-certificate-host" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    If this attribute is set and if the file that backs the KeyStore does not exist, then
+                    a self-signed certificate will be generated on first use and it will be persisted to
+                    the file that backs the KeyStore. The value of this attribute will be used for the
+                    Common Name value in the self-signed certificate.
+    
+                    The use of this attribute is intended for testing purposes only. This attribute is not
+                    intended for production use.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="trustManagersType">

@@ -6,6 +6,22 @@
         <credential-store name="credstore1">
             <credential-reference store="mystore" alias="the-alias"/>
         </credential-store>
+        <credential-store name="test1" relative-to="jboss.server.data.dir" location="test1.store" create="true">
+            <implementation-properties>
+                <property name="keyStoreType" value="JCEKS"/>
+                <property name="keyAlias" value="adminKey"/>
+            </implementation-properties>
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <credential-store name="test2" relative-to="jboss.server.data.dir" modifiable="true">
+            <credential-reference store="test1" alias="to_open_test2"/>
+        </credential-store>
+        <secret-key-credential-store name="testEmpty" relative-to="jboss.server.config.dir" path="testEmpty.cs" create="true" 
+            populate="false" />
+        <secret-key-credential-store name="test128" relative-to="jboss.server.config.dir" path="test128.cs" create="true" key-size="128" />
+        <secret-key-credential-store name="test192" relative-to="jboss.server.config.dir" path="test192.cs" create="true"
+            default-alias="192" key-size="192" />
+        <secret-key-credential-store name="test256" relative-to="jboss.server.config.dir" path="test256.cs" />
     </credential-stores>
     <tls>
         <!-- Attempt to create using Elytron capabilities. Testing only. -->
@@ -86,4 +102,7 @@
                                 provider-name="first" />
         </client-ssl-contexts>
     </tls>
+    <expression-resolver default-resolver="A" prefix="CIPHER">
+        <resolver name="A" credential-store="test256" secret-key="key"/>
+    </expression-resolver>
 </subsystem>

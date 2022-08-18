@@ -53,6 +53,7 @@ import org.wildfly.security.x500.cert.acme.CertificateAuthority;
  * The capabilities are same as the ones provided by the Elytron subsystem
  *
  * @author <a href="mailto:mmazanek@redhat.com">Martin Mazanek</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 class Capabilities {
 

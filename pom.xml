@@ -50,6 +50,7 @@
         <version.org.jboss.arquillian.junit>1.6.0.Final</version.org.jboss.arquillian.junit>
         <version.org.jboss.galleon>4.2.8.Final</version.org.jboss.galleon>
         <version.org.jmockit>1.39</version.org.jmockit>
+        <version.org.mockserver>5.8.1</version.org.mockserver>
 
 
         <!-- Plugin versions and their dependency versions -->
@@ -336,6 +337,12 @@
                 <version>${version.org.jmockit}</version>
             </dependency>
             <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-netty</artifactId>
+                <version>${version.org.mockserver}</version>
+                <scope>test</scope>
+            </dependency>
+                <dependency>
                 <groupId>org.wildfly.core</groupId>
                 <artifactId>wildfly-core-test-runner</artifactId>
                 <version>${version.org.wildfly.core}</version>

@@ -135,6 +135,8 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         resourceRegistration.registerSubModel(AdvancedModifiableKeyStoreDecorator.wrap(new KeyStoreDefinition()));
         resourceRegistration.registerSubModel(SSLContextDefinitions.getKeyManagerDefinition());
         resourceRegistration.registerSubModel(SSLContextDefinitions.getTrustManagerDefinition());
+        resourceRegistration.registerSubModel(new CertificateAuthorityDefinition());
+        resourceRegistration.registerSubModel(new CertificateAuthorityAccountDefinition());
         resourceRegistration.registerSubModel(SSLContextDefinitions.getClientSSLContextDefinition(serverOrHostController));
         resourceRegistration.registerSubModel(SSLContextDefinitions.getServerSSLContextDefinition(serverOrHostController));
     }

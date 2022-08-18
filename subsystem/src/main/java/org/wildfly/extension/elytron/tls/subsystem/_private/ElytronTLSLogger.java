@@ -36,11 +36,13 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
+import org.wildfly.security.x500.cert.acme.AcmeException;
 
 /**
  * Log messages for Elytron TLS subsystem
  *
  * @author <a href="mmazanek@redhat.com">Martin Mazanek</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 @MessageLogger(projectCode = "ELYTLS", length = 4)
 public interface ElytronTLSLogger extends BasicLogger {
@@ -131,6 +133,9 @@ public interface ElytronTLSLogger extends BasicLogger {
     @LogMessage(level = WARN)
     @Message(id = 24, value = "Certificate [%s] in KeyStore is not valid")
     void certificateNotValid(String alias, @Cause Exception cause);
+
+    @Message(id = 29, value = "Failed to parse URL '%s'")
+    OperationFailedException invalidURL(String url, @Cause Exception cause);
 
     @Message(id = 31, value = "Unable to access CRL file.")
     StartException unableToAccessCRL(@Cause Exception cause);
@@ -250,20 +255,63 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1042, value = "Unable to obtain Entry for alias '%s'")
     OperationFailedException unableToObtainEntry(String alias);
 
+    @Message(id = 1043, value = "Unable to create an account with the certificate authority: %s")
+    OperationFailedException unableToCreateAccountWithCertificateAuthority(@Cause Exception cause, String causeMessage);
+
+    @Message(id = 1044, value = "Unable to change the account key associated with the certificate authority: %s")
+    OperationFailedException unableToChangeAccountKeyWithCertificateAuthority(@Cause Exception cause, String causeMessage);
+
+    @Message(id = 1045, value = "Unable to deactivate the account associated with the certificate authority: %s")
+    OperationFailedException unableToDeactivateAccountWithCertificateAuthority(@Cause Exception cause, String causeMessage);
+
+    @Message(id = 1046, value = "Unable to obtain certificate authority account Certificate for alias '%s'")
+    StartException unableToObtainCertificateAuthorityAccountCertificate(String alias);
+
+    @Message(id = 1047, value = "Unable to obtain certificate authority account PrivateKey for alias '%s'")
+    StartException unableToObtainCertificateAuthorityAccountPrivateKey(String alias);
+
+    @Message(id = 1048, value = "Unable to update certificate authority account key store: %s")
+    OperationFailedException unableToUpdateCertificateAuthorityAccountKeyStore(@Cause Exception cause, String causeMessage);
+
+    @Message(id = 1049, value = "Unable to respond to challenge from certificate authority: %s")
+    AcmeException unableToRespondToCertificateAuthorityChallenge(@Cause Exception cause, String causeMessage);
+
+    @Message(id = 1050, value = "Invalid certificate authority challenge")
+    AcmeException invalidCertificateAuthorityChallenge();
+
     @Message(id = 1051, value = "Invalid certificate revocation reason '%s'")
     OperationFailedException invalidCertificateRevocationReason(String reason);
 
     @Message(id = 1052, value = "Unable to instantiate AcmeClientSpi implementation")
     IllegalStateException unableToInstatiateAcmeClientSpiImplementation();
 
+    @Message(id = 1053, value = "Unable to update the account with the certificate authority: %s")
+    OperationFailedException unableToUpdateAccountWithCertificateAuthority(@Cause Exception cause, String causeMessage);
+
+    @Message(id = 1054, value = "Unable to get the metadata associated with the certificate authority: %s")
+    OperationFailedException unableToGetCertificateAuthorityMetadata(@Cause Exception cause, String causeMessage);
+
     @Message(id = 1055, value = "Invalid key size: %d")
     OperationFailedException invalidKeySize(int keySize);
+
+    @Message(id = 1056, value = "A certificate authority account with this account key already exists. To update the contact" +
+            " information associated with this existing account, use %s. To change the key associated with this existing account, use %s.")
+    OperationFailedException certificateAuthorityAccountAlreadyExists(String updateAccount, String changeAccountKey);
+
+    @Message(id = 1057, value = "Failed to create ServerAuthModule [%s] using module '%s'")
+    RuntimeException failedToCreateServerAuthModule(String className, String module, @Cause Exception cause);
+
+    @Message(id = 1058, value = "Failed to parse PEM public key with kid: %s")
+    OperationFailedException failedToParsePEMPublicKey(String kid);
 
     @Message(id = 1059, value = "Unable to detect KeyStore '%s'")
     StartException unableToDetectKeyStore(String path);
 
     @Message(id = 1060, value = "Fileless KeyStore needs to have a defined type.")
     OperationFailedException filelessKeyStoreMissingType();
+
+    @Message(id = 1063, value = "LetsEncrypt certificate authority is configured by default.")
+    OperationFailedException letsEncryptNameNotAllowed();
 
     @Message(id = 1064, value = "Failed to load OCSP responder certificate '%s'.")
     StartException failedToLoadResponderCert(String alias, @Cause Exception exception);
@@ -290,6 +338,10 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1085, value = "Generated self-signed certificate at %s. Please note that self-signed certificates are not secure and should only be used for testing purposes. Do not use this self-signed certificate in production.\nSHA-1 fingerprint of the generated key is %s\nSHA-256 fingerprint of the generated key is %s")
     @LogMessage(level = WARN)
     void selfSignedCertificateHasBeenCreated(String file, String sha1, String sha256);
+
+
+    @Message(id = 1088, value = "Missing certificate authority challenge")
+    AcmeException missingCertificateAuthorityChallenge();
 
     @Message(id = 1089, value = "Multiple keystore definitions.")
     OperationFailedException multipleKeystoreDefinitions();

@@ -41,7 +41,7 @@ import org.jboss.msc.service.ServiceName;
 class TrivialCapabilityServiceRemoveHandler extends ServiceRemoveStepHandler implements ElytronOperationStepHandler {
 
     private final RuntimeCapability<?> firstCapability;
-    private final Set<RuntimeCapability> allCapabilities;
+    private final Set<RuntimeCapability<?>> allCapabilities;
 
     /**
      * Construct an {@link OperationStepHandler} for removing a single service based on it's capability.
@@ -59,7 +59,7 @@ class TrivialCapabilityServiceRemoveHandler extends ServiceRemoveStepHandler imp
     protected void recordCapabilitiesAndRequirements(OperationContext context, ModelNode operation, Resource resource) throws OperationFailedException {
         super.recordCapabilitiesAndRequirements(context, operation, resource);
         final String pathValue = context.getCurrentAddressValue();
-        for (RuntimeCapability r : allCapabilities) {
+        for (RuntimeCapability<?> r : allCapabilities) {
             context.deregisterCapabilityRequirement(ELYTRON_CAPABILITY, r.isDynamicallyNamed() ? r.getDynamicName(pathValue) : r.getName());
         }
     }

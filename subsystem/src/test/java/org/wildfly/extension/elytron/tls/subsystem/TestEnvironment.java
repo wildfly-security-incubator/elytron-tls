@@ -24,7 +24,8 @@ import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
 
 class TestEnvironment {
-    
+    // TODO: Re-add LDAP configuration
+
     /**
      * Creates an {@link AdditionalInitialization} with the Weld {@link org.jboss.as.controller.capability.RuntimeCapability capability},
      * operating in {@link org.jboss.as.controller.RunningMode#ADMIN_ONLY RunningMode.ADMIN_ONLY}.
