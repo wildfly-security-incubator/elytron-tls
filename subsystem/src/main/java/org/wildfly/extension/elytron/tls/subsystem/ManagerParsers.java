@@ -19,7 +19,7 @@ class ManagerParsers {
             .addAttribute(SSLContextDefinitions.ALIAS_FILTER)
             .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(SSLContextDefinitions.PROVIDERS)
-//            .addAttribute(SSLContextDefinitions.GENERATE_SELF_SIGNED_CERTIFICATE_HOST) // new
+            .addAttribute(SSLContextDefinitions.GENERATE_SELF_SIGNED_CERTIFICATE_HOST) // new
             .addAttribute(CredentialReference.getAttributeDefinition())
             .build();
 

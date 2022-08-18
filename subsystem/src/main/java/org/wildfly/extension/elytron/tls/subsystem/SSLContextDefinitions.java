@@ -216,6 +216,12 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
+    static final SimpleAttributeDefinition GENERATE_SELF_SIGNED_CERTIFICATE_HOST = new SimpleAttributeDefinitionBuilder(Constants.GENERATE_SELF_SIGNED_CERTIFICATE_HOST, ModelType.STRING, true)
+            .setMinSize(1)
+            .setAllowExpression(true)
+            .setRestartAllServices()
+            .build();
+
     /** Provider definitions */
 
     static final SimpleAttributeDefinition PROVIDER_NAME = new SimpleAttributeDefinitionBuilder(Constants.PROVIDER_NAME, ModelType.STRING, true)
@@ -374,13 +380,6 @@ public class SSLContextDefinitions {
             .setRestartAllServices()
             .build();
 
-// Temporarily disable self-signed certificates
-//    static final SimpleAttributeDefinition GENERATE_SELF_SIGNED_CERTIFICATE_HOST = new SimpleAttributeDefinitionBuilder(Constants.GENERATE_SELF_SIGNED_CERTIFICATE_HOST, ModelType.STRING, true)
-//            .setMinSize(1)
-//            .setAllowExpression(true)
-//            .setRestartAllServices()
-//            .build();
-
     /** KeyManager definitions */
 
     static final SimpleAttributeDefinition KEY_MANAGER = new SimpleAttributeDefinitionBuilder(Constants.KEY_MANAGER, ModelType.STRING, true)
@@ -392,8 +391,8 @@ public class SSLContextDefinitions {
             .build();
 
     static final ObjectTypeAttributeDefinition KEY_MANAGER_OBJECT = new ObjectTypeAttributeDefinition.Builder(Constants.KEY_MANAGER_OBJECT,
-                ALGORITHM, providersKMDefinition, PROVIDER_NAME, keystoreKMDefinition, KEY_STORE_OBJECT, ALIAS_FILTER, CREDENTIAL_REFERENCE
-                /* GENERATE_SELF_SIGNED_CERTIFICATE_HOST */)
+                ALGORITHM, providersKMDefinition, PROVIDER_NAME, keystoreKMDefinition, KEY_STORE_OBJECT, ALIAS_FILTER, CREDENTIAL_REFERENCE,
+                GENERATE_SELF_SIGNED_CERTIFICATE_HOST)
             .setRequired(true)
             .setAlternatives(Constants.KEY_MANAGER)
             .setAllowExpression(false)
@@ -446,7 +445,7 @@ public class SSLContextDefinitions {
         final ObjectTypeAttributeDefinition credentialReferenceDefinition = CredentialReference.getAttributeDefinition(true);
 
         AttributeDefinition[] attributes = new AttributeDefinition[]{ALGORITHM, providersKMDefinition, PROVIDER_NAME,
-                keystoreKMDefinition, ALIAS_FILTER, credentialReferenceDefinition, /* GENERATE_SELF_SIGNED_CERTIFICATE_HOST */};
+                keystoreKMDefinition, ALIAS_FILTER, credentialReferenceDefinition, GENERATE_SELF_SIGNED_CERTIFICATE_HOST};
 
         AbstractAddStepHandler add = new TrivialAddHandler<KeyManager>(KeyManager.class, attributes, KEY_MANAGER_RUNTIME_CAPABILITY) {
 
@@ -1597,7 +1596,7 @@ static ResourceDefinition getClientSSLContextDefinition(boolean serverOrHostCont
                     if(! init) {
                         try {
                             ((KeyStoreService) keyStoreService).generateAndSaveSelfSignedCertificate(generateSelfSignedCertificateHostName, password);
-                            if (! initKeyManagerFactory(keyStoreService.getValue(), this, aliasFilter, password, keyManagerFactory)) {
+                            if (! initKeyManagerFactory(((KeyStoreService) keyStoreService).getValue(), this, aliasFilter, password, keyManagerFactory)) {
                                 throw LOGGER.noTypeFoundForLazyInitKeyManager(X509ExtendedKeyManager.class.getSimpleName());
                             }
                         } catch (Exception e) {
