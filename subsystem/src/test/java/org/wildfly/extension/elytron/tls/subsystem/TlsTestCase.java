@@ -77,6 +77,9 @@ import org.wildfly.security.x500.cert.BasicConstraintsExtension;
 import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 import org.wildfly.security.x500.cert.X509CertificateBuilder;
 
+/**
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ */
 public class TlsTestCase extends AbstractSubsystemTest {
 
     private static final Provider wildFlyElytronProvider = new WildFlyElytronProvider();

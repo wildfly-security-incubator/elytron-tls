@@ -38,6 +38,7 @@ import org.jboss.msc.service.ServiceRegistry;
 
 /**
  * @author <a href="mailto:mmazanek@redhat.com">Martin Mazanek</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class ElytronTlsExtension implements Extension {
 

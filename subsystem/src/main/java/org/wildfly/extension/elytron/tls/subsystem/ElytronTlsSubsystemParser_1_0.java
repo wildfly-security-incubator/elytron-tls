@@ -50,6 +50,13 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
     PersistentResourceXMLDescription getTrustManagerParser() {
         return new ManagerParsers().trustManagerParser_1_0;
     }
+    
+    PersistentResourceXMLDescription getCertificateAuthorityParser() {
+        return new CAParsers().certificateAuthorityParser_1_0;
+    }
+    PersistentResourceXMLDescription getCertificateAuthorityAccountParser() {
+        return new CAParsers().certificateAuthorityAccountParser_1_0;
+    }
 
     PersistentResourceXMLDescription getProviderParser() {
         return new ProviderParser().providerParser_1_0;
@@ -70,6 +77,8 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
                 .addChild(getKeyStoreParser())
                 .addChild(getKeyManagerParser())
                 .addChild(getTrustManagerParser())
+                .addChild(getCertificateAuthorityParser())
+                .addChild(getCertificateAuthorityAccountParser())
                 .build();
     }
 

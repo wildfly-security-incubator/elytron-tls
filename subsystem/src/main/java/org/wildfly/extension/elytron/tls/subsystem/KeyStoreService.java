@@ -265,7 +265,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
         this.providersSupplier = providersSupplier;
     }
 
-    void setCredentialSourceSupplier (ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+    void setCredentialSourceSupplier(ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         this.credentialSourceSupplier = credentialSourceSupplier;
     }
 

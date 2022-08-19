@@ -28,6 +28,7 @@ import org.junit.Test;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class ElytronTlsSubsystemTestCase extends AbstractSubsystemBaseTest {
 

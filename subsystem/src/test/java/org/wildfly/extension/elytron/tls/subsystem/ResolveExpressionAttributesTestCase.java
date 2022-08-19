@@ -73,8 +73,8 @@ public class ResolveExpressionAttributesTestCase extends AbstractSubsystemBaseTe
 
     @Test
     public void testExpressionAttributesResolved() {
-        // testCertificateAuthorityAccount();
-        // testCertificateAuthority();
+        testCertificateAuthorityAccount();
+        testCertificateAuthority();
         testCredentialStore();
         // testCustomComponent();
         testElytronTlsDefinition();
