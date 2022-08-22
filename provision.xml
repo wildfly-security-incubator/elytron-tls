@@ -42,7 +42,7 @@
             <include name="cloud-profile"/>
 
             <!-- Our layer(s) -->
-            <include name="elytron-tls-layer"/>
+            <include name="elytron-tls"/>
         </layers>
     </config>
     <options>

@@ -20,18 +20,7 @@
 
     <resources>
         <artifact name="${org.wildfly.extras.elytron-tls:elytron-tls-dependency}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-asn1}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-base}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-credential}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-keystore}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-provider-util}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-ssl-common}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-util}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-cert}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-cert-acme}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-cert-util}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-x500-principal}"/>
+        <artifact name="${org.wildfly.security:wildfly-elytron-ssl-common"></artifact>
     </resources>
 
     <dependencies>

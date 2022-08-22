@@ -128,7 +128,6 @@
             <scope>provided</scope>
         </dependency>
 
-
         <!-- module and copy artifact dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -140,66 +139,5 @@
             <artifactId>elytron-tls-subsystem</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-asn1</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-base</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-credential</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-provider-util</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-ssl-common</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert-acme</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-cert-util</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron-x500-principal</artifactId>
-        </dependency>
-<!--
-
-        <dependency>
-            <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-feature-pack-galleon-content</artifactId>
-            <version>${version.org.wildfly}</version>
-            <type>pom</type>
-            <scope>provided</scope>
-        </dependency>
--->
-
     </dependencies>
 </project>
