@@ -16,8 +16,4 @@
   -->
 <feature-group-spec name="elytron-tls-base" xmlns="urn:jboss:galleon:feature-group:1.0">
     <feature spec="subsystem.elytron-tls"/>
-    <packages>
-        <!-- required by default configuration-->
-        <package name="org.wildfly.openssl"/>
-    </packages>
 </feature-group-spec>
