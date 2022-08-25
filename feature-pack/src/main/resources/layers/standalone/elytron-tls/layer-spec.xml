@@ -18,7 +18,7 @@
     <dependencies>
         <layer name="cdi"/>
     </dependencies>
-    <feature-group name="elytron-tls-base"/>
+    <feature-group name="elytron-tls"/>
     <!--
     We already bring in our extension/subsystem module in /feature-pack/wildfly-feature-pack-build.xml since we are adding
     a configurable feature. If the feature needs additional modules we should add those in

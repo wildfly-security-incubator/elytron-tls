@@ -46,7 +46,9 @@
 
 
         <!-- Other dependency versions -->
+        <version.jakarta.json.jakarta-json-api>1.1.6</version.jakarta.json.jakarta-json-api>
         <version.org.bouncycastle>1.69</version.org.bouncycastle>
+        <version.org.glassfish.jakarta.json>1.1.6</version.org.glassfish.jakarta.json>
         <version.org.jboss.arquillian.junit>1.6.0.Final</version.org.jboss.arquillian.junit>
         <version.org.jboss.galleon>4.2.8.Final</version.org.jboss.galleon>
         <version.org.jmockit>1.39</version.org.jmockit>
@@ -245,6 +247,16 @@
 
             <!-- External dependencies -->
             <!-- This does not go into the modules so don't worry about exclusions -->
+            <dependency>
+                <groupId>jakarta.json</groupId>
+                <artifactId>jakarta.json-api</artifactId>
+                <version>${version.jakarta.json.jakarta-json-api}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish</groupId>
+                <artifactId>jakarta.json</artifactId>
+                <version>${version.org.glassfish.jakarta.json}</version>
+            </dependency>
             <dependency>
                 <groupId>org.wildfly.checkstyle</groupId>
                 <artifactId>wildfly-checkstyle-config</artifactId>

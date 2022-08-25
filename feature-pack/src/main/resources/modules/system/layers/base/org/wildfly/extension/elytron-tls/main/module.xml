@@ -32,7 +32,10 @@
         <module name="org.jboss.weld.api"/>
         <module name="org.jboss.weld.core"/>
         <module name="org.jboss.weld.spi"/>
-        <module name="org.wildfly.security.manager"/>
+        <module name="org.wildfly.security.base"/>
+        <!-- TODO: Remove this module once key store and manager objects are implemented -->
+        <module name="org.wildly.extension.elytron"/>
+        <module name="org.wildfly.security.elytron-web.undertow-server"/>
         <module name="org.wildfly.elytron-tls-dependency"/>
     </dependencies>
 </module>
