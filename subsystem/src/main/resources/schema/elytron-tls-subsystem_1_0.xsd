@@ -287,13 +287,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-manager-object" type="xs:string" use="optional">
+        <!-- <xs:attribute name="key-manager-object" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
                     KeyManager object to be used by this SSLContext.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="trust-manager" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -301,13 +301,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
+        <!-- <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
                     TrustManager object to be used by this SSLContext.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="provider-name" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -435,13 +435,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-manager-object" type="xs:string" use="optional">
+        <!-- <xs:attribute name="key-manager-object" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
                     KeyManager object to be used by this SSLContext.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="trust-manager" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -449,13 +449,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
+        <!-- <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
                     TrustManager object to be used by this SSLContext.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="provider-name" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -582,13 +582,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-object" type="xs:string">
+        <!-- <xs:attribute name="key-store-object" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     KeyStore object to use with the KeyManager.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="alias" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>
@@ -649,13 +649,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-object" type="xs:string">
+        <!-- <xs:attribute name="key-store-object" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     KeyStore object to use with the KeyManager.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="alias-filter" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>
@@ -744,13 +744,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-store-object" type="xs:string">
+        <!-- <xs:attribute name="key-store-object" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     KeyStore object to use with the TrustManager.
                 </xs:documentation>
             </xs:annotation>
-        </xs:attribute>
+        </xs:attribute> -->
         <xs:attribute name="alias-filter" type="xs:string" use="optional">
             <xs:annotation>
                 <xs:documentation>

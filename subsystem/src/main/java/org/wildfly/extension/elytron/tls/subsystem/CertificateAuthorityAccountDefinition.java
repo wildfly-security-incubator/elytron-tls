@@ -101,7 +101,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
     static final SimpleAttributeDefinition KEY_STORE = new SimpleAttributeDefinitionBuilder(Constants.KEY_STORE, ModelType.STRING, false)
             .setAttributeGroup(Constants.ACCOUNT_KEY)
             .setMinSize(1)
-            .setAlternatives(Constants.KEY_STORE_OBJECT)
+            // .setAlternatives(Constants.KEY_STORE_OBJECT)
             .setRestartAllServices()
             .setCapabilityReference(KEY_STORE_CAPABILITY, CERTIFICATE_AUTHORITY_ACCOUNT_CAPABILITY)
             .build();
@@ -113,6 +113,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             .setMinSize(1)
             .setAlternatives(Constants.KEY_STORE)
             .setRestartAllServices()
+            .setCapabilityReference(KEY_STORE_CAPABILITY, CERTIFICATE_AUTHORITY_ACCOUNT_CAPABILITY)
             .build();
 
     static final SimpleAttributeDefinition ALIAS = new SimpleAttributeDefinitionBuilder(Constants.ALIAS, ModelType.STRING, false)
@@ -126,7 +127,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             .setAttributeGroup(Constants.ACCOUNT_KEY)
             .build();
 
-    private static final AttributeDefinition[] ATTRIBUTES = new AttributeDefinition[] { CERTIFICATE_AUTHORITY, CONTACT_URLS, KEY_STORE, KEY_STORE_OBJECT, ALIAS, CREDENTIAL_REFERENCE };
+    private static final AttributeDefinition[] ATTRIBUTES = new AttributeDefinition[] { CERTIFICATE_AUTHORITY, CONTACT_URLS, KEY_STORE, /* KEY_STORE_OBJECT, */ ALIAS, CREDENTIAL_REFERENCE };
 
     static final SimpleAttributeDefinition AGREE_TO_TERMS_OF_SERVICE = new SimpleAttributeDefinitionBuilder(Constants.AGREE_TO_TERMS_OF_SERVICE, ModelType.BOOLEAN, false)
             .setAllowExpression(true)
@@ -197,7 +198,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             final String alias = ALIAS.resolveModelAttribute(context, model).asString();
 
             String keyStoreName = KEY_STORE.resolveModelAttribute(context, model).asString();
-            final ModelNode keyStoreObject = KEY_STORE_OBJECT.resolveModelAttribute(context, model);
+            /* final ModelNode keyStoreObject = KEY_STORE_OBJECT.resolveModelAttribute(context, model);
             if (keyStoreName == null) {
                 if (keyStoreObject == null) {
                     LOGGER.missingKeyStoreDefinition();
@@ -207,6 +208,9 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
                 if (keyStoreObject != null) {
                     LOGGER.multipleKeystoreDefinitions();
                 }
+            } */
+            if (keyStoreName == null) {
+                LOGGER.missingKeyStoreDefinition();
             }
             final String finalKeyStoreName = keyStoreName;
             
