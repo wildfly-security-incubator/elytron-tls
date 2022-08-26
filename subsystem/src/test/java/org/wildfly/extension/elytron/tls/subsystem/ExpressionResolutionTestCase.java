@@ -160,7 +160,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
             String... expectedAliases) throws Exception {
 
         ModelNode readAliases = new ModelNode();
-        readAliases.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(resourceType, resourceName);
+        readAliases.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(resourceType, resourceName);
         readAliases.get(ClientConstants.OP).set(Constants.READ_ALIASES);
 
         ModelNode readAliasesResult = assertSuccess(services.executeOperation(readAliases));
@@ -202,6 +202,9 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
         add.get(ClientConstants.OP).set(ClientConstants.ADD);
         add.get(Constants.PATH).set(testStorePath);
         add.get(Constants.POPULATE).set(false);
+
+        System.out.println("string is");
+        System.out.println(add.get(ClientConstants.OP_ADDR));
 
         assertSuccess(services.executeOperation(add));
 
@@ -290,7 +293,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
             assertEquals("Successful descryption", CLEAR_TEXT, decrypted);
         } else {
             assertTrue("Failure expected", result.get(OUTCOME).asString().equals(ClientConstants.FAILED));
-            assertTrue("Expected Error Code", result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("WFLYELY00920:"));
+            assertTrue("Expected Error Code", result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("ELYTLS0920:"));
         }
     }
 
@@ -362,7 +365,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
         ModelNode result = services.executeOperation(composite);
         assertTrue("Failure expected", result.get(OUTCOME).asString().equals(ClientConstants.FAILED));
         assertTrue("Expected Error Code (Cycle Detected)",
-                result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("WFLYELY00043:"));
+                result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("ELYTLS0043:"));
 
         csUtilOne.cleanUp();
         csUtilTwo.cleanUp();

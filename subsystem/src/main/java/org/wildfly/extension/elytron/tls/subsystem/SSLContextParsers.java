@@ -26,6 +26,9 @@ import static org.wildfly.extension.elytron.tls.subsystem.Constants.SERVER_SSL_C
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 
+/**
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ */
 class SSLContextParsers {
 
     final PersistentResourceXMLDescription clientSslContextParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(CLIENT_SSL_CONTEXT))

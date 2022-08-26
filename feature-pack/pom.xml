@@ -139,5 +139,9 @@
             <artifactId>elytron-tls-subsystem</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron-ssl-common</artifactId>
+        </dependency>
     </dependencies>
 </project>

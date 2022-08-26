@@ -25,7 +25,10 @@ import org.jboss.as.controller.PersistentResourceXMLDescription;
 import org.jboss.as.controller.PersistentResourceXMLParser;
 
 /**
+ * A parser for the Elytron TLS subsystem.
+ * 
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
 

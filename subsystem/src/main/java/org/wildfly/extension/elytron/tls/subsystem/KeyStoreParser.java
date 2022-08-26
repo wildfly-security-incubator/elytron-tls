@@ -16,7 +16,7 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.wildfly.extension.elytron.tls.subsystem.Constants.KEY_STORE_OBJECT;
+import static org.wildfly.extension.elytron.tls.subsystem.Constants.KEY_STORE;
 import static org.wildfly.extension.elytron.tls.subsystem.Constants.KEY_STORES;
 
 import org.jboss.as.controller.PathElement;
@@ -25,7 +25,7 @@ import org.jboss.as.controller.security.CredentialReference;
 
 class KeyStoreParser {
 
-    final PersistentResourceXMLDescription keyStoreParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(KEY_STORE_OBJECT))
+    final PersistentResourceXMLDescription keyStoreParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(KEY_STORE))
             .setXmlWrapperElement(KEY_STORES)
             .addAttribute(KeyStoreDefinition.CREDENTIAL_REFERENCE)
             .addAttribute(KeyStoreDefinition.TYPE)

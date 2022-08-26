@@ -17,7 +17,7 @@
  */
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.ELYTRON_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME;
 
 import java.util.Collections;
 import java.util.Set;
@@ -36,7 +36,7 @@ import org.jboss.dmr.ModelNode;
  *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
-class BaseAddHandler extends AbstractAddStepHandler implements org.wildfly.extension.elytron.tls.subsystem.ElytronOperationStepHandler {
+class BaseAddHandler extends AbstractAddStepHandler implements ElytronOperationStepHandler {
 
     private final Set<RuntimeCapability> runtimeCapabilities;
 
@@ -81,7 +81,7 @@ class BaseAddHandler extends AbstractAddStepHandler implements org.wildfly.exten
         super.recordCapabilitiesAndRequirements(context, operation, resource);
         final String pathValue = context.getCurrentAddressValue();
         for (RuntimeCapability r : runtimeCapabilities) {
-            context.registerAdditionalCapabilityRequirement(ELYTRON_CAPABILITY, r.isDynamicallyNamed() ? r.getDynamicName(pathValue) : r.getName(), null);
+            context.registerAdditionalCapabilityRequirement(ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME, r.isDynamicallyNamed() ? r.getDynamicName(pathValue) : r.getName(), null);
         }
     }
 

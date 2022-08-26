@@ -59,8 +59,8 @@ class Capabilities {
 
     private static final String WILDFLY_SECURITY_CAPABILITY_BASE = "org.wildfly.security.";
 
-    private static final String ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME = "org.wildfly.extras.elytron-tls";
-
+    static final String ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME = "org.wildfly.extras.elytron-tls";
+    
     static final RuntimeCapability<Void> ELYTRON_TLS_RUNTIME_CAPABILITY = RuntimeCapability.Builder
             .of(ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME)
             .addRequirements(ElytronTlsExtension.WELD_CAPABILITY_NAME)
