@@ -160,7 +160,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
             String... expectedAliases) throws Exception {
 
         ModelNode readAliases = new ModelNode();
-        readAliases.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add(resourceType, resourceName);
+        readAliases.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(resourceType, resourceName);
         readAliases.get(ClientConstants.OP).set(Constants.READ_ALIASES);
 
         ModelNode readAliasesResult = assertSuccess(services.executeOperation(readAliases));

@@ -623,7 +623,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             ZonedDateTime startTime = ZonedDateTime.now().withNano(0);
 
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.GENERATE_KEY_PAIR);
             operation.get(Constants.ALIAS).set("bsmith");
             operation.get(Constants.ALGORITHM).set("RSA");
@@ -707,7 +707,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.GENERATE_CERTIFICATE_SIGNING_REQUEST);
             operation.get(Constants.ALIAS).set("ssmith");
             operation.get(Constants.SIGNATURE_ALGORITHM).set("SHA512withRSA");
@@ -765,7 +765,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             assertEquals(1, alias.get(Constants.CERTIFICATE_CHAIN).asList().size());
 
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.IMPORT_CERTIFICATE);
             operation.get(Constants.ALIAS).set("ssmith");
             operation.get(CredentialReference.CREDENTIAL_REFERENCE).get(CredentialReference.CLEAR_TEXT).set(KEY_PASSWORD);
@@ -817,7 +817,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             assertEquals(1, aliasBefore.getCertificateChain().length);
 
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.IMPORT_CERTIFICATE);
             operation.get(Constants.ALIAS).set("ssmith");
             operation.get(CredentialReference.CREDENTIAL_REFERENCE).get(CredentialReference.CLEAR_TEXT).set(KEY_PASSWORD);
@@ -865,7 +865,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             int numAliasesBefore = readAliases().size();
 
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.IMPORT_CERTIFICATE);
             operation.get(Constants.ALIAS).set("intermediateCA");
             Path resources = Paths.get(KeyStoresTestCase.class.getResource(".").toURI());
@@ -909,7 +909,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             int numAliasesBefore = readAliases().size();
 
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.IMPORT_CERTIFICATE);
             operation.get(Constants.ALIAS).set("anotherCA");
             Path resources = Paths.get(KeyStoresTestCase.class.getResource(".").toURI());
@@ -951,7 +951,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.EXPORT_CERTIFICATE);
             operation.get(Constants.ALIAS).set("ssmith");
             operation.get(Constants.PATH).set(resources + certificateFileName);
@@ -980,7 +980,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.EXPORT_CERTIFICATE);
             operation.get(Constants.ALIAS).set("ssmith");
             operation.get(Constants.PATH).set(resources + certificateFileName);
@@ -1029,7 +1029,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             KeyStore.PrivateKeyEntry aliasBefore = (KeyStore.PrivateKeyEntry) keyStore.getEntry("ssmith", new KeyStore.PasswordProtection(KEY_PASSWORD.toCharArray()));
 
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.CHANGE_ALIAS);
             operation.get(Constants.ALIAS).set("ssmith");
             operation.get(Constants.NEW_ALIAS).set("sallysmith");
@@ -1059,7 +1059,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         assertSuccess(services.executeOperation(operation));
         try {
             operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.STORE);
             assertSuccess(services.executeOperation(operation));
             assertTrue(file.exists());
@@ -1091,7 +1091,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         assertFalse(keyStore.containsAlias(alias));
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.OBTAIN_CERTIFICATE);
             operation.get(Constants.ALIAS).set(alias);
             operation.get(Constants.DOMAIN_NAMES).add("www.example.com");
@@ -1147,7 +1147,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         server = setupTestObtainCertificateWithUnsupportedPublicKey();
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.OBTAIN_CERTIFICATE);
             operation.get(Constants.ALIAS).set("server");
             operation.get(Constants.DOMAIN_NAMES).add("iraclzlcqgaymrc.com");
@@ -1170,7 +1170,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     private void obtainCertificate(String keyAlgorithmName, int keySize, String domainName, String alias, KeyStore keyStore) throws Exception {
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.OBTAIN_CERTIFICATE);
             operation.get(Constants.ALIAS).set(alias);
             operation.get(Constants.DOMAIN_NAMES).add(domainName);
@@ -1248,7 +1248,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.SHOULD_RENEW_CERTIFICATE);
             operation.get(Constants.ALIAS).set(alias);
             operation.get(Constants.EXPIRATION).set(expiration);
@@ -1271,7 +1271,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         assertTrue(keyStore.containsAlias(alias));
         try {
             ModelNode operation = new ModelNode();
-            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("key-store", ACCOUNTS_KEYSTORE_NAME);
+            operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("key-store", ACCOUNTS_KEYSTORE_NAME);
             operation.get(ClientConstants.OP).set(Constants.REVOKE_CERTIFICATE);
             operation.get(Constants.ALIAS).set(alias);
             if (reason != null) {
@@ -1403,7 +1403,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
     private void addCertificateAuthorityWithoutStagingUrl() {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("certificate-authority", CERTIFICATE_AUTHORITY_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("certificate-authority", CERTIFICATE_AUTHORITY_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.URL).set(SIMULATED_LETS_ENCRYPT_ENDPOINT);
         assertSuccess(services.executeOperation(operation));
@@ -1412,7 +1412,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     private void addCertificateAuthorityAccountWithCustomCA(String alias, String contactURL) throws Exception {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.CONTACT_URLS).add(contactURL);
         operation.get(Constants.CERTIFICATE_AUTHORITY).set(CERTIFICATE_AUTHORITY_NAME);
@@ -1425,7 +1425,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     private void removeCertificateAuthority() {
         ModelNode operation;
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron").add("certificate-authority", CERTIFICATE_AUTHORITY_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("certificate-authority", CERTIFICATE_AUTHORITY_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }

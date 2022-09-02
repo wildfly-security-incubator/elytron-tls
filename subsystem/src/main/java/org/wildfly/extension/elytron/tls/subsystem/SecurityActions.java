@@ -23,7 +23,7 @@ import java.security.PrivilegedExceptionAction;
 import org.wildfly.security.manager.WildFlySecurityManager;
 
 /**
- * Wrapper around {@link AccessController#doPrivileged(PrivilegedAction)} for the 'org.wildfly.extension.elytron' package.
+ * Wrapper around {@link AccessController#doPrivileged(PrivilegedAction)} for the 'org.wildfly.extension.elytron.tls.subsystem' package.
  *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
