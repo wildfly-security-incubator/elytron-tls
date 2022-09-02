@@ -203,6 +203,9 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
         add.get(Constants.PATH).set(testStorePath);
         add.get(Constants.POPULATE).set(false);
 
+        System.out.println("string is");
+        System.out.println(add.get(ClientConstants.OP_ADDR));
+
         assertSuccess(services.executeOperation(add));
 
           // Generate one and export it.

@@ -20,7 +20,7 @@
 
     <resources>
         <artifact name="${org.wildfly.extras.elytron-tls:elytron-tls-dependency}"/>
-        <artifact name="${org.wildfly.security:wildfly-elytron-ssl-common"></artifact>
+        <artifact name="${org.wildfly.security:wildfly-elytron-ssl-common}"></artifact>
     </resources>
 
     <dependencies>
