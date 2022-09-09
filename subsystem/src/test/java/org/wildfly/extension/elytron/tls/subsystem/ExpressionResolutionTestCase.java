@@ -293,7 +293,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
             assertEquals("Successful descryption", CLEAR_TEXT, decrypted);
         } else {
             assertTrue("Failure expected", result.get(OUTCOME).asString().equals(ClientConstants.FAILED));
-            assertTrue("Expected Error Code", result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("WFLYELY00920:"));
+            assertTrue("Expected Error Code", result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("ELYTLS0920:"));
         }
     }
 
@@ -365,7 +365,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
         ModelNode result = services.executeOperation(composite);
         assertTrue("Failure expected", result.get(OUTCOME).asString().equals(ClientConstants.FAILED));
         assertTrue("Expected Error Code (Cycle Detected)",
-                result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("WFLYELY00043:"));
+                result.get(ClientConstants.FAILURE_DESCRIPTION).asString().contains("ELYTLS0043:"));
 
         csUtilOne.cleanUp();
         csUtilTwo.cleanUp();

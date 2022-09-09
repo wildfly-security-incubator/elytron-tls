@@ -120,6 +120,9 @@ import org.wildfly.security.ssl.ProtocolSelector;
 import org.wildfly.security.ssl.X509RevocationTrustManager;
 
 
+/**
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
+ */
 public class SSLContextDefinitions {
 
     static final ServiceUtil<SSLContext> SERVER_SERVICE_UTIL = ServiceUtil.newInstance(SSL_CONTEXT_RUNTIME_CAPABILITY, Constants.SERVER_SSL_CONTEXT, SSLContext.class);

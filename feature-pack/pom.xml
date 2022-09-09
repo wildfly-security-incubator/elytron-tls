@@ -140,7 +140,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.wildfly.security</groupId>
             <artifactId>wildfly-elytron-ssl-common</artifactId>
         </dependency>
     </dependencies>

@@ -18,8 +18,6 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import java.security.KeyStore;
-
 import org.jboss.msc.Service;
 
 /**
@@ -28,7 +26,5 @@ import org.jboss.msc.Service;
  * @author <a href="mailto:jkalina@redhat.com">Jan Kalina</a>
  */
 interface ModifiableKeyStoreService extends Service {
-
-    KeyStore getModifiableValue();
 
 }

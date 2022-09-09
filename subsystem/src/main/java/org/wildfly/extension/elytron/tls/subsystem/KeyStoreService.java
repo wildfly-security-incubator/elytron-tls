@@ -40,6 +40,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.security.auth.x500.X500Principal;
@@ -87,6 +88,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private final boolean required;
     private final String aliasFilter;
 
+    private Consumer<KeyStore> keyStoreConsumer;
     private Supplier<PathManager> pathManagerSupplier;
     private Supplier<Provider[]> providersSupplier;
     private ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier;
@@ -99,21 +101,33 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private volatile ModifyTrackingKeyStore trackingKeyStore = null;
     private volatile KeyStore unmodifiableKeyStore = null;
 
-    private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required, String aliasFilter) {
+    private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
+            String aliasFilter, Consumer<KeyStore> keyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
+            Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         this.provider = provider;
         this.type = type;
         this.relativeTo = relativeTo;
         this.path = path;
         this.required = required;
         this.aliasFilter = aliasFilter;
+        this.keyStoreConsumer = keyStoreConsumer;
+        this.pathManagerSupplier = pathManagerSupplier;
+        this.providersSupplier = providersSupplier;
+        this.credentialSourceSupplier = credentialSourceSupplier;
     }
 
-    static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter) {
-        return new KeyStoreService(provider, type, null, null, false, aliasFilter);
+    static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
+            Consumer<KeyStore> keyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
+            Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+        return new KeyStoreService(provider, type, null, null, false, aliasFilter, keyStoreConsumer,
+            pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
-    static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo, String path, boolean required, String aliasFilter) {
-        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter);
+    static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo,
+            String path, boolean required, String aliasFilter, Consumer<KeyStore> keyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
+            Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, keyStoreConsumer,
+            pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     /*
@@ -251,10 +265,6 @@ class KeyStoreService implements ModifiableKeyStoreService {
 
     public KeyStore getValue() throws IllegalStateException, IllegalArgumentException {
         return unmodifiableKeyStore;
-    }
-
-    public KeyStore getModifiableValue() {
-        return trackingKeyStore;
     }
 
     void setPathManagerSupplier(Supplier<PathManager> pathManagerSupplier) {

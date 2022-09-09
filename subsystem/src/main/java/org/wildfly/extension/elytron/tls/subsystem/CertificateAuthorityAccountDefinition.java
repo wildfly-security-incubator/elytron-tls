@@ -38,6 +38,8 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AbstractAttributeDefinitionBuilder;
@@ -60,7 +62,6 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
-import org.jboss.as.domain.http.server.ConsoleAvailabilityService.LogAdminConsole;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -81,6 +82,7 @@ import org.wildfly.security.x500.cert.acme.CertificateAuthority;
  * A {@link ResourceDefinition} for a single certificate authority account.
  *
  * @author <a href="mailto:fjuma@redhat.com">Farah Juma</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
 
@@ -214,9 +216,20 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             }
             final String finalKeyStoreName = keyStoreName;
             
+            String keyStoreCapabilityName = RuntimeCapability.buildDynamicCapabilityName(KEY_STORE_CAPABILITY, finalKeyStoreName);
+            ServiceName keyStoreServiceName = context.getCapabilityServiceName(keyStoreCapabilityName, KeyStore.class);
+
+            ServiceTarget serviceTarget = context.getServiceTarget();
+            RuntimeCapability<Void> caAccountRuntimeCapability = CERTIFICATE_AUTHORITY_ACCOUNT_RUNTIME_CAPABILITY.fromBaseCapability(context.getCurrentAddressValue());
+            ServiceName acmeAccountServiceName = caAccountRuntimeCapability.getCapabilityServiceName(AcmeAccount.class);
+            
+            ServiceBuilder<?> acmeAccountServiceBuilder = serviceTarget.addService(acmeAccountServiceName).setInitialMode(ServiceController.Mode.ACTIVE);
+            Consumer<AcmeAccount> acmeAccountConsumer = acmeAccountServiceBuilder.provides(acmeAccountServiceName);
+
+            Supplier<KeyStore> keyStoreSupplier = acmeAccountServiceBuilder.requires(keyStoreServiceName);
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier = null;
             if (CREDENTIAL_REFERENCE.resolveModelAttribute(context, operation).isDefined()) {
-                credentialSourceSupplier = CredentialReference.getCredentialSourceSupplier(context, CREDENTIAL_REFERENCE, operation, null);
+                credentialSourceSupplier = CredentialReference.getCredentialSourceSupplier(context, CREDENTIAL_REFERENCE, operation, acmeAccountServiceBuilder);
             }
             final List<ModelNode> contactUrls = CONTACT_URLS.resolveModelAttribute(context, model).asListOrEmpty();
             final List<String> contactUrlsList = new ArrayList<>(contactUrls.size());
@@ -224,24 +237,14 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
                 contactUrlsList.add(contactUrl.asString());
             }
 
-            AcmeAccountService acmeAccountService = new AcmeAccountService(certificateAuthorityName, contactUrlsList, alias, finalKeyStoreName);
-            ServiceTarget serviceTarget = context.getServiceTarget();
-            RuntimeCapability<Void> certificateAuthorityAccountRuntimeCapability = CERTIFICATE_AUTHORITY_ACCOUNT_RUNTIME_CAPABILITY.fromBaseCapability(context.getCurrentAddressValue());
-            ServiceName acmeAccountServiceName = certificateAuthorityAccountRuntimeCapability.getCapabilityServiceName(AcmeAccount.class);
-            ServiceBuilder<AcmeAccount> acmeAccountServiceBuilder = (ServiceBuilder<AcmeAccount>) serviceTarget.addService(acmeAccountServiceName).setInitialMode(ServiceController.Mode.ACTIVE);
-            
-            acmeAccountService.setCredentialSourceSupplier(credentialSourceSupplier);
-
-            String keyStoreCapabilityName = RuntimeCapability.buildDynamicCapabilityName(KEY_STORE_CAPABILITY, finalKeyStoreName);
-            ServiceName keyStoreServiceName = context.getCapabilityServiceName(keyStoreCapabilityName, KeyStore.class);
-            acmeAccountService.setKeyStoreSupplier(acmeAccountServiceBuilder.requires(keyStoreServiceName));
-            
-            if (certificateAuthorityName.equalsIgnoreCase(CertificateAuthority.LETS_ENCRYPT.getName())) {
-                commonRequirements(acmeAccountServiceBuilder, true, true).install();
-            } else {
+            if (!certificateAuthorityName.equalsIgnoreCase(CertificateAuthority.LETS_ENCRYPT.getName())) {
                 acmeAccountServiceBuilder.requires(CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY.getCapabilityServiceName(certificateAuthorityName));
-                commonRequirements(acmeAccountServiceBuilder, true, true).install();
             }
+            acmeAccountServiceBuilder = commonRequirements(acmeAccountServiceBuilder, true, true);
+
+            AcmeAccountService acmeAccountService = new AcmeAccountService(certificateAuthorityName,
+                contactUrlsList, alias, keyStoreName, acmeAccountConsumer, keyStoreSupplier, credentialSourceSupplier);
+            acmeAccountServiceBuilder.setInstance(acmeAccountService).install();
         }
 
         @Override

@@ -25,6 +25,7 @@ import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.jboss.as.controller.OperationContext;
@@ -36,6 +37,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.security.credential.source.CredentialSource;
+import org.wildfly.security.x500.cert.acme.Acme;
 import org.wildfly.security.x500.cert.acme.AcmeAccount;
 import org.wildfly.security.x500.cert.acme.CertificateAuthority;
 
@@ -43,24 +45,31 @@ import org.wildfly.security.x500.cert.acme.CertificateAuthority;
  * A {@link Service} responsible for a single {@link AcmeAccount} instance.
  *
  * @author <a href="mailto:fjuma@redhat.com">Farah Juma</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 class AcmeAccountService implements Service {
 
+    private Consumer<AcmeAccount> acmeAccountConsumer;
     private Supplier<KeyStore> keyStoreSupplier;
     private ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier;
+
     private final String certificateAuthorityName;
     private final List<String> contactUrlsList;
     private final String alias;
     private final String keyStoreName;
     private volatile AcmeAccount acmeAccount;
 
-    AcmeAccountService(String certificateAuthorityName, List<String> contactUrlsList, String alias, String keyStoreName) {
+    AcmeAccountService(String certificateAuthorityName, List<String> contactUrlsList, String alias,
+            String keyStoreName, Consumer<AcmeAccount> acmeAccountConsumer, Supplier<KeyStore> keyStoreSupplier, ExceptionSupplier<CredentialSource,Exception> credentialSourceSupplier) {
         this.certificateAuthorityName = certificateAuthorityName;
         this.contactUrlsList = contactUrlsList;
         this.alias = alias;
         this.keyStoreName = keyStoreName;
+        this.acmeAccountConsumer = acmeAccountConsumer;
+        this.keyStoreSupplier = keyStoreSupplier;
+        this.credentialSourceSupplier = credentialSourceSupplier;
     }
-
+    
     @Override
     public void start(StartContext startContext) throws StartException {
         try {
@@ -114,14 +123,6 @@ class AcmeAccountService implements Service {
 
     public AcmeAccount getValue() throws IllegalStateException, IllegalArgumentException {
         return acmeAccount;
-    }
-
-    void setKeyStoreSupplier(Supplier<KeyStore> keyStoreSupplier) {
-        this.keyStoreSupplier = keyStoreSupplier;
-    }
-
-    void setCredentialSourceSupplier(ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        this.credentialSourceSupplier = credentialSourceSupplier;
     }
 
     char[] resolveKeyPassword(KeyStoreService keyStoreService) throws RuntimeException {

@@ -69,6 +69,7 @@ import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcesso
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition {
 
