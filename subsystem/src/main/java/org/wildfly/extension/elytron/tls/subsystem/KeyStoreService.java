@@ -88,7 +88,6 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private final boolean required;
     private final String aliasFilter;
 
-    private Consumer<KeyStore> keyStoreConsumer;
     private Supplier<PathManager> pathManagerSupplier;
     private Supplier<Provider[]> providersSupplier;
     private ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier;
@@ -98,11 +97,13 @@ class KeyStoreService implements ModifiableKeyStoreService {
 
     private volatile long synched;
     private volatile AtomicLoadKeyStore keyStore = null;
-    private volatile ModifyTrackingKeyStore trackingKeyStore = null;
-    private volatile KeyStore unmodifiableKeyStore = null;
+    private volatile ModifyTrackingKeyStore trackingKeyStore;
+    private volatile KeyStore unmodifiableKeyStore;
+    private volatile Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer;
+    private volatile Consumer<KeyStore> unmodifiableKeyStoreConsumer;
 
     private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
-            String aliasFilter, Consumer<KeyStore> keyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
+            String aliasFilter, Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer, Consumer<KeyStore> unmodifiableKeyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
             Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         this.provider = provider;
         this.type = type;
@@ -110,24 +111,29 @@ class KeyStoreService implements ModifiableKeyStoreService {
         this.path = path;
         this.required = required;
         this.aliasFilter = aliasFilter;
-        this.keyStoreConsumer = keyStoreConsumer;
+        this.unmodifiableKeyStoreConsumer = unmodifiableKeyStoreConsumer;
+        this.trackingKeyStoreConsumer = trackingKeyStoreConsumer;
         this.pathManagerSupplier = pathManagerSupplier;
         this.providersSupplier = providersSupplier;
         this.credentialSourceSupplier = credentialSourceSupplier;
     }
 
     static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
-            Consumer<KeyStore> keyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
-            Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        return new KeyStoreService(provider, type, null, null, false, aliasFilter, keyStoreConsumer,
-            pathManagerSupplier, providersSupplier, credentialSourceSupplier);
+            Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer, Consumer<KeyStore> unmodifiableKeyStoreConsumer,
+            Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
+            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+        
+        return new KeyStoreService(provider, type, null, null, false, aliasFilter, trackingKeyStoreConsumer,
+            unmodifiableKeyStoreConsumer, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo,
-            String path, boolean required, String aliasFilter, Consumer<KeyStore> keyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
+            String path, boolean required, String aliasFilter, Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer,
+            Consumer<KeyStore> unmodifiableKeyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
             Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, keyStoreConsumer,
-            pathManagerSupplier, providersSupplier, credentialSourceSupplier);
+        
+        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, trackingKeyStoreConsumer,
+            unmodifiableKeyStoreConsumer, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     /*
@@ -174,11 +180,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
                     if (type != null) {
                         keyStore.load(is, password);
                     } else {
-                        Provider[] resolvedProviders = providersSupplier.get();
-                        if (resolvedProviders == null) {
-                            resolvedProviders = Security.getProviders();
-                        }
-                        final Provider[] finalProviders = resolvedProviders;
+                        final Provider[] finalProviders = providersSupplier == null ? Security.getProviders() : providersSupplier.get();
                         KeyStore detected = KeyStoreUtil.loadKeyStore(() -> finalProviders, this.provider, is, resolvedPath.getPath(), password);
 
                         if (detected == null) {
@@ -206,17 +208,20 @@ class KeyStoreService implements ModifiableKeyStoreService {
 
             this.keyStore = keyStore;
             KeyStore intermediate = aliasFilter != null ? FilteringKeyStore.filteringKeyStore(keyStore, AliasFilter.fromString(aliasFilter)) :  keyStore;
-            this.trackingKeyStore = ModifyTrackingKeyStore.modifyTrackingKeyStore(intermediate);
-            this.unmodifiableKeyStore = UnmodifiableKeyStore.unmodifiableKeyStore(intermediate);
+            
+            trackingKeyStore = ModifyTrackingKeyStore.modifyTrackingKeyStore(intermediate);
+            unmodifiableKeyStore = UnmodifiableKeyStore.unmodifiableKeyStore(intermediate);
+            trackingKeyStoreConsumer.accept(trackingKeyStore);
+            unmodifiableKeyStoreConsumer.accept(unmodifiableKeyStore);
         } catch (Exception e) {
             throw LOGGER.unableToStartService(e);
         }
     }
 
     private Provider resolveProvider() throws StartException {
-        Provider[] candidates = providersSupplier.get();
-        Supplier<Provider[]> resolveProvidersSupplier = () -> candidates == null ? Security.getProviders() : candidates;
-        Provider identified = findProvider(resolveProvidersSupplier, provider, KeyStore.class, type);
+        Supplier<Provider[]> identifyProviderSupplier = providersSupplier != null ? Security::getProviders : providersSupplier;
+        
+        Provider identified = findProvider(identifyProviderSupplier, provider, KeyStore.class, type);
         if (identified == null) {
             throw LOGGER.noSuitableProvider(type);
         }
@@ -252,31 +257,17 @@ class KeyStoreService implements ModifiableKeyStoreService {
     public void stop(StopContext stopContext) {
         LOGGER.tracef(
                 "stopping:  keyStore = %s  unmodifiableKeyStore = %s  trackingKeyStore = %s  pathResolver = %s",
-                keyStore, unmodifiableKeyStore, trackingKeyStore, pathResolver
+                keyStore, unmodifiableKeyStoreConsumer, trackingKeyStoreConsumer, pathResolver
         );
         keyStore = null;
+        unmodifiableKeyStoreConsumer.accept(null);
+        trackingKeyStoreConsumer.accept(null);
         unmodifiableKeyStore = null;
         trackingKeyStore = null;
         if (pathResolver != null) {
             pathResolver.clear();
             pathResolver = null;
         }
-    }
-
-    public KeyStore getValue() throws IllegalStateException, IllegalArgumentException {
-        return unmodifiableKeyStore;
-    }
-
-    void setPathManagerSupplier(Supplier<PathManager> pathManagerSupplier) {
-        this.pathManagerSupplier = pathManagerSupplier;
-    }
-
-    void setProvidersSupplier(Supplier<Provider[]> providersSupplier) {
-        this.providersSupplier = providersSupplier;
-    }
-
-    void setCredentialSourceSupplier(ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        this.credentialSourceSupplier = credentialSourceSupplier;
     }
 
     String getResolvedAbsolutePath() {

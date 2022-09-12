@@ -43,6 +43,8 @@ import java.security.KeyStoreException;
 import java.security.Provider;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ObjectTypeAttributeDefinition;
@@ -62,6 +64,7 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
+import org.jboss.as.controller.services.path.PathManager;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -70,7 +73,10 @@ import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.extension.elytron.tls.subsystem.KeyStoreService.LoadKey;
+import org.wildfly.security.credential.source.CredentialSource;
+import org.wildfly.security.keystore.ModifyTrackingKeyStore;
 
 /**
  * A {@link ResourceDefinition} for a single {@link KeyStore}.
@@ -252,39 +258,49 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             boolean required;
             String aliasFilter = ALIAS_FILTER.resolveModelAttribute(context, model).asStringOrNull();
 
-            final KeyStoreService keyStoreService;
             if (path != null) {
                 relativeTo = RELATIVE_TO.resolveModelAttribute(context, model).asStringOrNull();
-                required = REQUIRED.resolveModelAttribute(context, model).asBoolean();
-                keyStoreService = KeyStoreService.createFileBasedKeyStoreService(providerName, type, relativeTo, path, required, aliasFilter);
             } else {
                 if (type == null) {
                     throw LOGGER.filelessKeyStoreMissingType();
                 }
-                keyStoreService = KeyStoreService.createFileLessKeyStoreService(providerName, type, aliasFilter);
             }
 
             ServiceTarget serviceTarget = context.getServiceTarget();
-            RuntimeCapability<Void> runtimeCapability = KEY_STORE_RUNTIME_CAPABILITY.fromBaseCapability(context.getCurrentAddressValue());
-            ServiceName serviceName = runtimeCapability.getCapabilityServiceName(KeyStore.class);
-            ServiceBuilder<KeyStore> serviceBuilder = (ServiceBuilder<KeyStore>) serviceTarget.addService(serviceName).setInitialMode(Mode.ACTIVE);
+            ServiceName keyStoreServiceName = KEY_STORE_UTIL.serviceName(context.getCurrentAddressValue());
 
-            keyStoreService.setPathManagerSupplier(serviceBuilder.requires(
-                    PATH_MANAGER_CAPABILITY.getCapabilityServiceName()));
+            ServiceBuilder<?> keyStoreServiceBuilder = serviceTarget.addService(keyStoreServiceName).setInitialMode(Mode.ACTIVE);
+            Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer = keyStoreServiceBuilder.provides(keyStoreServiceName);
+            Consumer<KeyStore> unmodifiableKeyStoreConsumer = keyStoreServiceBuilder.provides(keyStoreServiceName);
+
+            Supplier<PathManager> pathManagerSupplier = keyStoreServiceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName()); 
             if (relativeTo != null) {
-                serviceBuilder.requires(pathName(relativeTo));
+                keyStoreServiceBuilder.requires(pathName(relativeTo));
             }
-
+            Supplier<Provider[]> providersSupplier = null;
             if (providers != null) {
                 String providersCapabilityName = RuntimeCapability.buildDynamicCapabilityName(PROVIDERS_CAPABILITY, providers);
                 ServiceName providerLoaderServiceName = context.getCapabilityServiceName(providersCapabilityName, Provider[].class);
-                keyStoreService.setProvidersSupplier(serviceBuilder.requires(providerLoaderServiceName));
+                providersSupplier = keyStoreServiceBuilder.requires(providerLoaderServiceName);
+            }
+            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier = CredentialReference.getCredentialSourceSupplier(
+                context, CREDENTIAL_REFERENCE, model, keyStoreServiceBuilder);
+
+            keyStoreServiceBuilder = commonRequirements(keyStoreServiceBuilder, true, true);
+
+            final KeyStoreService keyStoreService;
+            if (path != null) {
+                required = REQUIRED.resolveModelAttribute(context, model).asBoolean();
+                keyStoreService = KeyStoreService.createFileBasedKeyStoreService(providerName, type, relativeTo, path,
+                    required, aliasFilter, trackingKeyStoreConsumer, unmodifiableKeyStoreConsumer, pathManagerSupplier,
+                    providersSupplier, credentialSourceSupplier);
+            } else {
+                keyStoreService = KeyStoreService.createFileLessKeyStoreService(providerName, type, aliasFilter,
+                    trackingKeyStoreConsumer, unmodifiableKeyStoreConsumer, pathManagerSupplier, providersSupplier,
+                    credentialSourceSupplier);
             }
 
-            keyStoreService.setCredentialSourceSupplier(CredentialReference.getCredentialSourceSupplier(
-                    context, CREDENTIAL_REFERENCE, model, serviceBuilder));
-
-            commonRequirements(serviceBuilder, true, true).install();
+            keyStoreServiceBuilder.setInstance(keyStoreService).install();
         }
 
         @Override

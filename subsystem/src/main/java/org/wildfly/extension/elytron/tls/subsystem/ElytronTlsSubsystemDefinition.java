@@ -18,6 +18,10 @@ package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.OperationContext.Stage.RUNTIME;
 import static org.jboss.as.server.deployment.Phase.DEPENDENCIES;
+import static org.jboss.as.server.deployment.Phase.STRUCTURE;
+import static org.jboss.as.server.deployment.Phase.STRUCTURE_ELYTRON_EXPRESSION_RESOLVER;
+import static org.jboss.as.server.deployment.Phase.CONFIGURE_DEFAULT_SSL_CONTEXT;
+import static org.jboss.as.server.deployment.Phase.CONFIGURE_MODULE;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.ELYTRON_TLS_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_CAPABILITY;
@@ -66,6 +70,7 @@ import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
 import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
 import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcessor;
+import org.wildfly.extension.elytron.tls.subsystem.expression.DeploymentExpressionResolverProcessor;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
@@ -255,12 +260,21 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                 serviceBuilder.setInstance(defaultSSLContextService).install();
             }
 
-            context.addStep(new AbstractDeploymentChainStep() {
-                public void execute(DeploymentProcessorTarget processorTarget) {
-                    final int DEPENDENCIES_TEMPLATE = 6304;
-                    processorTarget.addDeploymentProcessor(ElytronTlsExtension.SUBSYSTEM_NAME, DEPENDENCIES, DEPENDENCIES_TEMPLATE, new DependencyProcessor());
-                }
-            }, RUNTIME);
+            if(context.isNormalServer()){
+                context.addStep(new AbstractDeploymentChainStep() {
+                    @Override
+                    public void execute(DeploymentProcessorTarget processorTarget) {
+                        final int DEPENDENCIES_ELYTRON_TLS = 0x0C60;
+                        final int STRUCTURE_ELYTRON_TLS_EXPRESSION_RESOLVER = 0x0490;
+
+                        processorTarget.addDeploymentProcessor(ElytronTlsExtension.SUBSYSTEM_NAME, STRUCTURE, STRUCTURE_ELYTRON_TLS_EXPRESSION_RESOLVER, new DeploymentExpressionResolverProcessor());
+                        processorTarget.addDeploymentProcessor(ElytronTlsExtension.SUBSYSTEM_NAME, DEPENDENCIES, DEPENDENCIES_ELYTRON_TLS, new DependencyProcessor());
+                        if (defaultSSLContext != null) {
+                            processorTarget.addDeploymentProcessor(ElytronTlsExtension.SUBSYSTEM_NAME, CONFIGURE_MODULE, CONFIGURE_DEFAULT_SSL_CONTEXT, new SSLContextDependencyProcessor());
+                        }
+                    }
+                }, RUNTIME);
+            }
 
             ElytronTLSLogger.LOGGER.activatingSubsystem();
         }

@@ -86,6 +86,9 @@ import org.wildfly.security.x500.cert.acme.CertificateAuthority;
  */
 class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
 
+    static final ServiceUtil<AcmeAccount> ACME_ACCOUNT_UTIL = ServiceUtil.newInstance(CERTIFICATE_AUTHORITY_ACCOUNT_RUNTIME_CAPABILITY,
+        Constants.CERTIFICATE_AUTHORITY_ACCOUNT, AcmeAccount.class); 
+
     static final StringListAttributeDefinition CONTACT_URLS = new StringListAttributeDefinition.Builder(Constants.CONTACT_URLS)
             .setRequired(false)
             .setAllowExpression(true)
@@ -220,8 +223,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             ServiceName keyStoreServiceName = context.getCapabilityServiceName(keyStoreCapabilityName, KeyStore.class);
 
             ServiceTarget serviceTarget = context.getServiceTarget();
-            RuntimeCapability<Void> caAccountRuntimeCapability = CERTIFICATE_AUTHORITY_ACCOUNT_RUNTIME_CAPABILITY.fromBaseCapability(context.getCurrentAddressValue());
-            ServiceName acmeAccountServiceName = caAccountRuntimeCapability.getCapabilityServiceName(AcmeAccount.class);
+            ServiceName acmeAccountServiceName = ACME_ACCOUNT_UTIL.serviceName(context.getCurrentAddressValue());
             
             ServiceBuilder<?> acmeAccountServiceBuilder = serviceTarget.addService(acmeAccountServiceName).setInitialMode(ServiceController.Mode.ACTIVE);
             Consumer<AcmeAccount> acmeAccountConsumer = acmeAccountServiceBuilder.provides(acmeAccountServiceName);
@@ -242,7 +244,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             }
             acmeAccountServiceBuilder = commonRequirements(acmeAccountServiceBuilder, true, true);
 
-            AcmeAccountService acmeAccountService = new AcmeAccountService(certificateAuthorityName,
+            final AcmeAccountService acmeAccountService = new AcmeAccountService(certificateAuthorityName,
                 contactUrlsList, alias, keyStoreName, acmeAccountConsumer, keyStoreSupplier, credentialSourceSupplier);
             acmeAccountServiceBuilder.setInstance(acmeAccountService).install();
         }
