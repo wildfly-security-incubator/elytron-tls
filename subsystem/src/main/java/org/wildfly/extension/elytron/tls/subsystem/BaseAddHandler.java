@@ -36,7 +36,7 @@ import org.jboss.dmr.ModelNode;
  *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
-class BaseAddHandler extends AbstractAddStepHandler implements org.wildfly.extension.elytron.tls.subsystem.ElytronOperationStepHandler {
+class BaseAddHandler extends AbstractAddStepHandler implements ElytronOperationStepHandler {
 
     private final Set<RuntimeCapability> runtimeCapabilities;
 
