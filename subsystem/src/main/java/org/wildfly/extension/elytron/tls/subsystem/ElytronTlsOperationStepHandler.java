@@ -25,5 +25,5 @@ import org.jboss.msc.Service;
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a> 
  */
-public abstract class ElytronTlsOperationStepHandler<T> implements ElytronOperationStepHandler {
+interface ElytronTlsOperationStepHandler extends ElytronOperationStepHandler {
 }
