@@ -16,14 +16,14 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import org.jboss.as.controller.OperationStepHandler;
-import org.jboss.msc.Service;
+import org.jboss.as.controller.AbstractRuntimeOnlyHandler;
 
 /**
- * An {@link OperationStepHandler} which executes functions in the new {@link Service} API, and can 
- * check if an operation is running on a server or host {@link java.lang.ModuleLayer.Controller}
+ * Implements {@link AbstractRuntimeOnlyHandler} with {@link RuntimeServiceProvider}.
+ * Can also check if an operation is running on a server or host {@link java.lang.ModuleLayer.Controller}.
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a> 
  */
-interface ElytronTlsOperationStepHandler extends ElytronOperationStepHandler {
+abstract class ElytronTlsRuntimeOnlyHandler extends ElytronRuntimeOnlyHandler {
+    // TODO: extend with service provider
 }

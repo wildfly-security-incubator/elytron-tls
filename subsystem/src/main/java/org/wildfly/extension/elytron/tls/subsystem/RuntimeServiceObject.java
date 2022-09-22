@@ -21,20 +21,19 @@ import java.util.function.Consumer;
 import org.wildfly.common.function.ExceptionFunction;
 
 /**
- * Captures a {@link Service} value or instance to make available to runtime operations.
+ * Captures a {@link Service} value or function to make available to runtime operations.
  * Derived from {@link org.jboss.as.clustering.controller.ServiceValueCaptor<T>}.
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class ElytronTlsRuntimeServiceObject<T> implements Consumer<T> {
+public class RuntimeServiceObject<T> implements Consumer<T> {
 
     private T value = null;
 
     public Class<?> getRuntimeClass()  {
-        return value.getClass();
+        return value != null ? value.getClass() : null;
     }
 
-    @Override
     public synchronized void accept(T acceptedValue) {
         value = acceptedValue;
     }

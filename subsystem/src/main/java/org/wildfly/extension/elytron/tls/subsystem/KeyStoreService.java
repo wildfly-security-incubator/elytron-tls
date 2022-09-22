@@ -49,6 +49,7 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.services.path.PathManager;
 import org.jboss.logging.Logger;
 import org.jboss.msc.Service;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
@@ -99,41 +100,42 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private volatile AtomicLoadKeyStore keyStore = null;
     private volatile ModifyTrackingKeyStore trackingKeyStore;
     private volatile KeyStore unmodifiableKeyStore;
-    private volatile Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer;
-    private volatile Consumer<KeyStore> unmodifiableKeyStoreConsumer;
-
+    private RuntimeServiceProvider runtimeProvider;
+    private final ServiceName serviceName;
+    
     private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
-            String aliasFilter, Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer, Consumer<KeyStore> unmodifiableKeyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
-            Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+            String aliasFilter, RuntimeServiceProvider runtimeProvider, ServiceName serviceName,
+            Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
+            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+        
         this.provider = provider;
         this.type = type;
         this.relativeTo = relativeTo;
         this.path = path;
         this.required = required;
         this.aliasFilter = aliasFilter;
-        this.unmodifiableKeyStoreConsumer = unmodifiableKeyStoreConsumer;
-        this.trackingKeyStoreConsumer = trackingKeyStoreConsumer;
+        this.runtimeProvider = runtimeProvider;
+        this.serviceName = serviceName;
         this.pathManagerSupplier = pathManagerSupplier;
         this.providersSupplier = providersSupplier;
         this.credentialSourceSupplier = credentialSourceSupplier;
     }
 
     static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
-            Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer, Consumer<KeyStore> unmodifiableKeyStoreConsumer,
-            Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
-            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        
-        return new KeyStoreService(provider, type, null, null, false, aliasFilter, trackingKeyStoreConsumer,
-            unmodifiableKeyStoreConsumer, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
-    }
-
-    static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo,
-            String path, boolean required, String aliasFilter, Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer,
-            Consumer<KeyStore> unmodifiableKeyStoreConsumer, Supplier<PathManager> pathManagerSupplier,
+            RuntimeServiceProvider runtimeProvider, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
             Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
-        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, trackingKeyStoreConsumer,
-            unmodifiableKeyStoreConsumer, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
+        return new KeyStoreService(provider, type, null, null, false, aliasFilter, runtimeProvider,
+            serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
+    }
+
+    static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo, String path,
+            boolean required, String aliasFilter, RuntimeServiceProvider runtimeProvider, ServiceName serviceName, 
+            Supplier<PathManager> pathManagerSupplier,Supplier<Provider[]> providersSupplier,
+            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+        
+        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, runtimeProvider,
+            serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     /*
@@ -208,9 +210,11 @@ class KeyStoreService implements ModifiableKeyStoreService {
 
             this.keyStore = keyStore;
             KeyStore intermediate = aliasFilter != null ? FilteringKeyStore.filteringKeyStore(keyStore, AliasFilter.fromString(aliasFilter)) :  keyStore;
-            
             trackingKeyStore = ModifyTrackingKeyStore.modifyTrackingKeyStore(intermediate);
             unmodifiableKeyStore = UnmodifiableKeyStore.unmodifiableKeyStore(intermediate);
+
+            runtimeProvider.get(serviceName, ModifyTrackingKeyStore.class).accept(trackingKeyStore);
+
             trackingKeyStoreConsumer.accept(trackingKeyStore);
             unmodifiableKeyStoreConsumer.accept(unmodifiableKeyStore);
         } catch (Exception e) {

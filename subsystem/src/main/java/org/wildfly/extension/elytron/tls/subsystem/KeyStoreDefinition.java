@@ -65,6 +65,7 @@ import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
 import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.domain.management.audit.KeystoreAttributes;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -84,6 +85,8 @@ import org.wildfly.security.keystore.ModifyTrackingKeyStore;
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 final class KeyStoreDefinition extends SimpleResourceDefinition {
+
+    private static RuntimeServiceProvider keyStoreRuntimeProvider = new RuntimeServiceProvider();
 
     static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE, KeyStore.class);
 
@@ -272,6 +275,10 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             ServiceBuilder<?> keyStoreServiceBuilder = serviceTarget.addService(keyStoreServiceName).setInitialMode(Mode.ACTIVE);
             Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer = keyStoreServiceBuilder.provides(keyStoreServiceName);
             Consumer<KeyStore> unmodifiableKeyStoreConsumer = keyStoreServiceBuilder.provides(keyStoreServiceName);
+            
+            keyStoreRuntimeProvider.addService(keyStoreServiceName);
+            keyStoreRuntimeProvider.addValue(keyStoreServiceName, (RuntimeServiceObject<ModifyTrackingKeyStore>) trackingKeyStoreConsumer);
+            keyStoreRuntimeProvider.addValue(keyStoreServiceName, (RuntimeServiceObject<KeyStore>) unmodifiableKeyStoreConsumer);
 
             Supplier<PathManager> pathManagerSupplier = keyStoreServiceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName()); 
             if (relativeTo != null) {
@@ -292,12 +299,12 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             if (path != null) {
                 required = REQUIRED.resolveModelAttribute(context, model).asBoolean();
                 keyStoreService = KeyStoreService.createFileBasedKeyStoreService(providerName, type, relativeTo, path,
-                    required, aliasFilter, trackingKeyStoreConsumer, unmodifiableKeyStoreConsumer, pathManagerSupplier,
+                    required, aliasFilter, keyStoreRuntimeProvider, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             } else {
                 keyStoreService = KeyStoreService.createFileLessKeyStoreService(providerName, type, aliasFilter,
-                    trackingKeyStoreConsumer, unmodifiableKeyStoreConsumer, pathManagerSupplier, providersSupplier,
-                    credentialSourceSupplier);
+                    keyStoreRuntimeProvider, keyStoreServiceName, pathManagerSupplier,
+                    providersSupplier, credentialSourceSupplier);
             }
 
             keyStoreServiceBuilder.setInstance(keyStoreService).install();
