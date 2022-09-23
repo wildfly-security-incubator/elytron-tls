@@ -36,6 +36,7 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
+import org.wildfly.extension.elytron.tls.subsystem.RuntimeServiceFunction;
 import org.wildfly.security.x500.cert.acme.AcmeException;
 
 /**
@@ -154,6 +155,15 @@ public interface ElytronTLSLogger extends BasicLogger {
 
     @Message(id = 44, value = "Unexpected name of servicename's parent - %s")
     IllegalStateException invalidServiceNameParent(String canonicalName);
+
+    @Message(id = 45, value = "RuntimeServiceSupplier values must have class defined by accept() or setRuntimeClass()")
+    UnsupportedOperationException runtimeServiceValueClassUndefined();
+
+    @Message(id = 46, value = "RuntimeServiceFunction does not accept new ExceptionFunction")
+    UnsupportedOperationException RuntimeServiceFunctionAlreadyInitialized();
+
+    @Message(id = 47, value = "Cannot execute RuntimeServiceFunction '%s' on itself")
+    UnsupportedOperationException nestedRuntimeServiceFunctionExecution(String name);
 
     /*
      * Credential Store Section.

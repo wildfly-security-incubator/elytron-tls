@@ -16,29 +16,66 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+
 import java.util.function.Consumer;
 
 import org.wildfly.common.function.ExceptionFunction;
 
 /**
- * Captures a {@link Service} value or function to make available to runtime operations.
+ * Captures a {@link Service} value to make available to runtime operations.
  * Derived from {@link org.jboss.as.clustering.controller.ServiceValueCaptor<T>}.
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class RuntimeServiceObject<T> implements Consumer<T> {
 
-    private T value = null;
+    protected T object = null;
+    protected Class<?> objectClass;
+    protected boolean objectAccepted = false;
+    protected String name = null;
 
-    public Class<?> getRuntimeClass()  {
-        return value != null ? value.getClass() : null;
+    /**
+     * Sets the class of the service object. Will be overridden when an object is accepted.
+     * 
+     * @return the object class if successfully set, or null if not
+     */
+    public synchronized Class<?> setRuntimeClass(Class<T> clazz) {
+        if (!objectAccepted) {
+            objectClass = clazz;
+            return objectClass;
+        }
+        
+        return null;
+    }
+
+    public synchronized Class<?> getRuntimeClass()  {
+        return objectClass;
+    }
+
+    public String getRuntimeName() {
+        return name;
     }
 
     public synchronized void accept(T acceptedValue) {
-        value = acceptedValue;
+        object = acceptedValue;
+        objectClass = acceptedValue.getClass();
+        objectAccepted = true;
     }
 
+    /**
+     * Use the service object as an argument to the {@link ExceptionFunction}.
+     * 
+     * @param function the function to be executed
+     * @return the function result
+     * @throws UnsupportedOperationException if both the service object and function input are instances 
+     * of the same {@link RuntimeServiceFunction}.
+     * @throws E if a function exception occurs
+     */
     public synchronized <R, E extends Exception> R execute(ExceptionFunction<T, R, E> function) throws E {
-        return value != null ? function.apply(value) : null;
+        if (((RuntimeServiceFunction<?,?,?>) function).getRuntimeName() == name) {
+            throw LOGGER.nestedRuntimeServiceFunctionExecution(name);
+        }
+        return object != null ? function.apply(object) : null;
     }
 }

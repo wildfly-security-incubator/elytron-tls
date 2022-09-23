@@ -19,7 +19,7 @@ package org.wildfly.extension.elytron.tls.subsystem;
 import org.jboss.as.controller.AbstractRuntimeOnlyHandler;
 
 /**
- * Implements {@link AbstractRuntimeOnlyHandler} with {@link RuntimeServiceProvider}.
+ * Implements {@link AbstractRuntimeOnlyHandler} with {@link RuntimeServiceSupplier}.
  * Can also check if an operation is running on a server or host {@link java.lang.ModuleLayer.Controller}.
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a> 

@@ -53,6 +53,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.wildfly.common.function.ExceptionFunction;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.common.iteration.ByteIterator;
 import org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PathResolver;
@@ -100,11 +101,11 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private volatile AtomicLoadKeyStore keyStore = null;
     private volatile ModifyTrackingKeyStore trackingKeyStore;
     private volatile KeyStore unmodifiableKeyStore;
-    private RuntimeServiceProvider runtimeProvider;
+    private RuntimeServiceSupplier runtimeSupplier;
     private final ServiceName serviceName;
     
     private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
-            String aliasFilter, RuntimeServiceProvider runtimeProvider, ServiceName serviceName,
+            String aliasFilter, RuntimeServiceSupplier runtimeSupplier, ServiceName serviceName,
             Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
@@ -114,7 +115,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
         this.path = path;
         this.required = required;
         this.aliasFilter = aliasFilter;
-        this.runtimeProvider = runtimeProvider;
+        this.runtimeSupplier = runtimeSupplier;
         this.serviceName = serviceName;
         this.pathManagerSupplier = pathManagerSupplier;
         this.providersSupplier = providersSupplier;
@@ -122,19 +123,19 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
-            RuntimeServiceProvider runtimeProvider, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
+            RuntimeServiceSupplier runtimeSupplier, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
             Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
-        return new KeyStoreService(provider, type, null, null, false, aliasFilter, runtimeProvider,
+        return new KeyStoreService(provider, type, null, null, false, aliasFilter, runtimeSupplier,
             serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo, String path,
-            boolean required, String aliasFilter, RuntimeServiceProvider runtimeProvider, ServiceName serviceName, 
+            boolean required, String aliasFilter, RuntimeServiceSupplier runtimeSupplier, ServiceName serviceName, 
             Supplier<PathManager> pathManagerSupplier,Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
-        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, runtimeProvider,
+        return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, runtimeSupplier,
             serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
@@ -212,11 +213,8 @@ class KeyStoreService implements ModifiableKeyStoreService {
             KeyStore intermediate = aliasFilter != null ? FilteringKeyStore.filteringKeyStore(keyStore, AliasFilter.fromString(aliasFilter)) :  keyStore;
             trackingKeyStore = ModifyTrackingKeyStore.modifyTrackingKeyStore(intermediate);
             unmodifiableKeyStore = UnmodifiableKeyStore.unmodifiableKeyStore(intermediate);
-
-            runtimeProvider.get(serviceName, ModifyTrackingKeyStore.class).accept(trackingKeyStore);
-
-            trackingKeyStoreConsumer.accept(trackingKeyStore);
-            unmodifiableKeyStoreConsumer.accept(unmodifiableKeyStore);
+            
+            updateSuppliers();
         } catch (Exception e) {
             throw LOGGER.unableToStartService(e);
         }
@@ -230,6 +228,13 @@ class KeyStoreService implements ModifiableKeyStoreService {
             throw LOGGER.noSuitableProvider(type);
         }
         return identified;
+    }
+
+    private void updateSuppliers() {
+        if (runtimeSupplier != null) {
+            runtimeSupplier.get(serviceName, ModifyTrackingKeyStore.class).accept(trackingKeyStore);
+            runtimeSupplier.get(serviceName, KeyStore.class).accept(unmodifiableKeyStore);
+        }
     }
 
     private AtomicLoadKeyStore.LoadKey load(AtomicLoadKeyStore keyStore) throws Exception {
@@ -261,13 +266,12 @@ class KeyStoreService implements ModifiableKeyStoreService {
     public void stop(StopContext stopContext) {
         LOGGER.tracef(
                 "stopping:  keyStore = %s  unmodifiableKeyStore = %s  trackingKeyStore = %s  pathResolver = %s",
-                keyStore, unmodifiableKeyStoreConsumer, trackingKeyStoreConsumer, pathResolver
+                keyStore, unmodifiableKeyStore, trackingKeyStore, pathResolver
         );
         keyStore = null;
-        unmodifiableKeyStoreConsumer.accept(null);
-        trackingKeyStoreConsumer.accept(null);
         unmodifiableKeyStore = null;
         trackingKeyStore = null;
+        updateSuppliers();
         if (pathResolver != null) {
             pathResolver.clear();
             pathResolver = null;
@@ -294,6 +298,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
             synched = System.currentTimeMillis();
             boolean originalModified = trackingKeyStore.isModified();
             trackingKeyStore.setModified(false);
+            updateSuppliers();
             return new LoadKey(loadKey, originalSynced, originalModified);
         } catch (Exception e) {
             throw LOGGER.unableToCompleteOperation(e, e.getLocalizedMessage());
@@ -305,6 +310,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
         keyStore.revert(loadKey.loadKey);
         synched = loadKey.modifiedTime;
         trackingKeyStore.setModified(loadKey.modified);
+        updateSuppliers();
     }
 
     void save() throws OperationFailedException {
@@ -316,6 +322,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
             keyStore.store(fos, resolvePassword());
             synched = System.currentTimeMillis();
             trackingKeyStore.setModified(false);
+            updateSuppliers();
         } catch (Exception e) {
             throw LOGGER.unableToCompleteOperation(e, e.getLocalizedMessage());
         }
