@@ -1,41 +1,51 @@
+/*
+ * Copyright 2022 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
-
+import org.jboss.msc.Service;
 import org.wildfly.common.function.ExceptionFunction;
 
 /**
- * Captures a {@link Service} method as an {@link ExceptionFunction} to make available to runtime
- * operations. Derived from {@link org.jboss.as.clustering.controller.OperationFunction<T, V>}.
+ * Captures a {@link Service} method as an {@link ExceptionFunction} to make it available to runtime
+ * operations.
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 
-public class RuntimeServiceFunction<T, R, E extends Exception> extends RuntimeServiceObject<T> implements ExceptionFunction<T, R, E> {
-
-    /* Remaining point is that not using the object field makes operating on this ExceptionFunction itself
-     * [ function.execute() ] impossible. This is likely not desired, calling another function to operate on
-     * itself may cause issues. Will add brief explainer to overriding method. */
-
-    RuntimeServiceFunction() {
-        objectAccepted = true;
-        objectClass = ExceptionFunction.class;
+public class RuntimeServiceFunction<I, T> extends RuntimeServiceObject<String, ExceptionFunction<?, ?, ? extends Exception>> {
+    
+    public RuntimeServiceFunction(ExceptionFunction<?, ?, ? extends Exception> function,
+        String functionName) {
+        
+        object = function;
+        objectId = functionName;
+    }
+    
+    public String getFunctionName() {
+        return objectId;
     }
 
-    @Override
-    public synchronized void accept(T acceptedValue) {
-        throw LOGGER.RuntimeServiceFunctionAlreadyInitialized();
+    /** Provides the {@link ExceptionFunction} */
+    public ExceptionFunction<?, ?, ? extends Exception> getFunction() {
+        return object;
     }
 
-    /**
-     * Use the service function to execute an operation on the value.
-     * 
-     * @param value the value to execute on
-     * @return the function result
-     * @throws E if an exception occurs
-     */
-    @Override
-    public R apply(T value) throws E {
-        return null;
+    /** Alias for {@code getFunction()} */
+    public ExceptionFunction<?, ?, ? extends Exception> execute() {
+        return object;
     }
 }

@@ -156,14 +156,8 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 44, value = "Unexpected name of servicename's parent - %s")
     IllegalStateException invalidServiceNameParent(String canonicalName);
 
-    @Message(id = 45, value = "RuntimeServiceSupplier values must have class defined by accept() or setRuntimeClass()")
-    UnsupportedOperationException runtimeServiceValueClassUndefined();
-
-    @Message(id = 46, value = "RuntimeServiceFunction does not accept new ExceptionFunction")
-    UnsupportedOperationException RuntimeServiceFunctionAlreadyInitialized();
-
-    @Message(id = 47, value = "Cannot execute RuntimeServiceFunction '%s' on itself")
-    UnsupportedOperationException nestedRuntimeServiceFunctionExecution(String name);
+    @Message(id = 45, value = "RuntimeServiceValue class from service '%s' was not set")
+    UnsupportedOperationException undefinedServiceValueClass(String serviceName);
 
     /*
      * Credential Store Section.

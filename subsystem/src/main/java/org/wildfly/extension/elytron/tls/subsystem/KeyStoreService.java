@@ -101,11 +101,11 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private volatile AtomicLoadKeyStore keyStore = null;
     private volatile ModifyTrackingKeyStore trackingKeyStore;
     private volatile KeyStore unmodifiableKeyStore;
-    private RuntimeServiceSupplier runtimeSupplier;
+    private RuntimeServiceValueSupplier runtimeSupplier;
     private final ServiceName serviceName;
     
     private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
-            String aliasFilter, RuntimeServiceSupplier runtimeSupplier, ServiceName serviceName,
+            String aliasFilter, RuntimeServiceValueSupplier runtimeSupplier, ServiceName serviceName,
             Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
@@ -123,7 +123,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
-            RuntimeServiceSupplier runtimeSupplier, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
+            RuntimeServiceValueSupplier runtimeSupplier, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
             Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
         return new KeyStoreService(provider, type, null, null, false, aliasFilter, runtimeSupplier,
@@ -131,7 +131,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo, String path,
-            boolean required, String aliasFilter, RuntimeServiceSupplier runtimeSupplier, ServiceName serviceName, 
+            boolean required, String aliasFilter, RuntimeServiceValueSupplier runtimeSupplier, ServiceName serviceName, 
             Supplier<PathManager> pathManagerSupplier,Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         

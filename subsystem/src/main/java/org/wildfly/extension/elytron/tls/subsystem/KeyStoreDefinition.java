@@ -86,7 +86,7 @@ import org.wildfly.security.keystore.ModifyTrackingKeyStore;
  */
 final class KeyStoreDefinition extends SimpleResourceDefinition {
 
-    protected static RuntimeServiceSupplier keyStoreRuntimeSupplier = new RuntimeServiceSupplier();
+    protected static RuntimeServiceValueSupplier keyStoreRuntimeSupplier = new RuntimeServiceValueSupplier();
 
     static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE, KeyStore.class);
 

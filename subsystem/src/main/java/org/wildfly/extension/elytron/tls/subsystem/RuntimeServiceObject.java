@@ -16,66 +16,20 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
-
-import java.util.function.Consumer;
-
-import org.wildfly.common.function.ExceptionFunction;
-
 /**
- * Captures a {@link Service} value to make available to runtime operations.
- * Derived from {@link org.jboss.as.clustering.controller.ServiceValueCaptor<T>}.
+ * Captures a {@link Service} object to make it available to runtime operations. Derived from 
+ * {@link org.jboss.as.clustering.controller.FunctionExecutor}
+ * 
+ * @param <I> the class used to identify service objects in the collection 
+ * @param <T> class of the object provided by the service at runtime
+ * @param object the object provided by the Service
+ * @param objectId an identifier for the object, such as a string or class
+ * @implSpec Create public classes to set the object, and getters/setters for {@code objectId} 
+ * @implSpec Use the method name {@code execute} to indicate operations applied with the value
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class RuntimeServiceObject<T> implements Consumer<T> {
-
+public abstract class RuntimeServiceObject<I, T> {
     protected T object = null;
-    protected Class<?> objectClass;
-    protected boolean objectAccepted = false;
-    protected String name = null;
-
-    /**
-     * Sets the class of the service object. Will be overridden when an object is accepted.
-     * 
-     * @return the object class if successfully set, or null if not
-     */
-    public synchronized Class<?> setRuntimeClass(Class<T> clazz) {
-        if (!objectAccepted) {
-            objectClass = clazz;
-            return objectClass;
-        }
-        
-        return null;
-    }
-
-    public synchronized Class<?> getRuntimeClass()  {
-        return objectClass;
-    }
-
-    public String getRuntimeName() {
-        return name;
-    }
-
-    public synchronized void accept(T acceptedValue) {
-        object = acceptedValue;
-        objectClass = acceptedValue.getClass();
-        objectAccepted = true;
-    }
-
-    /**
-     * Use the service object as an argument to the {@link ExceptionFunction}.
-     * 
-     * @param function the function to be executed
-     * @return the function result
-     * @throws UnsupportedOperationException if both the service object and function input are instances 
-     * of the same {@link RuntimeServiceFunction}.
-     * @throws E if a function exception occurs
-     */
-    public synchronized <R, E extends Exception> R execute(ExceptionFunction<T, R, E> function) throws E {
-        if (((RuntimeServiceFunction<?,?,?>) function).getRuntimeName() == name) {
-            throw LOGGER.nestedRuntimeServiceFunctionExecution(name);
-        }
-        return object != null ? function.apply(object) : null;
-    }
+    protected I objectId = null;
 }
