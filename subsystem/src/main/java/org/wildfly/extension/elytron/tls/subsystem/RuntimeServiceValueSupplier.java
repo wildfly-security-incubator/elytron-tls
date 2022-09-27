@@ -28,40 +28,38 @@ import org.jboss.msc.service.ServiceName;
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class RuntimeServiceValueSupplier<I, O> implements RuntimeServiceSupplier<Class<?>,
-                                                                RuntimeServiceValue<Class<?>, ?>> {
+public class RuntimeServiceValueSupplier<O> implements RuntimeServiceSupplier<RuntimeServiceValue> {
 
     protected ConcurrentHashMap<ServiceName,
-                ConcurrentHashMap<Class<?>, RuntimeServiceValue<Class<?>, ?>>> runtimeValues = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, RuntimeServiceValue>> runtimeValues = new ConcurrentHashMap<>();
 
     @Override
     public void addService(ServiceName serviceName) {
         runtimeValues.putIfAbsent(serviceName, new ConcurrentHashMap<>());
     }
 
-    @SuppressWarnings("unchecked")
     public <T> void add(ServiceName serviceName, Consumer<T> consumer, Class<?> consumerClass) {
-        RuntimeServiceValue<I, T> serviceObject = (RuntimeServiceValue<I, T>) consumer;
-        serviceObject.setRuntimeClass(consumerClass);
-        add(serviceName, serviceObject, consumerClass);
+        RuntimeServiceValue<T> serviceValue = (RuntimeServiceValue<T>) consumer;
+        serviceValue.setObjectName(consumerClass);
+        add(serviceName, serviceValue, consumerClass);
     }
 
     @Override
-    public void add(ServiceName serviceName, RuntimeServiceValue<Class<?>, ?> serviceValue) {
-        if (serviceValue.getRuntimeClass() == null) {
+    public void add(ServiceName serviceName, RuntimeServiceValue serviceValue) {
+        if (serviceValue.getObjectName() == "unset") {
             throw LOGGER.undefinedServiceValueClass(serviceName.getCanonicalName());
         }
 
         runtimeValues.putIfAbsent(serviceName, new ConcurrentHashMap<>());
-        runtimeValues.get(serviceName).put(serviceValue.getRuntimeClass(), serviceValue);
+        runtimeValues.get(serviceName).put(serviceValue.getObjectName(), serviceValue);
     }
 
-    @Override
-    public RuntimeServiceValue<Class<?>, ?> get(ServiceName name, Class<?> objectId) {
-        ConcurrentHashMap<Class<?>, RuntimeServiceValue<Class<?>, ?>> service = runtimeValues.getOrDefault(name, null);
+    @SuppressWarnings("unchecked")
+    public <T> RuntimeServiceValue<T> get(ServiceName name, Class<T> objectClass) {
+        ConcurrentHashMap<String, RuntimeServiceValue> service = runtimeValues.getOrDefault(name, null);
         
         if (service != null) {
-            RuntimeServiceValue<Class<?>, ?> serviceValue = service.getOrDefault(objectId, null);
+            RuntimeServiceValue<T> serviceValue = (RuntimeServiceValue<T>) service.getOrDefault(objectClass, null);
             return serviceValue;
         }
         return null;

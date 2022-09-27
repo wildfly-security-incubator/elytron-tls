@@ -20,16 +20,26 @@ package org.wildfly.extension.elytron.tls.subsystem;
  * Captures a {@link Service} object to make it available to runtime operations. Derived from 
  * {@link org.jboss.as.clustering.controller.FunctionExecutor}
  * 
- * @param <I> the class used to identify service objects in the collection 
- * @param <T> class of the object provided by the service at runtime
- * @param object the object provided by the Service
- * @param objectId an identifier for the object, such as a string or class
- * @implSpec Create public classes to set the object, and getters/setters for {@code objectId} 
- * @implSpec Use the method name {@code execute} to indicate operations applied with the value
+ * @param runtimeObjectType the implementation of this class
+ * @param objectName an identifier for the object, such as a name or class in string form
+ * @implSpec Create an appropriate object field
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public abstract class RuntimeServiceObject<I, T> {
-    protected T object = null;
-    protected I objectId = null;
+public abstract class RuntimeServiceObject {
+    protected final String runtimeObjectType;
+    protected String objectName;
+
+    public RuntimeServiceObject(Class<? extends RuntimeServiceObject> runtimeObjectType, String objectName) {
+        this.runtimeObjectType = runtimeObjectType.getName();
+        this.objectName = objectName;
+    }
+
+    public final String getRuntimeObjectDetails() {
+        return new StringBuilder(runtimeObjectType).append(':').append(objectName).toString();
+    }
+
+    public final String getObjectName() {
+        return objectName;
+    }
 }

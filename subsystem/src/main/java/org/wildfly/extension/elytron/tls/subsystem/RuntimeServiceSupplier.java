@@ -21,12 +21,13 @@ import org.jboss.msc.service.ServiceName;
  * Makes the objects of a {@link Service} available for execution by runtime operations . Derived
  * from {@link org.jboss.as.clustering.controller.FunctionExecutorRegistry}.
  * 
- * @param <I> the class used to identify service objects in the collection
- * @param <O> the {@link RuntimeServiceObject} class providing the objects
+ * @param <O> the {@link RuntimeServiceObject} implementation providing the objects
+ * @implSpec the method {@code public O get(ServiceName, Object)} using an identifier for the runtime objects.
+ * Must be converted to a {@link String}.
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 
-interface RuntimeServiceSupplier<I, O extends RuntimeServiceObject<I, ?>> {
+interface RuntimeServiceSupplier<O extends RuntimeServiceObject> {
 
     /**
      * Adds a service to a {@link java.util.Collection} to store its related objects
@@ -42,14 +43,4 @@ interface RuntimeServiceSupplier<I, O extends RuntimeServiceObject<I, ?>> {
      * @param serviceObject the object available when requested
      */
     public void add(ServiceName serviceName, O serviceObject);
-
-    /**
-     * Retrieves a {@link RuntimeServiceObject} to be operated on.
-     * 
-     * @param serviceName the name of the service providing the object
-     * @param objectId the identifier of the object requested
-     * @param runtimeClass the type of RuntimeServiceObject requested
-     * @return the object
-     */
-    public O get(ServiceName serviceName, I objectId);
 }

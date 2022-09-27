@@ -101,12 +101,12 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private volatile AtomicLoadKeyStore keyStore = null;
     private volatile ModifyTrackingKeyStore trackingKeyStore;
     private volatile KeyStore unmodifiableKeyStore;
-    private RuntimeServiceValueSupplier runtimeSupplier;
+    private RuntimeServiceValueSupplier<Class<?>, ? extends KeyStore> runtimeValueSupplier;
     private final ServiceName serviceName;
     
     private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
-            String aliasFilter, RuntimeServiceValueSupplier runtimeSupplier, ServiceName serviceName,
-            Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
+            String aliasFilter, RuntimeServiceValueSupplier<Class<?>, ? extends KeyStore> runtimeSupplier,
+            ServiceName serviceName, Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
         this.provider = provider;
@@ -115,7 +115,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
         this.path = path;
         this.required = required;
         this.aliasFilter = aliasFilter;
-        this.runtimeSupplier = runtimeSupplier;
+        this.runtimeValueSupplier = runtimeSupplier;
         this.serviceName = serviceName;
         this.pathManagerSupplier = pathManagerSupplier;
         this.providersSupplier = providersSupplier;
@@ -123,16 +123,17 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
-            RuntimeServiceValueSupplier runtimeSupplier, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
-            Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
+            RuntimeServiceValueSupplier<Class<?>, ? extends KeyStore> runtimeSupplier, ServiceName serviceName,
+            Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
+            ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
         return new KeyStoreService(provider, type, null, null, false, aliasFilter, runtimeSupplier,
             serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo, String path,
-            boolean required, String aliasFilter, RuntimeServiceValueSupplier runtimeSupplier, ServiceName serviceName, 
-            Supplier<PathManager> pathManagerSupplier,Supplier<Provider[]> providersSupplier,
+            boolean required, String aliasFilter, RuntimeServiceValueSupplier<Class<?>, ? extends KeyStore> runtimeSupplier,
+            ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
         return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, runtimeSupplier,
@@ -213,6 +214,9 @@ class KeyStoreService implements ModifiableKeyStoreService {
             KeyStore intermediate = aliasFilter != null ? FilteringKeyStore.filteringKeyStore(keyStore, AliasFilter.fromString(aliasFilter)) :  keyStore;
             trackingKeyStore = ModifyTrackingKeyStore.modifyTrackingKeyStore(intermediate);
             unmodifiableKeyStore = UnmodifiableKeyStore.unmodifiableKeyStore(intermediate);
+
+            runtimeValueSupplier.get(serviceName, KeyStore.class).accept(unmodifiableKeyStore);
+            
             
             updateSuppliers();
         } catch (Exception e) {
@@ -231,9 +235,9 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     private void updateSuppliers() {
-        if (runtimeSupplier != null) {
-            runtimeSupplier.get(serviceName, ModifyTrackingKeyStore.class).accept(trackingKeyStore);
-            runtimeSupplier.get(serviceName, KeyStore.class).accept(unmodifiableKeyStore);
+        if (runtimeValueSupplier != null) {
+            runtimeValueSupplier.get(serviceName, ModifyTrackingKeyStore.class).accept(trackingKeyStore);
+            runtimeValueSupplier.get(serviceName, KeyStore.class).accept(unmodifiableKeyStore);
         }
     }
 

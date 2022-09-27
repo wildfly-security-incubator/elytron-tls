@@ -26,45 +26,39 @@ import org.wildfly.common.function.ExceptionFunction;
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class RuntimeServiceFunctionSupplier<I, O> implements RuntimeServiceSupplier<String,
-    RuntimeServiceFunction<String, ExceptionFunction<?, ?, ? extends Exception>>> {
+public class RuntimeServiceFunctionSupplier<O> implements RuntimeServiceSupplier<RuntimeServiceFunction> {
     
     protected ConcurrentHashMap<ServiceName,
-        ConcurrentHashMap<String, RuntimeServiceFunction<String,
-            ExceptionFunction<?, ?, ? extends Exception>>>> runtimeFunctions = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, RuntimeServiceFunction>> runtimeFunctions = new ConcurrentHashMap<>();
 
     @Override
     public void addService(ServiceName serviceName) {
         runtimeFunctions.putIfAbsent(serviceName, new ConcurrentHashMap<>());
     }
 
-    public void add(ServiceName serviceName, ExceptionFunction<?, ?, ? extends Exception> function,
-        String functionName) {
+    public <T, R, E extends Exception> void add(ServiceName serviceName, ExceptionFunction<T, R, E> function,
+        String functionName, Class<R> returnClass) {
 
-        RuntimeServiceFunction<String,
-            ExceptionFunction<?, ?, ? extends Exception>> serviceObject = new RuntimeServiceFunction<>(function, functionName);
-        add(serviceName, serviceObject);
+        RuntimeServiceFunction<T, R, E> serviceFunction = new RuntimeServiceFunction<>(function, functionName, returnClass);
+        add(serviceName, serviceFunction);
     }
 
     @Override
-    public void add(ServiceName serviceName, RuntimeServiceFunction<String,
-                    ExceptionFunction<?, ?, ? extends Exception>> serviceFunction) {
+    public void add(ServiceName serviceName, RuntimeServiceFunction serviceFunction) {
         
         runtimeFunctions.putIfAbsent(serviceName, new ConcurrentHashMap<>());
-        runtimeFunctions.get(serviceName).put(serviceFunction.getFunctionName(), serviceFunction);
+        runtimeFunctions.get(serviceName).put(serviceFunction.getObjectName(), serviceFunction);
     }
 
-    @Override
-    public RuntimeServiceFunction<String, ExceptionFunction<?, ?, ? extends Exception>> get(ServiceName serviceName,
-                String functionName) {
+    @SuppressWarnings("unchecked")
+    public <T, R, E extends Exception> RuntimeServiceFunction<T, R, E> get(ServiceName serviceName,
+                String functionName, Class<R> returnClass) {
 
-        ConcurrentHashMap<String, RuntimeServiceFunction<String,
-            ExceptionFunction<?, ?, ? extends Exception>>> service = runtimeFunctions.getOrDefault(serviceName, null);
+        ConcurrentHashMap<String, RuntimeServiceFunction> service = runtimeFunctions.getOrDefault(serviceName, null);
 
         if (service != null) {
-            RuntimeServiceFunction<String, ExceptionFunction<?, ?,
-                    ? extends Exception>> serviceFunction = service.getOrDefault(functionName, null);
-            return serviceFunction;
+            RuntimeServiceFunction<T, R, E> serviceFunction = (RuntimeServiceFunction<T, R, E>) service.getOrDefault(functionName, null);
+            if (serviceFunction.getReturnClass() == returnClass) return serviceFunction;
         }
         return null;
     }

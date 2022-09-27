@@ -86,7 +86,8 @@ import org.wildfly.security.keystore.ModifyTrackingKeyStore;
  */
 final class KeyStoreDefinition extends SimpleResourceDefinition {
 
-    protected static RuntimeServiceValueSupplier keyStoreRuntimeSupplier = new RuntimeServiceValueSupplier();
+    protected static RuntimeServiceValueSupplier<Class<?>,
+        RuntimeServiceValue<Class<?>, ? extends KeyStore>> runtimeValueSupplier = new RuntimeServiceValueSupplier<>();
 
     static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE, KeyStore.class);
 
@@ -276,9 +277,9 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             Consumer<ModifyTrackingKeyStore> trackingKeyStoreConsumer = keyStoreServiceBuilder.provides(keyStoreServiceName);
             Consumer<KeyStore> unmodifiableKeyStoreConsumer = keyStoreServiceBuilder.provides(keyStoreServiceName);
             
-            keyStoreRuntimeSupplier.addService(keyStoreServiceName);
-            keyStoreRuntimeSupplier.add(keyStoreServiceName, trackingKeyStoreConsumer, ModifyTrackingKeyStore.class);
-            keyStoreRuntimeSupplier.add(keyStoreServiceName, unmodifiableKeyStoreConsumer, KeyStore.class);
+            runtimeValueSupplier.addService(keyStoreServiceName);
+            runtimeValueSupplier.add(keyStoreServiceName, trackingKeyStoreConsumer, ModifyTrackingKeyStore.class);
+            runtimeValueSupplier.add(keyStoreServiceName, unmodifiableKeyStoreConsumer, KeyStore.class);
 
             Supplier<PathManager> pathManagerSupplier = keyStoreServiceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName()); 
             if (relativeTo != null) {
@@ -299,11 +300,11 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             if (path != null) {
                 required = REQUIRED.resolveModelAttribute(context, model).asBoolean();
                 keyStoreService = KeyStoreService.createFileBasedKeyStoreService(providerName, type, relativeTo, path,
-                    required, aliasFilter, keyStoreRuntimeSupplier, keyStoreServiceName, pathManagerSupplier,
+                    required, aliasFilter, runtimeValueSupplier, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             } else {
                 keyStoreService = KeyStoreService.createFileLessKeyStoreService(providerName, type, aliasFilter,
-                    keyStoreRuntimeSupplier, keyStoreServiceName, pathManagerSupplier,
+                    runtimeValueSupplier, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             }
 

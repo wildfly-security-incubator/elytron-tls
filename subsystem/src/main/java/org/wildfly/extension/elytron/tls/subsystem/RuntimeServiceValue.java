@@ -28,32 +28,25 @@ import org.wildfly.common.function.ExceptionFunction;
  * @param objectAccepted indicates if the class has provided the object
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class RuntimeServiceValue<I, T> extends RuntimeServiceObject<Class<?>, T> implements Consumer<T> {
+public class RuntimeServiceValue<T> extends RuntimeServiceObject implements Consumer<T> {
     
-    private boolean objectAccepted = false;
+    private T object = null;
+    
+    public RuntimeServiceValue(Class<?> valueClass) {
+        super(RuntimeServiceValue.class, valueClass.getName());
+    }
+
+    public RuntimeServiceValue() {
+        super(RuntimeServiceValue.class, "unset");
+    }
+
+    public void setObjectName(Class<?> valueClass) {
+        objectName = valueClass.getName();
+    }
 
     @Override
     public synchronized void accept(T acceptedValue) {
         object = acceptedValue;
-        objectId = acceptedValue.getClass();
-        objectAccepted = true;
-    }
-
-    /**
-     * Sets the class of the service object. Will be overridden when an object is accepted.
-     * 
-     * @return the object class if successfully set, or null if not
-     */
-    public synchronized Class<?> setRuntimeClass(Class<?> clazz) {
-        if (!objectAccepted) {
-            objectId = clazz;
-            return objectId;
-        }
-        return null;
-    }
-
-    public synchronized Class<?> getRuntimeClass()  {
-        return objectId;
     }
 
     public synchronized <R, E extends Exception> R execute(ExceptionFunction<T, R, E> function) throws E {

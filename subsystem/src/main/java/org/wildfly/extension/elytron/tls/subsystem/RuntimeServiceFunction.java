@@ -26,26 +26,30 @@ import org.wildfly.common.function.ExceptionFunction;
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 
-public class RuntimeServiceFunction<I, T> extends RuntimeServiceObject<String, ExceptionFunction<?, ?, ? extends Exception>> {
+public class RuntimeServiceFunction<T, R, E extends Exception> extends RuntimeServiceObject implements ExceptionFunction<T, R, E> {
     
-    public RuntimeServiceFunction(ExceptionFunction<?, ?, ? extends Exception> function,
-        String functionName) {
-        
-        object = function;
-        objectId = functionName;
+    private ExceptionFunction<T, R, E> constructorFunction;
+    private final Class<R> returnClass;
+
+    public RuntimeServiceFunction(String functionName, Class<R> returnClass) {
+        super(RuntimeServiceFunction.class, functionName);
+        this.returnClass = returnClass;
+        this.constructorFunction = null;
     }
     
-    public String getFunctionName() {
-        return objectId;
+    public RuntimeServiceFunction(ExceptionFunction<T, R, E> function, String functionName,
+        Class<R> returnClass) {
+        this(functionName, returnClass);
+        this.constructorFunction = function;
     }
 
-    /** Provides the {@link ExceptionFunction} */
-    public ExceptionFunction<?, ?, ? extends Exception> getFunction() {
-        return object;
+    public Class<R> getReturnClass() {
+        return returnClass;
     }
 
-    /** Alias for {@code getFunction()} */
-    public ExceptionFunction<?, ?, ? extends Exception> execute() {
-        return object;
+    /** Defaults to run constructorFunction function if a function was passed in. */
+    @Override
+    public R apply(T t) throws E {
+        return constructorFunction.apply(t);
     }
 }
