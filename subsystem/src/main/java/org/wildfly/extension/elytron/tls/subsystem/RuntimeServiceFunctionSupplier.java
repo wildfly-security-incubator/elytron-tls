@@ -20,13 +20,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.msc.service.ServiceName;
 import org.wildfly.common.function.ExceptionFunction;
+import org.wildfly.extension.elytron.tls.subsystem.RuntimeServiceFunction.RSFUnused;
 
 /**
  * Provides the functions of a {@link org.jboss.msc.Service} at runtime. 
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class RuntimeServiceFunctionSupplier<O> implements RuntimeServiceSupplier<RuntimeServiceFunction> {
+public class RuntimeServiceFunctionSupplier implements RuntimeServiceSupplier {
     
     protected ConcurrentHashMap<ServiceName,
         ConcurrentHashMap<String, RuntimeServiceFunction>> runtimeFunctions = new ConcurrentHashMap<>();
@@ -44,10 +45,10 @@ public class RuntimeServiceFunctionSupplier<O> implements RuntimeServiceSupplier
     }
 
     @Override
-    public void add(ServiceName serviceName, RuntimeServiceFunction serviceFunction) {
+    public void add(ServiceName serviceName, RuntimeServiceObject serviceFunction) {
         
         runtimeFunctions.putIfAbsent(serviceName, new ConcurrentHashMap<>());
-        runtimeFunctions.get(serviceName).put(serviceFunction.getObjectName(), serviceFunction);
+        runtimeFunctions.get(serviceName).put(serviceFunction.getObjectName(), (RuntimeServiceFunction) serviceFunction);
     }
 
     @SuppressWarnings("unchecked")
@@ -58,7 +59,7 @@ public class RuntimeServiceFunctionSupplier<O> implements RuntimeServiceSupplier
 
         if (service != null) {
             RuntimeServiceFunction<T, R, E> serviceFunction = (RuntimeServiceFunction<T, R, E>) service.getOrDefault(functionName, null);
-            if (serviceFunction.getReturnClass() == returnClass) return serviceFunction;
+            if (serviceFunction.getReturnClass() == returnClass || serviceFunction.getReturnClass() == RSFUnused.class) return serviceFunction;
         }
         return null;
     }

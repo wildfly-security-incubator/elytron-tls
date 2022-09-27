@@ -86,8 +86,8 @@ import org.wildfly.security.keystore.ModifyTrackingKeyStore;
  */
 final class KeyStoreDefinition extends SimpleResourceDefinition {
 
-    protected static RuntimeServiceValueSupplier<Class<?>,
-        RuntimeServiceValue<Class<?>, ? extends KeyStore>> runtimeValueSupplier = new RuntimeServiceValueSupplier<>();
+    protected static RuntimeServiceValueSupplier runtimeValueSupplier = new RuntimeServiceValueSupplier();
+    protected static RuntimeServiceFunctionSupplier runtimeFunctionSupplier = new RuntimeServiceFunctionSupplier();
 
     static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE, KeyStore.class);
 
@@ -300,11 +300,11 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             if (path != null) {
                 required = REQUIRED.resolveModelAttribute(context, model).asBoolean();
                 keyStoreService = KeyStoreService.createFileBasedKeyStoreService(providerName, type, relativeTo, path,
-                    required, aliasFilter, runtimeValueSupplier, keyStoreServiceName, pathManagerSupplier,
+                    required, aliasFilter, runtimeValueSupplier, runtimeFunctionSupplier, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             } else {
                 keyStoreService = KeyStoreService.createFileLessKeyStoreService(providerName, type, aliasFilter,
-                    runtimeValueSupplier, keyStoreServiceName, pathManagerSupplier,
+                    runtimeValueSupplier, runtimeFunctionSupplier, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             }
 

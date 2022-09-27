@@ -28,7 +28,7 @@ import org.jboss.msc.service.ServiceName;
  * 
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class RuntimeServiceValueSupplier<O> implements RuntimeServiceSupplier<RuntimeServiceValue> {
+public class RuntimeServiceValueSupplier implements RuntimeServiceSupplier {
 
     protected ConcurrentHashMap<ServiceName,
         ConcurrentHashMap<String, RuntimeServiceValue>> runtimeValues = new ConcurrentHashMap<>();
@@ -45,13 +45,13 @@ public class RuntimeServiceValueSupplier<O> implements RuntimeServiceSupplier<Ru
     }
 
     @Override
-    public void add(ServiceName serviceName, RuntimeServiceValue serviceValue) {
+    public void add(ServiceName serviceName, RuntimeServiceObject serviceValue) {
         if (serviceValue.getObjectName() == "unset") {
             throw LOGGER.undefinedServiceValueClass(serviceName.getCanonicalName());
         }
 
         runtimeValues.putIfAbsent(serviceName, new ConcurrentHashMap<>());
-        runtimeValues.get(serviceName).put(serviceValue.getObjectName(), serviceValue);
+        runtimeValues.get(serviceName).put(serviceValue.getObjectName(),  (RuntimeServiceValue) serviceValue);
     }
 
     @SuppressWarnings("unchecked")
