@@ -36,7 +36,7 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartException;
-import org.wildfly.extension.elytron.tls.subsystem.RuntimeServiceFunction;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceMethods;
 import org.wildfly.security.x500.cert.acme.AcmeException;
 
 /**
@@ -158,6 +158,9 @@ public interface ElytronTLSLogger extends BasicLogger {
 
     @Message(id = 45, value = "RuntimeServiceValue class from service '%s' was not set")
     UnsupportedOperationException undefinedServiceValueClass(String serviceName);
+
+    @Message(id = 46, value = "Service '%s' has not provided a RuntimeServiceObject with identity '%s'")
+    OperationFailedException runtimeServiceObjectNotAvailable(String serviceName, String runtimeObject);
 
     /*
      * Credential Store Section.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.extension.elytron.tls.subsystem;
+package org.wildfly.extension.elytron.tls.subsystem.runtime;
 
 import java.util.function.Consumer;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.extension.elytron.tls.subsystem;
+package org.wildfly.extension.elytron.tls.subsystem.runtime;
 
 /**
  * Captures a {@link Service} object to make it available to runtime operations. Derived from 

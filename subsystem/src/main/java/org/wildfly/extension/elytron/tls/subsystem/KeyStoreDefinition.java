@@ -75,7 +75,10 @@ import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.wildfly.common.function.ExceptionSupplier;
+import org.wildfly.extension.elytron.tls.subsystem.KeyStoreService.KeyStoreMethods;
 import org.wildfly.extension.elytron.tls.subsystem.KeyStoreService.LoadKey;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceMethodsSupplier;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceValueSupplier;
 import org.wildfly.security.credential.source.CredentialSource;
 import org.wildfly.security.keystore.ModifyTrackingKeyStore;
 
@@ -87,7 +90,7 @@ import org.wildfly.security.keystore.ModifyTrackingKeyStore;
 final class KeyStoreDefinition extends SimpleResourceDefinition {
 
     protected static RuntimeServiceValueSupplier runtimeValueSupplier = new RuntimeServiceValueSupplier();
-    protected static RuntimeServiceFunctionSupplier runtimeFunctionSupplier = new RuntimeServiceFunctionSupplier();
+    protected static RuntimeServiceMethodsSupplier runtimeMethodsSupplier = new RuntimeServiceMethodsSupplier();
 
     static final ServiceUtil<KeyStore> KEY_STORE_UTIL = ServiceUtil.newInstance(KEY_STORE_RUNTIME_CAPABILITY, Constants.KEY_STORE, KeyStore.class);
 
@@ -300,11 +303,11 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             if (path != null) {
                 required = REQUIRED.resolveModelAttribute(context, model).asBoolean();
                 keyStoreService = KeyStoreService.createFileBasedKeyStoreService(providerName, type, relativeTo, path,
-                    required, aliasFilter, runtimeValueSupplier, runtimeFunctionSupplier, keyStoreServiceName, pathManagerSupplier,
+                    required, aliasFilter, runtimeValueSupplier, runtimeMethodsSupplier, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             } else {
                 keyStoreService = KeyStoreService.createFileLessKeyStoreService(providerName, type, aliasFilter,
-                    runtimeValueSupplier, runtimeFunctionSupplier, keyStoreServiceName, pathManagerSupplier,
+                    runtimeValueSupplier, runtimeMethodsSupplier, keyStoreServiceName, pathManagerSupplier,
                     providersSupplier, credentialSourceSupplier);
             }
 
@@ -349,13 +352,13 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
                 return;
             }
 
-            performRuntime(context.getResult(), context, operation, (KeyStoreService) serviceContainer.getService());
+            performRuntime(context.getResult(), context, operation, (KeyStoreService) serviceContainer.getService(), keyStoreName);
         }
 
-        protected void performRuntime(ModelNode result, ModelNode operation,  KeyStoreService keyStoreService) throws OperationFailedException {}
+        protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreService keyStoreService, ServiceName keyStoreName) throws OperationFailedException {}
 
-        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation,  KeyStoreService keyStoreService) throws OperationFailedException {
-            performRuntime(result, operation, keyStoreService);
+        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation,  KeyStoreService keyStoreService, ServiceName keyStoreName) throws OperationFailedException {
+            performRuntime(result, operation, keyStoreService, keyStoreName);
         }
 
     }
@@ -369,15 +372,21 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
         }
 
         @Override
-        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation, final KeyStoreService keyStoreService) throws OperationFailedException {
+        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation, final KeyStoreService keyStoreService, ServiceName keyStoreName) throws OperationFailedException {
             String operationName = operation.require(OP).asString();
+
+            KeyStoreMethods methods = runtimeMethodsSupplier.get(keyStoreName, KeyStoreMethods.class);
+            if (methods == null) { // TODO move this to KeyStoreRuntimeOnlyHandler
+                throw LOGGER.runtimeServiceObjectNotAvailable(keyStoreName.getSimpleName(), KeyStoreMethods.class.getSimpleName());
+            }
+
             switch (operationName) {
                 case Constants.LOAD:
-                    final LoadKey loadKey = keyStoreService.load();
-                    context.completeStep((context1, operation1) -> keyStoreService.revertLoad(loadKey));
+                    final LoadKey loadKey = methods.load();
+                    context.completeStep((context1, operation1) -> methods.revertLoad(loadKey));
                     break;
                 case Constants.STORE:
-                    keyStoreService.save();
+                    methods.save();
                     break;
                 default:
                     throw LOGGER.invalidOperationName(operationName, Constants.LOAD,

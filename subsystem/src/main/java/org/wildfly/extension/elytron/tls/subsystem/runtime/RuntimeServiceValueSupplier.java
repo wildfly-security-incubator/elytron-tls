@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.extension.elytron.tls.subsystem;
+package org.wildfly.extension.elytron.tls.subsystem.runtime;
 
 import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
 
@@ -45,13 +45,17 @@ public class RuntimeServiceValueSupplier implements RuntimeServiceSupplier {
     }
 
     @Override
-    public void add(ServiceName serviceName, RuntimeServiceObject serviceValue) {
+    public <T extends RuntimeServiceObject> String add(ServiceName serviceName, T serviceValue) {
         if (serviceValue.getObjectName() == "unset") {
-            throw LOGGER.undefinedServiceValueClass(serviceName.getCanonicalName());
+            throw LOGGER.undefinedServiceValueClass(serviceName.getSimpleName());
         }
 
-        runtimeValues.putIfAbsent(serviceName, new ConcurrentHashMap<>());
-        runtimeValues.get(serviceName).put(serviceValue.getObjectName(),  (RuntimeServiceValue) serviceValue);
+        ConcurrentHashMap<String, RuntimeServiceValue> service = runtimeValues.getOrDefault(serviceName, null);
+        if (service != null) {
+            RuntimeServiceValue result = runtimeValues.get(serviceName).put(serviceValue.getObjectName(), (RuntimeServiceValue) serviceValue);
+            return result != null ? result.getRuntimeObjectDetails() : null;
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.extension.elytron.tls.subsystem;
+package org.wildfly.extension.elytron.tls.subsystem.runtime;
+
+import java.util.ArrayList;
 
 import org.jboss.msc.service.ServiceName;
 
@@ -40,18 +42,24 @@ interface RuntimeServiceSupplier {
      * 
      * @param serviceName the name of the service providing the object 
      * @param serviceObject the object available when requested
+     * @return the details of the object added, or null if failed to add
      */
-    public void add(ServiceName serviceName, RuntimeServiceObject serviceObject);
+    public <T extends RuntimeServiceObject> String add(ServiceName serviceName, T serviceObject);
 
     /**
      * Adds a {@link RuntimeServiceObject} to the collection of objects provided by the service.
      * 
      * @param serviceName the name of the service providing the object 
      * @param serviceObjects the objects available when requested
+     * @return an {@link ArrayList} of the added objects, substituting an empty String on failures
      */
-    default public void add(ServiceName serviceName, RuntimeServiceObject... serviceObjects){
+    default public ArrayList<String> add(ServiceName serviceName, RuntimeServiceObject... serviceObjects){
+        ArrayList<String> results = new ArrayList<>(); 
+        
         for (RuntimeServiceObject obj : serviceObjects) {
-            add(serviceName, obj);
+            String result = add(serviceName, obj);
+            results.add(result != null ? result : new String());
         }
+        return results;
     }
 }

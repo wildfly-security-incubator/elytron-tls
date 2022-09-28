@@ -59,7 +59,9 @@ import org.wildfly.common.function.ExceptionFunction;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.common.iteration.ByteIterator;
 import org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PathResolver;
-import org.wildfly.extension.elytron.tls.subsystem.RuntimeServiceFunction.RSFUnused;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceMethods;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceMethodsSupplier;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceValueSupplier;
 import org.wildfly.security.EmptyProvider;
 import org.wildfly.security.credential.PasswordCredential;
 import org.wildfly.security.credential.source.CredentialSource;
@@ -107,10 +109,10 @@ class KeyStoreService implements ModifiableKeyStoreService {
 
     private final ServiceName serviceName;
     private RuntimeServiceValueSupplier runtimeValueSupplier;
-    private RuntimeServiceFunctionSupplier runtimeFunctionSupplier;
+    private RuntimeServiceMethodsSupplier runtimeMethodsSupplier;
     
     private KeyStoreService(String provider, String type, String relativeTo, String path, boolean required,
-            String aliasFilter, RuntimeServiceValueSupplier runtimeValueSupplier, RuntimeServiceFunctionSupplier runtimeFunctionSupplier,
+            String aliasFilter, RuntimeServiceValueSupplier runtimeValueSupplier, RuntimeServiceMethodsSupplier runtimeMethodsSupplier,
             ServiceName serviceName, Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
@@ -121,7 +123,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
         this.required = required;
         this.aliasFilter = aliasFilter;
         this.runtimeValueSupplier = runtimeValueSupplier;
-        this.runtimeFunctionSupplier = runtimeFunctionSupplier;
+        this.runtimeMethodsSupplier = runtimeMethodsSupplier;
         this.serviceName = serviceName;
         this.pathManagerSupplier = pathManagerSupplier;
         this.providersSupplier = providersSupplier;
@@ -129,21 +131,21 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     static KeyStoreService createFileLessKeyStoreService(String provider, String type, String aliasFilter,
-            RuntimeServiceValueSupplier runtimeValueSupplier, RuntimeServiceFunctionSupplier runtimeFunctionSupplier,
+            RuntimeServiceValueSupplier runtimeValueSupplier, RuntimeServiceMethodsSupplier runtimeMethodsSupplier,
             ServiceName serviceName, Supplier<PathManager> pathManagerSupplier, Supplier<Provider[]> providersSupplier,
             ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
         return new KeyStoreService(provider, type, null, null, false, aliasFilter, runtimeValueSupplier,
-            runtimeFunctionSupplier, serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
+            runtimeMethodsSupplier, serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     static KeyStoreService createFileBasedKeyStoreService(String provider, String type, String relativeTo, String path,
             boolean required, String aliasFilter, RuntimeServiceValueSupplier runtimeValueSupplier,
-            RuntimeServiceFunctionSupplier runtimeFunctionSupplier, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
+            RuntimeServiceMethodsSupplier runtimeMethodsSupplier, ServiceName serviceName, Supplier<PathManager> pathManagerSupplier,
             Supplier<Provider[]> providersSupplier, ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
         
         return new KeyStoreService(provider, type, relativeTo, path, required, aliasFilter, runtimeValueSupplier,
-            runtimeFunctionSupplier, serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
+            runtimeMethodsSupplier, serviceName, pathManagerSupplier, providersSupplier, credentialSourceSupplier);
     }
 
     /*
@@ -222,7 +224,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
             unmodifiableKeyStore = UnmodifiableKeyStore.unmodifiableKeyStore(intermediate);
 
             updateSuppliers();
-            registerRuntimeFunctions();
+            registerRuntimeMethods();
         } catch (Exception e) {
             throw LOGGER.unableToStartService(e);
         }
@@ -245,146 +247,14 @@ class KeyStoreService implements ModifiableKeyStoreService {
         }
     }
 
-    private void registerRuntimeFunctions() {
-        runtimeFunctionSupplier.addService(serviceName);
-        runtimeFunctionSupplier.add(serviceName, timeSynched, load, revertLoad, save, isModified, resolveKeyPassword,
-            resolvePassword, getResolvedPath, generateAndSaveSelfSignedCertificate, shouldAutoGenerateSelfSignedCertificate);
+    private void registerRuntimeMethods() {
+        if (runtimeMethodsSupplier != null) {
+            runtimeMethodsSupplier.addService(serviceName);
+            runtimeMethodsSupplier.add(serviceName, new KeyStoreMethods());
+        }
     }
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, Exception> timeSynched = new RuntimeServiceFunction<RSFUnused, RSFUnused, Exception>("timeSynched", RSFUnused.class) {
-        public long apply() {
-            return synched;
-        }
-    };
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, OperationFailedException> load = new RuntimeServiceFunction<RSFUnused, RSFUnused, OperationFailedException>("load", RSFUnused.class) {
-        public LoadKey apply() throws OperationFailedException {
-            try {
-                LOGGER.tracef("reloading KeyStore from file [%s]", resolvedPath);
-                AtomicLoadKeyStore.LoadKey loadKey = load(keyStore);
-                long originalSynced = synched;
-                synched = System.currentTimeMillis();
-                boolean originalModified = trackingKeyStore.isModified();
-                trackingKeyStore.setModified(false);
-                updateSuppliers();
-                return new LoadKey(loadKey, originalSynced, originalModified);
-            } catch (Exception e) {
-                throw LOGGER.unableToCompleteOperation(e, e.getLocalizedMessage());
-            }
-        }
-    };
-
-    private RuntimeServiceFunction<LoadKey, Void, Exception> revertLoad = new RuntimeServiceFunction<LoadKey, Void, Exception>("revertLoad", Void.class) {
-        @Override
-        public Void apply(LoadKey loadKey) throws Exception {
-            LOGGER.trace("reverting load of KeyStore");
-            keyStore.revert(loadKey.loadKey);
-            synched = loadKey.modifiedTime;
-            trackingKeyStore.setModified(loadKey.modified);
-            updateSuppliers();
-            return null;
-        }
-    };
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, OperationFailedException> save = new RuntimeServiceFunction<RSFUnused, RSFUnused, OperationFailedException>("save", RSFUnused.class) {
-        public void apply() throws OperationFailedException {
-            if (resolvedPath == null) {
-                throw LOGGER.cantSaveWithoutFile(path);
-            }
-            LOGGER.tracef("saving KeyStore to the file [%s]", resolvedPath);
-            try (FileOutputStream fos = new FileOutputStream(resolvedPath)) {
-                keyStore.store(fos, resolvePassword());
-                synched = System.currentTimeMillis();
-                trackingKeyStore.setModified(false);
-                updateSuppliers();
-            } catch (Exception e) {
-                throw LOGGER.unableToCompleteOperation(e, e.getLocalizedMessage());
-            }
-            return null;
-        } 
-    };
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, Exception> isModified = new RuntimeServiceFunction<RSFUnused, RSFUnused, Exception>("isModified", RSFUnused.class) {
-        public boolean apply() {
-            return trackingKeyStore.isModified();
-        }
-    };
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, Exception> resolveKeyPassword = new RuntimeServiceFunction<RSFUnused, RSFUnused, Exception>("resolveKeyPassword", RSFUnused.class) {
-        public char[] apply(ExceptionSupplier<CredentialSource, Exception> keyPasswordCredentialSourceSupplier) throws Exception {
-            if (keyPasswordCredentialSourceSupplier == null) {
-                // use the key-store password if no key password is provided
-                return resolvePassword.apply(null);
-            }
-            CredentialSource cs = keyPasswordCredentialSourceSupplier.get();
-            String path = resolvedPath != null ? resolvedPath.getPath() : "null";
-            if (cs == null) throw LOGGER.keyPasswordCannotBeResolved(path);
-            PasswordCredential credential = cs.getCredential(PasswordCredential.class);
-            if (credential == null) throw LOGGER.keyPasswordCannotBeResolved(path);
-            ClearPassword password = credential.getPassword(ClearPassword.class);
-            if (password == null) throw LOGGER.keyPasswordCannotBeResolved(path);
-            return password.getPassword();
-        }
-    };
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, Exception> resolvePassword = new RuntimeServiceFunction<RSFUnused, RSFUnused, Exception>("resolvePassword", RSFUnused.class) {
-        public char[] apply(Void t) throws Exception {
-            CredentialSource cs = credentialSourceSupplier != null ? credentialSourceSupplier.get() : null;
-        String path = resolvedPath != null ? resolvedPath.getPath() : "null";
-            if (cs == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
-            PasswordCredential credential = cs.getCredential(PasswordCredential.class);
-            if (credential == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
-            ClearPassword password = credential.getPassword(ClearPassword.class);
-            if (password == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
-
-            return password.getPassword();
-        }
-    };
-
-    private RuntimeServiceFunction<RSFUnused, RSFUnused, Exception> getResolvedPath = new RuntimeServiceFunction<RSFUnused, RSFUnused, Exception>("getResolvedPath", RSFUnused.class) {
-        public File apply(PathResolver pathResolver, String path, String relativeTo) {
-            pathResolver.path(path);
-            if (relativeTo != null) {
-                pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
-            }
-            return pathResolver.resolve();
-        }
-    };
-
-    private RuntimeServiceFunction<String, Void, Exception> generateAndSaveSelfSignedCertificate = new RuntimeServiceFunction<String, Void, Exception>("generateAndSaveSelfSignedCertificate", Void.class) {
-        public void apply(String host, char[] password) {
-            try {
-                if (shouldAutoGenerateSelfSignedCertificate(host)) {
-                    // generate certificate
-                    Date from = new Date();
-                    Date to = new Date(from.getTime() + (1000L * 60L * 60L * 24L * 365L * 10L));
-                    SelfSignedX509CertificateAndSigningKey selfSignedCertificateAndSigningKey = SelfSignedX509CertificateAndSigningKey.builder()
-                            .setDn(new X500Principal(COMMON_NAME_PREFIX + host))
-                            .setNotValidAfter(ZonedDateTime.ofInstant(Instant.ofEpochMilli(to.getTime()), TimeZone.getDefault().toZoneId()))
-                            .setNotValidBefore(ZonedDateTime.ofInstant(Instant.ofEpochMilli(from.getTime()), TimeZone.getDefault().toZoneId()))
-                            .setKeyAlgorithmName(GENERATED_CERTIFICATE_KEY_ALGORITHM)
-                            .setKeySize(GENERATED_CERTIFICATE_KEY_SIZE)
-                            .setSignatureAlgorithmName(GENERATED_CERTIFICATE_SIGNATURE_ALGORITHM)
-                            .build();
-                    X509Certificate selfSignedCertificate = selfSignedCertificateAndSigningKey.getSelfSignedCertificate();
-                    keyStore.setKeyEntry(GENERATED_CERTIFICATE_ALIAS, selfSignedCertificateAndSigningKey.getSigningKey(), password == null ? resolvePassword() : password,
-                            new X509Certificate[]{selfSignedCertificate});
-                    LOGGER.selfSignedCertificateHasBeenCreated(resolvedPath.getAbsolutePath(), getShaFingerprint(selfSignedCertificate, "SHA-1"), getShaFingerprint(selfSignedCertificate, "SHA-256"));
-                    save();
-                    updateSuppliers();
-                }
-            } catch (Exception e) {
-                throw LOGGER.failedToStoreGeneratedSelfSignedCertificate(e);
-            }
-        }
-    };
-
-    private RuntimeServiceFunction<String, Boolean, Exception> shouldAutoGenerateSelfSignedCertificate = new RuntimeServiceFunction<String, Boolean, Exception>("shouldAutoGenerateSelfSignedCertificate", Boolean.class) {
-        @Override
-        public Boolean apply(String host) throws Exception {
-            return host != null && resolvedPath != null && ! resolvedPath.exists();
-        }
-    };
+    /* runtimeFunctionSupplier.add(serviceName, timeSynched, load, revertLoad, save, isModified, resolveKeyPassword,
+            resolvePassword, getResolvedPath, generateAndSaveSelfSignedCertificate, shouldAutoGenerateSelfSignedCertificate); */
 
     private AtomicLoadKeyStore.LoadKey load(AtomicLoadKeyStore keyStore) throws Exception {
         try (InputStream is = resolvedPath != null ? new FileInputStream(resolvedPath) : null) {
@@ -562,6 +432,164 @@ class KeyStoreService implements ModifiableKeyStoreService {
             this.loadKey = loadKey;
             this.modifiedTime = modifiedTime;
             this.modified = modified;
+        }
+    }
+
+    class KeyStoreMethods extends RuntimeServiceMethods {
+    
+        public KeyStoreMethods() {
+            super(KeyStoreMethods.class);
+        }
+
+        private AtomicLoadKeyStore.LoadKey load(AtomicLoadKeyStore keyStore) throws Exception {
+            try (InputStream is = resolvedPath != null ? new FileInputStream(resolvedPath) : null) {
+                AtomicLoadKeyStore.LoadKey loadKey = keyStore.revertibleLoad(is, resolvePassword());
+                checkCertificatesValidity(keyStore);
+                return loadKey;
+            }
+        }
+    
+        private void checkCertificatesValidity(KeyStore keyStore) throws KeyStoreException {
+            if (LOGGER.isEnabled(Logger.Level.WARN)) {
+                Enumeration<String> aliases = keyStore.aliases();
+                while (aliases.hasMoreElements()) {
+                    String alias = aliases.nextElement();
+                    Certificate certificate = keyStore.getCertificate(alias);
+                    if (certificate != null && certificate instanceof X509Certificate) {
+                        try {
+                            ((X509Certificate) certificate).checkValidity();
+                        } catch (CertificateExpiredException | CertificateNotYetValidException e) {
+                            LOGGER.certificateNotValid(alias, e);
+                        }
+                    }
+                }
+            }
+        }
+    
+        String getResolvedAbsolutePath() {
+            return resolvedPath != null ? resolvedPath.getAbsolutePath() : null;
+        }
+
+        /*
+        * OperationStepHandler Access Methods
+        */
+
+        long timeSynched() {
+            return synched;
+        }
+
+        LoadKey load() throws OperationFailedException {
+            try {
+                LOGGER.tracef("reloading KeyStore from file [%s]", resolvedPath);
+                AtomicLoadKeyStore.LoadKey loadKey = load(keyStore);
+                long originalSynced = synched;
+                synched = System.currentTimeMillis();
+                boolean originalModified = trackingKeyStore.isModified();
+                trackingKeyStore.setModified(false);
+                updateSuppliers();
+                return new LoadKey(loadKey, originalSynced, originalModified);
+            } catch (Exception e) {
+                throw LOGGER.unableToCompleteOperation(e, e.getLocalizedMessage());
+            }
+        }
+
+        void revertLoad(final LoadKey loadKey) {
+            LOGGER.trace("reverting load of KeyStore");
+            keyStore.revert(loadKey.loadKey);
+            synched = loadKey.modifiedTime;
+            trackingKeyStore.setModified(loadKey.modified);
+            updateSuppliers();
+        }
+
+        void save() throws OperationFailedException {
+            if (resolvedPath == null) {
+                throw LOGGER.cantSaveWithoutFile(path);
+            }
+            LOGGER.tracef("saving KeyStore to the file [%s]", resolvedPath);
+            try (FileOutputStream fos = new FileOutputStream(resolvedPath)) {
+                keyStore.store(fos, resolvePassword());
+                synched = System.currentTimeMillis();
+                trackingKeyStore.setModified(false);
+                updateSuppliers();
+            } catch (Exception e) {
+                throw LOGGER.unableToCompleteOperation(e, e.getLocalizedMessage());
+            }
+        }
+
+        boolean isModified() {
+            return trackingKeyStore.isModified();
+        }
+
+        char[] resolveKeyPassword(final ExceptionSupplier<CredentialSource, Exception> keyPasswordCredentialSourceSupplier) throws Exception {
+            if (keyPasswordCredentialSourceSupplier == null) {
+                // use the key-store password if no key password is provided
+                return resolvePassword();
+            }
+            CredentialSource cs = keyPasswordCredentialSourceSupplier.get();
+            String path = resolvedPath != null ? resolvedPath.getPath() : "null";
+            if (cs == null) throw LOGGER.keyPasswordCannotBeResolved(path);
+            PasswordCredential credential = cs.getCredential(PasswordCredential.class);
+            if (credential == null) throw LOGGER.keyPasswordCannotBeResolved(path);
+            ClearPassword password = credential.getPassword(ClearPassword.class);
+            if (password == null) throw LOGGER.keyPasswordCannotBeResolved(path);
+            return password.getPassword();
+        }
+
+        private char[] resolvePassword() throws Exception {
+            CredentialSource cs = credentialSourceSupplier != null ? credentialSourceSupplier.get() : null;
+            String path = resolvedPath != null ? resolvedPath.getPath() : "null";
+            if (cs == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
+            PasswordCredential credential = cs.getCredential(PasswordCredential.class);
+            if (credential == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
+            ClearPassword password = credential.getPassword(ClearPassword.class);
+            if (password == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
+
+            return password.getPassword();
+        }
+
+        File getResolvedPath(PathResolver pathResolver, String path, String relativeTo) {
+            pathResolver.path(path);
+            if (relativeTo != null) {
+                pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
+            }
+            return pathResolver.resolve();
+        }
+
+        void generateAndSaveSelfSignedCertificate(String host, char[] password) {
+            try {
+                if (shouldAutoGenerateSelfSignedCertificate(host)) {
+                    // generate certificate
+                    Date from = new Date();
+                    Date to = new Date(from.getTime() + (1000L * 60L * 60L * 24L * 365L * 10L));
+                    SelfSignedX509CertificateAndSigningKey selfSignedCertificateAndSigningKey = SelfSignedX509CertificateAndSigningKey.builder()
+                            .setDn(new X500Principal(COMMON_NAME_PREFIX + host))
+                            .setNotValidAfter(ZonedDateTime.ofInstant(Instant.ofEpochMilli(to.getTime()), TimeZone.getDefault().toZoneId()))
+                            .setNotValidBefore(ZonedDateTime.ofInstant(Instant.ofEpochMilli(from.getTime()), TimeZone.getDefault().toZoneId()))
+                            .setKeyAlgorithmName(GENERATED_CERTIFICATE_KEY_ALGORITHM)
+                            .setKeySize(GENERATED_CERTIFICATE_KEY_SIZE)
+                            .setSignatureAlgorithmName(GENERATED_CERTIFICATE_SIGNATURE_ALGORITHM)
+                            .build();
+                    X509Certificate selfSignedCertificate = selfSignedCertificateAndSigningKey.getSelfSignedCertificate();
+                    keyStore.setKeyEntry(GENERATED_CERTIFICATE_ALIAS, selfSignedCertificateAndSigningKey.getSigningKey(), password == null ? resolvePassword() : password,
+                            new X509Certificate[]{selfSignedCertificate});
+                    LOGGER.selfSignedCertificateHasBeenCreated(resolvedPath.getAbsolutePath(), getShaFingerprint(selfSignedCertificate, "SHA-1"), getShaFingerprint(selfSignedCertificate, "SHA-256"));
+                    save();
+                    updateSuppliers();
+                }
+            } catch (Exception e) {
+                throw LOGGER.failedToStoreGeneratedSelfSignedCertificate(e);
+            }
+        }
+
+        boolean shouldAutoGenerateSelfSignedCertificate(String host) {
+            return host != null && resolvedPath != null && ! resolvedPath.exists();
+        }
+
+        private static String getShaFingerprint(X509Certificate certificate, String algorithm) throws Exception {
+            MessageDigest md = MessageDigest.getInstance(algorithm);
+            md.update(certificate.getEncoded());
+            byte[] digest = md.digest();
+            return ByteIterator.ofBytes(digest).hexEncode().drainToString(HEX_DELIMITER, 2);
         }
     }
 
