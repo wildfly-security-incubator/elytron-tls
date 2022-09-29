@@ -65,7 +65,6 @@ import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
 import org.jboss.as.controller.services.path.PathManager;
-import org.jboss.as.domain.management.audit.KeystoreAttributes;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -78,6 +77,7 @@ import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.extension.elytron.tls.subsystem.KeyStoreService.KeyStoreMethods;
 import org.wildfly.extension.elytron.tls.subsystem.KeyStoreService.LoadKey;
 import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceMethodsSupplier;
+import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceValue;
 import org.wildfly.extension.elytron.tls.subsystem.runtime.RuntimeServiceValueSupplier;
 import org.wildfly.security.credential.source.CredentialSource;
 import org.wildfly.security.keystore.ModifyTrackingKeyStore;
@@ -196,9 +196,10 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             resourceRegistration.registerReadOnlyAttribute(SIZE, new KeyStoreRuntimeOnlyHandler(false) {
 
                 @Override
-                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreService keyStoreService) throws OperationFailedException {
+                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName) throws OperationFailedException {
                     try {
-                        result.set(keyStoreService.getValue().size());
+                        RuntimeServiceValue<KeyStore> keyStoreValue = runtimeValueSupplier.get(keyStoreName, KeyStore.class);
+                        result.set(keyStoreValue.execute((store) -> store.size()));
                     } catch (KeyStoreException e) {
                         throw LOGGER.unableToAccessKeyStore(e);
                     }
@@ -208,26 +209,28 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             resourceRegistration.registerReadOnlyAttribute(SYNCHRONIZED, new KeyStoreRuntimeOnlyHandler(false) {
 
                 @Override
-                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreService keyStoreService) throws OperationFailedException {
+                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName) throws OperationFailedException {
                     SimpleDateFormat sdf = new SimpleDateFormat(ISO_8601_FORMAT);
-                    result.set(sdf.format(new Date(keyStoreService.timeSynched())));
+                    result.set(sdf.format(new Date(keyStoreMethods.timeSynched())));
                 }
             });
 
             resourceRegistration.registerReadOnlyAttribute(MODIFIED, new KeyStoreRuntimeOnlyHandler(false) {
 
                 @Override
-                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreService keyStoreService) throws OperationFailedException {
-                    result.set(keyStoreService.isModified());
+                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName) throws OperationFailedException {
+                    result.set(keyStoreMethods.isModified());
                 }
             });
 
             resourceRegistration.registerReadOnlyAttribute(LOADED_PROVIDER, new KeyStoreRuntimeOnlyHandler(false) {
 
                 @Override
-                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreService keyStoreService)
+                protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName)
                         throws OperationFailedException {
-                    populateProvider(result, keyStoreService.getValue().getProvider(), false);
+                    RuntimeServiceValue<KeyStore> keyStoreValue = runtimeValueSupplier.get(keyStoreName, KeyStore.class);
+
+                    populateProvider(result, keyStoreValue.execute((store) -> store.getProvider()), false);
                 }
             });
         }
@@ -352,13 +355,18 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
                 return;
             }
 
-            performRuntime(context.getResult(), context, operation, (KeyStoreService) serviceContainer.getService(), keyStoreName);
+            KeyStoreMethods keyStoreMethods = runtimeMethodsSupplier.get(keyStoreName, KeyStoreMethods.class);
+            if (keyStoreMethods == null) {
+                throw LOGGER.runtimeServiceObjectNotAvailable(keyStoreName.getSimpleName(), KeyStoreMethods.class.getSimpleName());
+            }
+
+            performRuntime(context.getResult(), context, operation, keyStoreMethods, keyStoreName);
         }
 
-        protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreService keyStoreService, ServiceName keyStoreName) throws OperationFailedException {}
+        protected void performRuntime(ModelNode result, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName) throws OperationFailedException {}
 
-        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation,  KeyStoreService keyStoreService, ServiceName keyStoreName) throws OperationFailedException {
-            performRuntime(result, operation, keyStoreService, keyStoreName);
+        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName) throws OperationFailedException {
+            performRuntime(result, operation, keyStoreMethods, keyStoreName);
         }
 
     }
@@ -372,21 +380,16 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
         }
 
         @Override
-        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation, final KeyStoreService keyStoreService, ServiceName keyStoreName) throws OperationFailedException {
+        protected void performRuntime(ModelNode result, OperationContext context, ModelNode operation, KeyStoreMethods keyStoreMethods, ServiceName keyStoreName) throws OperationFailedException {
             String operationName = operation.require(OP).asString();
-
-            KeyStoreMethods methods = runtimeMethodsSupplier.get(keyStoreName, KeyStoreMethods.class);
-            if (methods == null) { // TODO move this to KeyStoreRuntimeOnlyHandler
-                throw LOGGER.runtimeServiceObjectNotAvailable(keyStoreName.getSimpleName(), KeyStoreMethods.class.getSimpleName());
-            }
 
             switch (operationName) {
                 case Constants.LOAD:
-                    final LoadKey loadKey = methods.load();
-                    context.completeStep((context1, operation1) -> methods.revertLoad(loadKey));
+                    final LoadKey loadKey = keyStoreMethods.load();
+                    context.completeStep((context1, operation1) -> keyStoreMethods.revertLoad(loadKey));
                     break;
                 case Constants.STORE:
-                    methods.save();
+                    keyStoreMethods.save();
                     break;
                 default:
                     throw LOGGER.invalidOperationName(operationName, Constants.LOAD,

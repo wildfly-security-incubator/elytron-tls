@@ -253,8 +253,6 @@ class KeyStoreService implements ModifiableKeyStoreService {
             runtimeMethodsSupplier.add(serviceName, new KeyStoreMethods());
         }
     }
-    /* runtimeFunctionSupplier.add(serviceName, timeSynched, load, revertLoad, save, isModified, resolveKeyPassword,
-            resolvePassword, getResolvedPath, generateAndSaveSelfSignedCertificate, shouldAutoGenerateSelfSignedCertificate); */
 
     private AtomicLoadKeyStore.LoadKey load(AtomicLoadKeyStore keyStore) throws Exception {
         try (InputStream is = resolvedPath != null ? new FileInputStream(resolvedPath) : null) {
