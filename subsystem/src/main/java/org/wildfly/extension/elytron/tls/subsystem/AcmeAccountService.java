@@ -25,15 +25,16 @@ import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.msc.Service;
+import org.jboss.msc.inject.Injector;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.InjectedValue;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.security.credential.source.CredentialSource;
 import org.wildfly.security.x500.cert.acme.AcmeAccount;
@@ -44,10 +45,10 @@ import org.wildfly.security.x500.cert.acme.CertificateAuthority;
  *
  * @author <a href="mailto:fjuma@redhat.com">Farah Juma</a>
  */
-class AcmeAccountService implements Service {
+class AcmeAccountService implements Service<AcmeAccount> {
 
-    private Supplier<KeyStore> keyStoreSupplier;
-    private ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier;
+    private final InjectedValue<KeyStore> keyStoreInjector = new InjectedValue<>();
+    private final InjectedValue<ExceptionSupplier<CredentialSource, Exception>> credentialSourceSupplierInjector = new InjectedValue<>();
     private final String certificateAuthorityName;
     private final List<String> contactUrlsList;
     private final String alias;
@@ -67,7 +68,7 @@ class AcmeAccountService implements Service {
             final ServiceRegistry serviceRegistry = startContext.getController().getServiceContainer();
             final ModifiableKeyStoreService keyStoreService = CertificateAuthorityAccountDefinition.getModifiableKeyStoreService(serviceRegistry, keyStoreName);
             char[] keyPassword = resolveKeyPassword((KeyStoreService) keyStoreService);
-            KeyStore keyStore = keyStoreSupplier.get();
+            KeyStore keyStore = keyStoreInjector.getValue();
             CertificateAuthority certificateAuthority;
             if (certificateAuthorityName.equalsIgnoreCase(CertificateAuthority.LETS_ENCRYPT.getName())) {
                 certificateAuthority = CertificateAuthority.LETS_ENCRYPT;
@@ -112,21 +113,22 @@ class AcmeAccountService implements Service {
         acmeAccount = null;
     }
 
+    @Override
     public AcmeAccount getValue() throws IllegalStateException, IllegalArgumentException {
         return acmeAccount;
     }
 
-    void setKeyStoreSupplier(Supplier<KeyStore> keyStoreSupplier) {
-        this.keyStoreSupplier = keyStoreSupplier;
+    Injector<KeyStore> getKeyStoreInjector() {
+        return keyStoreInjector;
     }
 
-    void setCredentialSourceSupplier(ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        this.credentialSourceSupplier = credentialSourceSupplier;
+    Injector<ExceptionSupplier<CredentialSource, Exception>> getCredentialSourceSupplierInjector() {
+        return credentialSourceSupplierInjector;
     }
 
     char[] resolveKeyPassword(KeyStoreService keyStoreService) throws RuntimeException {
         try {
-            return keyStoreService.resolveKeyPassword(credentialSourceSupplier);
+            return keyStoreService.resolveKeyPassword(credentialSourceSupplierInjector.getOptionalValue());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

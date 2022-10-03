@@ -27,14 +27,14 @@ class KeyStoreParser {
 
     final PersistentResourceXMLDescription keyStoreParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(KEY_STORE))
             .setXmlWrapperElement(KEY_STORES)
-            .addAttribute(KeyStoreDefinition.CREDENTIAL_REFERENCE)
             .addAttribute(KeyStoreDefinition.TYPE)
+            .addAttribute(KeyStoreDefinition.PROVIDER_NAME)
+            .addAttribute(KeyStoreDefinition.PROVIDERS)
+            .addAttribute(KeyStoreDefinition.CREDENTIAL_REFERENCE)
+            .addAttribute(KeyStoreDefinition.ALIAS_FILTER)
+            .addAttribute(KeyStoreDefinition.REQUIRED)
             .addAttribute(FileAttributeDefinitions.PATH)
             .addAttribute(FileAttributeDefinitions.RELATIVE_TO)
-            .addAttribute(KeyStoreDefinition.ALIAS_FILTER)
-            .addAttribute(KeyStoreDefinition.PROVIDERS)
-            .addAttribute(KeyStoreDefinition.PROVIDER_NAME)
-            .addAttribute(KeyStoreDefinition.REQUIRED)
             .addAttribute(CredentialReference.getAttributeDefinition())
             .build();
 }

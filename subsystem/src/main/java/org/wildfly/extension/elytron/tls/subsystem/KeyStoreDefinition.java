@@ -18,7 +18,6 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.jboss.as.controller.AbstractControllerService.PATH_MANAGER_CAPABILITY;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.security.CredentialReference.handleCredentialReferenceUpdate;
 import static org.jboss.as.controller.security.CredentialReference.rollbackCredentialStoreUpdate;
@@ -62,6 +61,8 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
+import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -267,10 +268,9 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             ServiceTarget serviceTarget = context.getServiceTarget();
             RuntimeCapability<Void> runtimeCapability = KEY_STORE_RUNTIME_CAPABILITY.fromBaseCapability(context.getCurrentAddressValue());
             ServiceName serviceName = runtimeCapability.getCapabilityServiceName(KeyStore.class);
-            ServiceBuilder<KeyStore> serviceBuilder = (ServiceBuilder<KeyStore>) serviceTarget.addService(serviceName).setInitialMode(Mode.ACTIVE);
+            ServiceBuilder<KeyStore> serviceBuilder = serviceTarget.addService(serviceName, keyStoreService).setInitialMode(Mode.ACTIVE);
 
-            keyStoreService.setPathManagerSupplier(serviceBuilder.requires(
-                    PATH_MANAGER_CAPABILITY.getCapabilityServiceName()));
+            serviceBuilder.addDependency(PathManagerService.SERVICE_NAME, PathManager.class, keyStoreService.getPathManagerInjector());
             if (relativeTo != null) {
                 serviceBuilder.requires(pathName(relativeTo));
             }
@@ -278,13 +278,13 @@ final class KeyStoreDefinition extends SimpleResourceDefinition {
             if (providers != null) {
                 String providersCapabilityName = RuntimeCapability.buildDynamicCapabilityName(PROVIDERS_CAPABILITY, providers);
                 ServiceName providerLoaderServiceName = context.getCapabilityServiceName(providersCapabilityName, Provider[].class);
-                keyStoreService.setProvidersSupplier(serviceBuilder.requires(providerLoaderServiceName));
+                serviceBuilder.addDependency(providerLoaderServiceName, Provider[].class, keyStoreService.getProvidersInjector());
             }
 
-            keyStoreService.setCredentialSourceSupplier(CredentialReference.getCredentialSourceSupplier(
-                    context, CREDENTIAL_REFERENCE, model, serviceBuilder));
+            keyStoreService.getCredentialSourceSupplierInjector()
+                    .inject(CredentialReference.getCredentialSourceSupplier(context, KeyStoreDefinition.CREDENTIAL_REFERENCE, model, serviceBuilder));
 
-            commonRequirements(serviceBuilder, true, true).install();
+            commonRequirements(serviceBuilder).install();
         }
 
         @Override

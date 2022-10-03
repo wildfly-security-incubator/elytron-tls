@@ -18,6 +18,14 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.commonRequirements;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
@@ -34,21 +42,14 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
 import org.wildfly.security.x500.cert.acme.CertificateAuthority;
-import org.jboss.msc.service.ServiceController.Mode;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY;
-import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.commonRequirements;
-import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
 
 /**
  * A {@link ResourceDefinition} for a single certificate authority.
@@ -124,7 +125,7 @@ class CertificateAuthorityDefinition extends SimpleResourceDefinition {
             if (certificateAuthorityName.equalsIgnoreCase(CertificateAuthority.LETS_ENCRYPT.getName())) {
                 throw LOGGER.letsEncryptNameNotAllowed();
             }
-            commonRequirements(installService(context, model), true, true).setInitialMode(Mode.ACTIVE).install();
+            commonRequirements(installService(context, model)).setInitialMode(Mode.ACTIVE).install();
         }
 
         ServiceBuilder<CertificateAuthority> installService(OperationContext context, ModelNode model) {
@@ -143,7 +144,7 @@ class CertificateAuthorityDefinition extends SimpleResourceDefinition {
         }
     }
 
-    static org.jboss.msc.service.Service<CertificateAuthority> getCertificateAuthorityService(ServiceRegistry serviceRegistry, String certificateAuthorityName) {
+    static Service<CertificateAuthority> getCertificateAuthorityService(ServiceRegistry serviceRegistry, String certificateAuthorityName) {
         RuntimeCapability<Void> runtimeCapability = CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY.fromBaseCapability(certificateAuthorityName);
         ServiceName serviceName = runtimeCapability.getCapabilityServiceName();
         ServiceController<CertificateAuthority> serviceContainer = getRequiredService(serviceRegistry, serviceName, CertificateAuthority.class);

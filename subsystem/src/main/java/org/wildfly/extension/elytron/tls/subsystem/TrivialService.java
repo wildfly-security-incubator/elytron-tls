@@ -58,11 +58,7 @@ class TrivialService<T> implements Service<T>, org.jboss.msc.Service {
 
     @Override
     public void start(StartContext context) throws StartException {
-        try {
-            value = checkNotNullParam("valueSupplier", valueSupplier).get();
-        } catch (Exception e) {
-            throw new StartException(e);
-        }
+        value = checkNotNullParam("valueSupplier", valueSupplier).get();
         if (valueConsumer != null) {
             valueConsumer.accept(value);
         }
@@ -86,7 +82,7 @@ class TrivialService<T> implements Service<T>, org.jboss.msc.Service {
     @FunctionalInterface
     interface ValueSupplier<T> {
 
-        T get() throws Exception;
+        T get() throws StartException;
 
         default void dispose() {}
 

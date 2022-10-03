@@ -399,7 +399,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         ModelNode operation = new ModelNode(); // add keystore
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", "ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", "ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + "/firefly-copy.keystore");
         operation.get(Constants.TYPE).set("JKS");
@@ -407,27 +407,27 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         assertSuccess(services.executeOperation(operation));
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         List<ModelNode> nodes = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
         assertEquals(2, nodes.size());
 
         operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(Constants.REMOVE_ALIAS);
         operation.get(Constants.ALIAS).set("ca");
         assertSuccess(services.executeOperation(operation));
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         nodes = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
         assertEquals(1, nodes.size());
 
         operation = new ModelNode(); // remove keystore
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }
@@ -439,7 +439,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         ModelNode operation = new ModelNode(); // add keystore
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", "ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", "ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + "/firefly-copy.keystore");
         operation.get(Constants.TYPE).set("JKS");
@@ -447,7 +447,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         assertSuccess(services.executeOperation(operation));
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         List<ModelNode> nodes = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
         assertEquals(2, nodes.size());
@@ -459,7 +459,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         validateRecursiveReadAliases(false);
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
         operation.get(Constants.ALIAS).set("firefly");
         operation.get(Constants.VERBOSE).set(false);
@@ -468,7 +468,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
     private void validateRecursiveReadAliases(final boolean verbose) {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         operation.get(Constants.VERBOSE).set(verbose);
         operation.get(Constants.RECURSIVE).set(true);
@@ -490,7 +490,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
             }
 
             final ModelNode readOperation = new ModelNode();
-            readOperation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store","ModifiedKeyStore");
+            readOperation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store","ModifiedKeyStore");
             readOperation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
             readOperation.get(Constants.VERBOSE).set(verbose);
             readOperation.get(Constants.ALIAS).set(alias);
@@ -540,25 +540,6 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     }
 
     @Test
-    public void testFilteringKeystoreCli() throws Exception {
-        ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.FILTERING_KEY_STORE,"FilteringKeyStore");
-        operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
-        List<ModelNode> nodes = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
-        assertEquals(1, nodes.size());
-        assertEquals("firefly", nodes.get(0).asString());
-
-        operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.FILTERING_KEY_STORE,"FilteringKeyStore");
-        operation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
-        operation.get(Constants.ALIAS).set("firefly");
-        ModelNode firefly = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT);
-        assertEquals("firefly", firefly.get(Constants.ALIAS).asString());
-        assertEquals(KeyStore.PrivateKeyEntry.class.getSimpleName(), firefly.get(Constants.ENTRY_TYPE).asString());
-        assertTrue(firefly.get(Constants.CERTIFICATE_CHAIN).isDefined());
-    }
-
-    @Test
     public void testAutomaticKeystoreService() throws Exception {
         ServiceName serviceName = Capabilities.KEY_STORE_RUNTIME_CAPABILITY.getCapabilityServiceName("AutomaticKeystore");
         KeyStore keyStore = (KeyStore) services.getContainer().getService(serviceName).getValue();
@@ -584,17 +565,17 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     @Test
     public void testAutomaticKeystoreCli() throws Exception {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls");
         operation.get(ClientConstants.OP).set("read-resource");
         System.out.println(services.executeOperation(operation).get(ClientConstants.RESULT).asString());
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.KEY_STORE,"AutomaticKeystore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add(Constants.KEY_STORE,"AutomaticKeystore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         List<ModelNode> nodes = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
         assertEquals(2, nodes.size());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.KEY_STORE,"AutomaticKeystore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add(Constants.KEY_STORE,"AutomaticKeystore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
         operation.get(Constants.ALIAS).set("firefly");
         ModelNode firefly = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT);
@@ -603,7 +584,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         assertTrue(firefly.get(Constants.CERTIFICATE_CHAIN).isDefined());
 
         operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.KEY_STORE,"AutomaticKeystore");
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add(Constants.KEY_STORE,"AutomaticKeystore");
         operation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
         operation.get(Constants.ALIAS).set("ca");
         ModelNode ca = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT);
@@ -1319,7 +1300,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         Files.copy(resources.resolve(keyStoreFile), resources.resolve("test-copy.keystore"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", keyStoreName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", keyStoreName);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + "/test-copy.keystore");
         operation.get(Constants.TYPE).set("JKS");
@@ -1337,7 +1318,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         Files.copy(resources.resolve("test-original.keystore"), resources.resolve("test-copy.keystore"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", KEYSTORE_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", KEYSTORE_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + "/test-copy.keystore");
         operation.get(Constants.TYPE).set("JKS");
@@ -1347,14 +1328,14 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
     private List<ModelNode> readAliases() {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", KEYSTORE_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","`elytron-tls").add("key-store", KEYSTORE_NAME);
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         return assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
     }
 
     private ModelNode readAlias(String aliasName) {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", KEYSTORE_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", KEYSTORE_NAME);
         operation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
         operation.get(Constants.ALIAS).set(aliasName);
         ModelNode alias = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT);
@@ -1377,7 +1358,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     private void removeKeyStore(String keyStoreName) {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", keyStoreName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", keyStoreName);
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }
@@ -1389,7 +1370,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", KEYSTORE_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", KEYSTORE_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + nonExistentFileName);
         operation.get(Constants.TYPE).set("JKS");
@@ -1433,7 +1414,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     private void removeCertificateAuthorityAccount() {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls`").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }

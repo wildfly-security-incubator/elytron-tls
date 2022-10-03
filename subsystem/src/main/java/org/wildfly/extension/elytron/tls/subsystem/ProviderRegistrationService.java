@@ -27,10 +27,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.jboss.msc.Service;
 import org.jboss.msc.inject.Injector;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 
@@ -39,7 +40,7 @@ import org.jboss.msc.value.InjectedValue;
  *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
-class ProviderRegistrationService implements Service {
+class ProviderRegistrationService implements Service<Void> {
 
     static final ServiceName SERVICE_NAME = ElytronTlsExtension.BASE_SERVICE_NAME.append(Constants.PROVIDER_REGISTRATION);
 
@@ -54,7 +55,7 @@ class ProviderRegistrationService implements Service {
     }
 
     @Override
-    public void start(StartContext context) {
+    public void start(StartContext context) throws StartException {
         SecurityActions.doPrivileged((PrivilegedAction<Void>) () -> {
             for (String s : providersToRemove) {
                 Security.removeProvider(s);
@@ -108,5 +109,10 @@ class ProviderRegistrationService implements Service {
 
     Injector<Provider[]> getFinalProviders() {
         return finalProviders;
+    }
+
+    @Override
+    public Void getValue() throws IllegalStateException, IllegalArgumentException {
+        return null;
     }
 }

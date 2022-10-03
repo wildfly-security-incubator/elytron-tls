@@ -32,7 +32,7 @@ import org.jboss.msc.service.ServiceRegistry;
 /**
  * @author Tomaz Cerar (c) 2017 Red Hat Inc.
  */
-class SecurityPropertiesWriteHandler extends AbstractWriteAttributeHandler<Void>{
+class SecurityPropertiesWriteHandler extends AbstractWriteAttributeHandler {
     private final PropertiesAttributeDefinition securityProperties;
 
     SecurityPropertiesWriteHandler(PropertiesAttributeDefinition attributeDefinition) {
@@ -64,7 +64,7 @@ class SecurityPropertiesWriteHandler extends AbstractWriteAttributeHandler<Void>
     }
 
     @Override
-    protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName, ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<Void> handbackHolder) throws OperationFailedException {
+    protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName, ModelNode resolvedValue, ModelNode currentValue, HandbackHolder handbackHolder) throws OperationFailedException {
         Map<String, String> newProps = securityProperties.unwrap(context, resolvedValue);
         Map<String, String> oldProps = securityProperties.unwrap(context, currentValue);
         setProperties(context, newProps, oldProps);
@@ -92,7 +92,7 @@ class SecurityPropertiesWriteHandler extends AbstractWriteAttributeHandler<Void>
     }
 
     @Override
-    protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName, ModelNode valueToRestore, ModelNode valueToRevert, Void handback) throws OperationFailedException {
+    protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName, ModelNode valueToRestore, ModelNode valueToRevert, Object handback) throws OperationFailedException {
         Map<String, String> newProps = securityProperties.unwrap(context, valueToRestore);
         Map<String, String> oldProps = securityProperties.unwrap(context, valueToRevert);
         setProperties(context, newProps, oldProps);

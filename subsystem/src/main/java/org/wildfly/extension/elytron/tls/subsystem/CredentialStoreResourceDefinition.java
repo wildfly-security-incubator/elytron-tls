@@ -18,7 +18,6 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.jboss.as.controller.AbstractControllerService.PATH_MANAGER_CAPABILITY;
 import static org.jboss.as.controller.security.CredentialReference.getCredentialSource;
 import static org.jboss.as.controller.security.CredentialReference.handleCredentialReferenceUpdate;
 import static org.jboss.as.controller.security.CredentialReference.rollbackCredentialStoreUpdate;
@@ -70,6 +69,7 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
+import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceName;
@@ -455,11 +455,12 @@ final class CredentialStoreResourceDefinition extends AbstractCredentialStoreRes
         protected ExceptionSupplier<CredentialStore, StartException> prepareServiceSupplier(OperationContext context,
                 CapabilityServiceBuilder<?> serviceBuilder) throws OperationFailedException {
 
+            final Supplier<PathManagerService> pathManager;
             if (relativeTo != null) {
-                pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                pathManager = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
                 serviceBuilder.requires(pathName(relativeTo));
             } else {
-                pathManagerSupplier = null;
+                pathManager = null;
             }
 
             final Supplier<Provider[]> providerSupplier;
@@ -498,7 +499,7 @@ final class CredentialStoreResourceDefinition extends AbstractCredentialStoreRes
                             PathResolver pathResolver = pathResolver();
                             pathResolver.path(location);
                             if (relativeTo != null) {
-                                pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
+                                pathResolver.relativeTo(relativeTo, pathManager.get());
                             }
                             File resolved = pathResolver.resolve();
                             pathResolver.clear();

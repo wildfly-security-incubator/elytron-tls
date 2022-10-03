@@ -4,14 +4,6 @@
         <provider-loader name="ManagerProviderLoader" class-names="com.sun.net.ssl.internal.ssl.Provider" />
         <provider-loader name="openssl" module="org.wildfly.openssl"/>
     </providers>
-    <credential-stores>
-        <credential-store name="test" location="target/tlstest.keystore">
-            <implementation-properties>
-                <property name="keyStoreType" value="JCEKS"/>
-            </implementation-properties>
-            <credential-reference clear-text="super_secret"/>
-        </credential-store>
-    </credential-stores>
     <tls>
         <key-stores>
             <key-store name="FireflyKeystore" >
@@ -155,4 +147,12 @@
                                 trust-manager="CaTrustManager" providers="ManagerProviderLoader"/>
         </client-ssl-contexts>
     </tls>
+    <credential-stores>
+        <credential-store name="test" location="target/tlstest.keystore">
+            <implementation-properties>
+                <property name="keyStoreType" value="JCEKS"/>
+            </implementation-properties>
+            <credential-reference clear-text="super_secret"/>
+        </credential-store>
+    </credential-stores>
 </subsystem>

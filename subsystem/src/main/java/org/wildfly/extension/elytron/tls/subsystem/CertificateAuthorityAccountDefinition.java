@@ -27,11 +27,11 @@ import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CERTIFICA
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.KEY_STORE_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.KEY_STORE_RUNTIME_CAPABILITY;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.commonRequirements;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
-import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
-import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
 
 import java.security.KeyStore;
@@ -60,7 +60,6 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.security.CredentialReference;
-import org.jboss.as.domain.http.server.ConsoleAvailabilityService.LogAdminConsole;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.ServiceBuilder;
@@ -228,19 +227,16 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
             ServiceTarget serviceTarget = context.getServiceTarget();
             RuntimeCapability<Void> certificateAuthorityAccountRuntimeCapability = CERTIFICATE_AUTHORITY_ACCOUNT_RUNTIME_CAPABILITY.fromBaseCapability(context.getCurrentAddressValue());
             ServiceName acmeAccountServiceName = certificateAuthorityAccountRuntimeCapability.getCapabilityServiceName(AcmeAccount.class);
-            ServiceBuilder<AcmeAccount> acmeAccountServiceBuilder = (ServiceBuilder<AcmeAccount>) serviceTarget.addService(acmeAccountServiceName).setInitialMode(ServiceController.Mode.ACTIVE);
-            
-            acmeAccountService.setCredentialSourceSupplier(credentialSourceSupplier);
+            ServiceBuilder<AcmeAccount> acmeAccountServiceBuilder = serviceTarget.addService(acmeAccountServiceName, acmeAccountService).setInitialMode(ServiceController.Mode.ACTIVE);
+            acmeAccountService.getCredentialSourceSupplierInjector().inject(credentialSourceSupplier);
 
-            String keyStoreCapabilityName = RuntimeCapability.buildDynamicCapabilityName(KEY_STORE_CAPABILITY, finalKeyStoreName);
-            ServiceName keyStoreServiceName = context.getCapabilityServiceName(keyStoreCapabilityName, KeyStore.class);
-            acmeAccountService.setKeyStoreSupplier(acmeAccountServiceBuilder.requires(keyStoreServiceName));
-            
+            String keyStoreCapabilityName = RuntimeCapability.buildDynamicCapabilityName(KEY_STORE_CAPABILITY, keyStoreName);
+            acmeAccountServiceBuilder.addDependency(context.getCapabilityServiceName(keyStoreCapabilityName, KeyStore.class), KeyStore.class, acmeAccountService.getKeyStoreInjector());
             if (certificateAuthorityName.equalsIgnoreCase(CertificateAuthority.LETS_ENCRYPT.getName())) {
-                commonRequirements(acmeAccountServiceBuilder, true, true).install();
+                commonRequirements(acmeAccountServiceBuilder).install();
             } else {
                 acmeAccountServiceBuilder.requires(CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY.getCapabilityServiceName(certificateAuthorityName));
-                commonRequirements(acmeAccountServiceBuilder, true, true).install();
+                commonRequirements(acmeAccountServiceBuilder).install();
             }
         }
 

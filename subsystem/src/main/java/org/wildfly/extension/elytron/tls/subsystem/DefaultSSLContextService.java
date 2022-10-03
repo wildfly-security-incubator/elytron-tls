@@ -16,8 +16,11 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
+import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.RESTORE_DEFAULT_SSL_CONTEXT;
 import static org.wildfly.extension.elytron.tls.subsystem.SecurityActions.doPrivileged;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedAction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -30,7 +33,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 
-
 /**
  * A simple {@link Service} to take an {@link SSLContext} and register it as the process wide default.
  *
@@ -40,7 +42,7 @@ class DefaultSSLContextService implements Service {
 
     static final ServiceName SERVICE_NAME = ElytronTlsExtension.BASE_SERVICE_NAME.append(Constants.SSL_CONTEXT_REGISTRATION);
 
-    //private static final boolean RESTORE_SSL_CONTEXT = doPrivileged((PrivilegedAction<Boolean>) () -> Boolean.getBoolean(RESTORE_DEFAULT_SSL_CONTEXT));
+    private static final boolean RESTORE_SSL_CONTEXT = doPrivileged((PrivilegedAction<Boolean>) () -> Boolean.getBoolean(RESTORE_DEFAULT_SSL_CONTEXT));
 
     private final Supplier<SSLContext> defaultSSLContextSupplier;
     private final Consumer<SSLContext> valueConsumer;
@@ -64,7 +66,6 @@ class DefaultSSLContextService implements Service {
     public void stop(StopContext context) {
         // We can't set the default back to 'null' as that would cause a NullPointerException.
         // For the purpose of testing we may want to restore the default.
-        /*
         if (RESTORE_SSL_CONTEXT) {
             try {
                 final SSLContext defaultSSLContext = SSLContext.getInstance("Default");
@@ -75,7 +76,7 @@ class DefaultSSLContextService implements Service {
             } catch (NoSuchAlgorithmException e) {
                 LOGGER.debug(e);
             }
-        }*/
+        }
     }
 
 }

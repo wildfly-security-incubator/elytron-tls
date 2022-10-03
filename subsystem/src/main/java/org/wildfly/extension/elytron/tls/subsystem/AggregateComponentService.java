@@ -25,6 +25,7 @@ import java.util.function.Function;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 
@@ -38,7 +39,7 @@ class AggregateComponentService<T> implements Service<T> {
     private final Class<T> aggregationType;
     private final Function<T[], T> aggregator;
 
-    private List<InjectedValue<T>> injections = new ArrayList<>();
+    private List<InjectedValue<T>> injections = new ArrayList<InjectedValue<T>>();
 
     private T aggregation;
 
@@ -52,7 +53,7 @@ class AggregateComponentService<T> implements Service<T> {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void start(StartContext context) {
+    public void start(StartContext context) throws StartException {
         ArrayList<T> toAggregate = new ArrayList<>(injections.size());
         for (InjectedValue<T> current : injections) {
             toAggregate.add(current.getValue());

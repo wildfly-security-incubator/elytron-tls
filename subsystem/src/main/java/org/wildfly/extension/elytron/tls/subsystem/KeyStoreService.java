@@ -47,10 +47,12 @@ import javax.security.auth.x500.X500Principal;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.services.path.PathManager;
 import org.jboss.logging.Logger;
-import org.jboss.msc.Service;
+import org.jboss.msc.inject.Injector;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.InjectedValue;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.common.iteration.ByteIterator;
 import org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PathResolver;
@@ -87,9 +89,9 @@ class KeyStoreService implements ModifiableKeyStoreService {
     private final boolean required;
     private final String aliasFilter;
 
-    private Supplier<PathManager> pathManagerSupplier;
-    private Supplier<Provider[]> providersSupplier;
-    private ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier;
+    private final InjectedValue<PathManager> pathManager = new InjectedValue<>();
+    private final InjectedValue<Provider[]> providers = new InjectedValue<>();
+    private final InjectedValue<ExceptionSupplier<CredentialSource, Exception>> credentialSourceSupplier = new InjectedValue<>();
 
     private PathResolver pathResolver;
     private File resolvedPath;
@@ -160,7 +162,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
                     if (type != null) {
                         keyStore.load(is, password);
                     } else {
-                        Provider[] resolvedProviders = providersSupplier.get();
+                        Provider[] resolvedProviders = providers.getOptionalValue();
                         if (resolvedProviders == null) {
                             resolvedProviders = Security.getProviders();
                         }
@@ -200,9 +202,9 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     private Provider resolveProvider() throws StartException {
-        Provider[] candidates = providersSupplier.get();
-        Supplier<Provider[]> resolveProvidersSupplier = () -> candidates == null ? Security.getProviders() : candidates;
-        Provider identified = findProvider(resolveProvidersSupplier, provider, KeyStore.class, type);
+        Provider[] candidates = providers.getOptionalValue();
+        Supplier<Provider[]> providersSupplier = () -> candidates == null ? Security.getProviders() : candidates;
+        Provider identified = findProvider(providersSupplier, provider, KeyStore.class, type);
         if (identified == null) {
             throw LOGGER.noSuitableProvider(type);
         }
@@ -249,6 +251,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
         }
     }
 
+    @Override
     public KeyStore getValue() throws IllegalStateException, IllegalArgumentException {
         return unmodifiableKeyStore;
     }
@@ -257,16 +260,16 @@ class KeyStoreService implements ModifiableKeyStoreService {
         return trackingKeyStore;
     }
 
-    void setPathManagerSupplier(Supplier<PathManager> pathManagerSupplier) {
-        this.pathManagerSupplier = pathManagerSupplier;
+    Injector<PathManager> getPathManagerInjector() {
+        return pathManager;
     }
 
-    void setProvidersSupplier(Supplier<Provider[]> providersSupplier) {
-        this.providersSupplier = providersSupplier;
+    Injector<Provider[]> getProvidersInjector() {
+        return providers;
     }
 
-    void setCredentialSourceSupplier(ExceptionSupplier<CredentialSource, Exception> credentialSourceSupplier) {
-        this.credentialSourceSupplier = credentialSourceSupplier;
+    Injector<ExceptionSupplier<CredentialSource, Exception>> getCredentialSourceSupplierInjector() {
+        return credentialSourceSupplier;
     }
 
     String getResolvedAbsolutePath() {
@@ -336,7 +339,8 @@ class KeyStoreService implements ModifiableKeyStoreService {
     }
 
     private char[] resolvePassword() throws Exception {
-        CredentialSource cs = credentialSourceSupplier != null ? credentialSourceSupplier.get() : null;
+        ExceptionSupplier<CredentialSource, Exception> sourceSupplier = credentialSourceSupplier.getValue();
+        CredentialSource cs = sourceSupplier != null ? sourceSupplier.get() : null;
         String path = resolvedPath != null ? resolvedPath.getPath() : "null";
         if (cs == null) throw LOGGER.keyStorePasswordCannotBeResolved(path);
         PasswordCredential credential = cs.getCredential(PasswordCredential.class);
@@ -350,7 +354,7 @@ class KeyStoreService implements ModifiableKeyStoreService {
     File getResolvedPath(PathResolver pathResolver, String path, String relativeTo) {
         pathResolver.path(path);
         if (relativeTo != null) {
-            pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
+            pathResolver.relativeTo(relativeTo, pathManager.getValue());
         }
         return pathResolver.resolve();
     }

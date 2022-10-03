@@ -569,7 +569,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
     private void addCertificateAuthorityAccount(String alias) throws Exception {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.CONTACT_URLS).add("mailto:admin@anexample.com");
         operation.get(Constants.CERTIFICATE_AUTHORITY).set(CertificateAuthority.LETS_ENCRYPT.getName());
@@ -595,7 +595,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
     private void addCertificateAuthorityAccountWithCustomCA(String alias, String[] contactUrlsList) throws Exception {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         ModelNode contactUrls = new ModelNode();
         for (String contactUrl : contactUrlsList) {
@@ -612,7 +612,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
     private void removeCertificateAuthorityAccount() {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }
@@ -622,7 +622,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
         Files.copy(resources.resolve("account.keystore"), resources.resolve("test-copy.keystore"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", keyStoreName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", keyStoreName);
         operation.get(ClientConstants.OP).set(ClientConstants.ADD);
         operation.get(Constants.PATH).set(resources + "/test-copy.keystore");
         operation.get(Constants.TYPE).set("JKS");
@@ -633,7 +633,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
     private void removeKeyStore(String keyStoreName) {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add("key-store", keyStoreName);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", keyStoreName);
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }

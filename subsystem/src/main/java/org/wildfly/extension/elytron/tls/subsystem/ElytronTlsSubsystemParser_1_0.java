@@ -75,11 +75,11 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
 
     PersistentResourceXMLDescription getTlsParser() {
         return PersistentResourceXMLDescription.decorator(TLS)
-                .addChild(getServerSSLContextParser())
-                .addChild(getClientSSLContextParser())
                 .addChild(getKeyStoreParser())
                 .addChild(getKeyManagerParser())
                 .addChild(getTrustManagerParser())
+                .addChild(getServerSSLContextParser())
+                .addChild(getClientSSLContextParser())
                 .addChild(getCertificateAuthorityParser())
                 .addChild(getCertificateAuthorityAccountParser())
                 .build();
@@ -88,16 +88,16 @@ public class ElytronTlsSubsystemParser_1_0 extends PersistentResourceXMLParser {
     @Override
     public PersistentResourceXMLDescription getParserDescription() {
         return PersistentResourceXMLDescription.builder(ElytronTlsExtension.SUBSYSTEM_PATH, getNameSpace())
-                .addAttribute(ElytronTlsSubsystemDefinition.SECURITY_PROPERTIES,
-                        new AttributeParsers.PropertiesParser(null, SECURITY_PROPERTY, true),
-                        new AttributeMarshallers.PropertiesAttributeMarshaller(null, SECURITY_PROPERTY, true))
                 .addAttribute(ElytronTlsSubsystemDefinition.INITIAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.FINAL_PROVIDERS)
                 .addAttribute(ElytronTlsSubsystemDefinition.DISALLOWED_PROVIDERS)
+                .addAttribute(ElytronTlsSubsystemDefinition.SECURITY_PROPERTIES,
+                        new AttributeParsers.PropertiesParser(null, SECURITY_PROPERTY, true),
+                        new AttributeMarshallers.PropertiesAttributeMarshaller(null, SECURITY_PROPERTY, true))
                 .addAttribute(ElytronTlsSubsystemDefinition.DEFAULT_SSL_CONTEXT)
+                .addChild(getProviderParser())
                 .addChild(getTlsParser())
                 .addChild(getCredentialStoresParser())
-                .addChild(getProviderParser())
                 .addChild(getExpressionResolverParser())
                 .build();
     }

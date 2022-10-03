@@ -16,7 +16,6 @@
 
 package org.wildfly.extension.elytron.tls.subsystem;
 
-import static org.jboss.as.controller.AbstractControllerService.PATH_MANAGER_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CREDENTIAL_STORE_API_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CREDENTIAL_STORE_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
@@ -30,6 +29,7 @@ import java.io.File;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.crypto.SecretKey;
 
@@ -49,6 +49,7 @@ import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
+import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.StartException;
@@ -236,13 +237,14 @@ class SecretKeyCredentialStoreDefinition extends AbstractCredentialStoreResource
 
         @Override
         protected ExceptionSupplier<CredentialStore, StartException> prepareServiceSupplier(OperationContext context,
-                                                                                            CapabilityServiceBuilder<?> serviceBuilder) {
+                CapabilityServiceBuilder<?> serviceBuilder) {
 
+            final Supplier<PathManagerService> pathManager;
             if (relativeTo != null) {
-                pathManagerSupplier = serviceBuilder.requires(PATH_MANAGER_CAPABILITY.getCapabilityServiceName());
+                pathManager = serviceBuilder.requires(PathManagerService.SERVICE_NAME);
                 serviceBuilder.requires(pathName(relativeTo));
             } else {
-                pathManagerSupplier = null;
+                pathManager = null;
             }
 
             return new ExceptionSupplier<CredentialStore, StartException>() {
@@ -253,7 +255,7 @@ class SecretKeyCredentialStoreDefinition extends AbstractCredentialStoreResource
                         PathResolver pathResolver = pathResolver();
                         pathResolver.path(path);
                         if (relativeTo != null) {
-                            pathResolver.relativeTo(relativeTo, pathManagerSupplier.get());
+                            pathResolver.relativeTo(relativeTo, pathManager.get());
                         }
                         File resolved = pathResolver.resolve();
                         pathResolver.clear();

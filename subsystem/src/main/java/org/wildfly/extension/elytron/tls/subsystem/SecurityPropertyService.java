@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.msc.Service;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -41,7 +41,7 @@ import org.jboss.msc.service.StopContext;
  *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
-class SecurityPropertyService implements Service {
+class SecurityPropertyService implements Service<Void> {
 
     static final ServiceName SERVICE_NAME = ElytronTlsExtension.BASE_SERVICE_NAME.append(Constants.SECURITY_PROPERTIES);
 
@@ -84,6 +84,11 @@ class SecurityPropertyService implements Service {
         });
         valuesSet.clear();
         started = false;
+    }
+
+    @Override
+    public Void getValue() throws IllegalStateException, IllegalArgumentException {
+        return null;
     }
 
     private void restoreProperty(String name, String restorationValue) {

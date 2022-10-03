@@ -310,11 +310,17 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1060, value = "Fileless KeyStore needs to have a defined type.")
     OperationFailedException filelessKeyStoreMissingType();
 
+    @Message(id = 1061, value = "Invalid value of host context map: '%s' is not valid hostname pattern.")
+    OperationFailedException invalidHostContextMapValue(String hostname);
+    
     @Message(id = 1063, value = "LetsEncrypt certificate authority is configured by default.")
     OperationFailedException letsEncryptNameNotAllowed();
 
     @Message(id = 1064, value = "Failed to load OCSP responder certificate '%s'.")
     StartException failedToLoadResponderCert(String alias, @Cause Exception exception);
+
+    @Message(id = 1065, value = "Multiple maximum-cert-path definitions found.")
+    OperationFailedException multipleMaximumCertPathDefinitions();
 
     @Message(id = 1066, value = "Invalid value for cipher-suite-names. %s")
     OperationFailedException invalidCipherSuiteNames(@Cause Throwable cause, String causeMessage);
@@ -343,11 +349,21 @@ public interface ElytronTLSLogger extends BasicLogger {
     @Message(id = 1088, value = "Missing certificate authority challenge")
     AcmeException missingCertificateAuthorityChallenge();
 
-    @Message(id = 1089, value = "Multiple keystore definitions.")
-    OperationFailedException multipleKeystoreDefinitions();
+    @Message(id = 1089, value = "Multiple keystore definitions")
+    OperationFailedException multipleKeyStoreDefinitions();
 
-    @Message(id = 1090, value = "Missing keystore definition.")
+    @Message(id = 1090, value = "Multiple key manager definitions")
+    OperationFailedException multipleKeyManagerDefinitions();
+
+    @Message(id = 1091, value = "Multiple trust manager definitions")
+    OperationFailedException multipleTrustManagerDefinitions();
+    
+    @Message(id = 1092, value = "Missing keystore definition")
     OperationFailedException missingKeyStoreDefinition();
+    @Message(id = 1093, value = "Missing key manager definition")
+    OperationFailedException missingKeyManagerDefinition();
+    @Message(id = 1094, value = "Missing trust manager definition")
+    OperationFailedException missingTrustManagerDefinition();
 
     @Message(id = 1200, value = "The name of the resolver to use was not specified and no default-resolver has been defined.")
     OperationFailedException noResolverSpecifiedAndNoDefault();

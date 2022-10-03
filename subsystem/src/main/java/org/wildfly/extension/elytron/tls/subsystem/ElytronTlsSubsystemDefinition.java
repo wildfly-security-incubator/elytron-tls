@@ -17,11 +17,10 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.OperationContext.Stage.RUNTIME;
-import static org.jboss.as.server.deployment.Phase.DEPENDENCIES;
-import static org.jboss.as.server.deployment.Phase.STRUCTURE;
-import static org.jboss.as.server.deployment.Phase.STRUCTURE_ELYTRON_EXPRESSION_RESOLVER;
 import static org.jboss.as.server.deployment.Phase.CONFIGURE_DEFAULT_SSL_CONTEXT;
 import static org.jboss.as.server.deployment.Phase.CONFIGURE_MODULE;
+import static org.jboss.as.server.deployment.Phase.DEPENDENCIES;
+import static org.jboss.as.server.deployment.Phase.STRUCTURE;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.ELYTRON_TLS_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.SSL_CONTEXT_CAPABILITY;
@@ -44,6 +43,7 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.AttributeMarshaller;
 import org.jboss.as.controller.AttributeParser;
 import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationContext.AttachmentKey;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PersistentResourceDefinition;
@@ -61,7 +61,7 @@ import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.jboss.msc.Service;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
@@ -71,17 +71,27 @@ import org.jboss.msc.service.ServiceTarget;
 import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
 import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcessor;
 import org.wildfly.extension.elytron.tls.subsystem.expression.DeploymentExpressionResolverProcessor;
+import org.wildfly.security.Version;
 
 /**
+ * Top level {@link PersistentResourceDefinition} for the Elytron TLS subsystem.
+ *
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition {
 
+    /**
+     * System property which if set to {@code true} will cause the JVM wide default {@link SSLContext} to be restored when the subsystem shuts down.
+     *
+     * This property is only for use by test cases.
+     */
+    static final String RESTORE_DEFAULT_SSL_CONTEXT = ElytronTlsSubsystemDefinition.class.getPackage().getName() + ".restore-default-ssl-context";
+
     static final PropertiesAttributeDefinition SECURITY_PROPERTIES = new PropertiesAttributeDefinition.Builder(Constants.SECURITY_PROPERTIES, true)
             .build();
 
-    private static final OperationContext.AttachmentKey<SecurityPropertyService> SECURITY_PROPERTY_SERVICE_KEY = OperationContext.AttachmentKey.create(SecurityPropertyService.class);
+    private static final AttachmentKey<SecurityPropertyService> SECURITY_PROPERTY_SERVICE_KEY = AttachmentKey.create(SecurityPropertyService.class);
 
 
     static final SimpleAttributeDefinition DEFAULT_SSL_CONTEXT = new SimpleAttributeDefinitionBuilder(Constants.DEFAULT_SSL_CONTEXT, ModelType.STRING, true)
@@ -183,9 +193,11 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
     @Override
     public void registerAdditionalRuntimePackages(ManagementResourceRegistration resourceRegistration) {
-        super.registerAdditionalRuntimePackages(resourceRegistration);
     }
 
+    static <T> ServiceBuilder<T> commonRequirements(ServiceBuilder<T> serviceBuilder) {
+        return commonRequirements(serviceBuilder, true, true);
+    }
 
     static <T> ServiceBuilder<T> commonRequirements(ServiceBuilder<T> serviceBuilder, boolean dependOnProperties, boolean dependOnProviderRegistration) {
         if (dependOnProperties) serviceBuilder.requires(SecurityPropertyService.SERVICE_NAME);
@@ -193,11 +205,10 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         return serviceBuilder;
     }
 
-    private static void installService(ServiceName serviceName, Service service, ServiceTarget serviceTarget) {
-        serviceTarget.addService(serviceName)
-                .setInstance(service)
-                .setInitialMode(Mode.ACTIVE)
-                .install();
+    private static void installService(ServiceName serviceName, Service<?> service, ServiceTarget serviceTarget) {
+        serviceTarget.addService(serviceName, service)
+            .setInitialMode(Mode.ACTIVE)
+            .install();
     }
 
     private static SecurityPropertyService uninstallSecurityPropertyService(OperationContext context) {
@@ -207,7 +218,7 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         if (service != null) {
             Object serviceImplementation = service.getService();
             context.removeService(service);
-            if (serviceImplementation instanceof SecurityPropertyService) {
+            if (serviceImplementation != null && serviceImplementation instanceof SecurityPropertyService) {
                 return (SecurityPropertyService) serviceImplementation;
             }
         }
@@ -222,8 +233,14 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
         }
 
         @Override
+        protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
+            Version.getVersion();
+            super.populateModel(operation, model);
+        }
+
+        @Override
         protected void performBoottime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-            Map<String, String> securityProperties = SECURITY_PROPERTIES.unwrap(context, model);
+            Map<String,String> securityProperties = SECURITY_PROPERTIES.unwrap(context, model);
             final String defaultSSLContext = DEFAULT_SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
 
             ServiceTarget target = context.getServiceTarget();
@@ -231,20 +248,21 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
             List<String> disallowedProviders = DISALLOWED_PROVIDERS.unwrap(context, operation);
             ProviderRegistrationService prs = new ProviderRegistrationService(disallowedProviders);
-            ServiceBuilder<?> builder = target.addService(ProviderRegistrationService.SERVICE_NAME)
-                    .setInstance(prs)
-                    .setInitialMode(Mode.ACTIVE);
+            ServiceBuilder<Void> builder = target.addService(ProviderRegistrationService.SERVICE_NAME, prs)
+                .setInitialMode(Mode.ACTIVE);
 
             String initialProviders = INITIAL_PROVIDERS.resolveModelAttribute(context, model).asStringOrNull();
             if (initialProviders != null) {
-                builder.requires(
-                        context.getCapabilityServiceName(PROVIDERS_CAPABILITY, initialProviders, Provider[].class));
+                builder.addDependency(
+                        context.getCapabilityServiceName(PROVIDERS_CAPABILITY, initialProviders, Provider[].class),
+                        Provider[].class, prs.getInitialProivders());
             }
 
             String finalProviders = FINAL_PROVIDERS.resolveModelAttribute(context, model).asStringOrNull();
             if (finalProviders != null) {
-                builder.requires(
-                        context.getCapabilityServiceName(PROVIDERS_CAPABILITY, finalProviders, Provider[].class));
+                builder.addDependency(
+                        context.getCapabilityServiceName(PROVIDERS_CAPABILITY, finalProviders, Provider[].class),
+                        Provider[].class, prs.getFinalProviders());
             }
             builder.install();
 
@@ -260,7 +278,7 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                 serviceBuilder.setInstance(defaultSSLContextService).install();
             }
 
-            if(context.isNormalServer()){
+            if (context.isNormalServer()) {
                 context.addStep(new AbstractDeploymentChainStep() {
                     @Override
                     public void execute(DeploymentProcessorTarget processorTarget) {
@@ -293,11 +311,11 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
 
     private static class ElytronTlsRemove extends AbstractRemoveStepHandler implements ElytronOperationStepHandler {
         private ElytronTlsRemove() {
-            super();
+            super(ELYTRON_TLS_RUNTIME_CAPABILITY);
         }
 
         @Override
-        protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
+        protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
             if (context.isResourceServiceRestartAllowed()) {
                 SecurityPropertyService securityPropertyService = uninstallSecurityPropertyService(context);
                 if (securityPropertyService != null) {

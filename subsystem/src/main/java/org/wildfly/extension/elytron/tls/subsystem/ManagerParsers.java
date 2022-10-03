@@ -33,10 +33,10 @@ class ManagerParsers {
             .addAttribute(SSLContextDefinitions.KEY_STORE)
         //     .addAttribute(SSLContextDefinitions.KEY_STORE_OBJECT)
             .addAttribute(SSLContextDefinitions.ALIAS_FILTER)
-            .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(SSLContextDefinitions.PROVIDERS)
-            .addAttribute(SSLContextDefinitions.GENERATE_SELF_SIGNED_CERTIFICATE_HOST) // new
+            .addAttribute(SSLContextDefinitions.PROVIDER_NAME)
             .addAttribute(CredentialReference.getAttributeDefinition())
+            .addAttribute(SSLContextDefinitions.GENERATE_SELF_SIGNED_CERTIFICATE_HOST) // new
             .build();
 
     final PersistentResourceXMLDescription trustManagerParser_1_0 = PersistentResourceXMLDescription.builder(PathElement.pathElement(TRUST_MANAGER))
