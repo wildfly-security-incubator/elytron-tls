@@ -69,7 +69,6 @@ import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
-import org.jboss.as.controller.MapAttributeDefinition;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.ObjectListAttributeDefinition;
 import org.jboss.as.controller.ObjectTypeAttributeDefinition;
@@ -80,7 +79,6 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
-import org.jboss.as.controller.SimpleMapAttributeDefinition;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
 import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
@@ -445,7 +443,8 @@ public class SSLContextDefinitions {
 
     /* SSL Context definitions */
 
-    static final SimpleAttributeDefinition DEFAULT_SSL_CONTEXT = new SimpleAttributeDefinitionBuilder(Constants.DEFAULT_SSL_CONTEXT, ModelType.STRING)
+    // TODO implement SNI
+    /* static final SimpleAttributeDefinition DEFAULT_SSL_CONTEXT = new SimpleAttributeDefinitionBuilder(Constants.DEFAULT_SSL_CONTEXT, ModelType.STRING)
            .setRequired(true)
            .setCapabilityReference(SSL_CONTEXT_CAPABILITY)
            .setRestartAllServices()
@@ -457,7 +456,7 @@ public class SSLContextDefinitions {
            .setMapValidator(new Validators.HostContextMapValidator())
            .setAllowExpression(false)
            .setRestartAllServices()
-           .build();
+           .build(); */
 
     /* Runtime Attributes */
 
@@ -1011,9 +1010,9 @@ public class SSLContextDefinitions {
                 final String cipherSuiteFilter = CIPHER_SUITE_FILTER.resolveModelAttribute(context, model).asString();
                 final String cipherSuiteNames = CIPHER_SUITE_NAMES.resolveModelAttribute(context, model).asStringOrNull();
                 
-                final InjectedValue<Provider[]> providersInjector = addSSLContextDependency(PROVIDERS_CAPABILITY, providersDefinition, Provider[].class, serviceBuilder, context, model);
-                final InjectedValue<KeyManager> keyManagerInjector = addSSLContextDependency(KEY_MANAGER_CAPABILITY, KEY_MANAGER, KeyManager.class, serviceBuilder, context, model);
-                final InjectedValue<TrustManager> trustManagerInjector = addSSLContextDependency(TRUST_MANAGER_CAPABILITY, TRUST_MANAGER, TrustManager.class, serviceBuilder, context, model);;
+                final InjectedValue<Provider[]> providersInjector = addDependency(PROVIDERS_CAPABILITY, providersDefinition, Provider[].class, serviceBuilder, context, model);
+                final InjectedValue<KeyManager> keyManagerInjector = addDependency(KEY_MANAGER_CAPABILITY, KEY_MANAGER, KeyManager.class, serviceBuilder, context, model);
+                final InjectedValue<TrustManager> trustManagerInjector = addDependency(TRUST_MANAGER_CAPABILITY, TRUST_MANAGER, TrustManager.class, serviceBuilder, context, model);
                 // final ModelNode keyManagerObject = KEY_MANAGER_OBJECT.resolveModelAttribute(context, model);
                 // final ModelNode trustManagerObject = TRUST_MANAGER_OBJECT.resolveModelAttribute(context, model);
                 
@@ -1136,9 +1135,9 @@ public class SSLContextDefinitions {
                 final int sessionTimeout = SESSION_TIMEOUT.resolveModelAttribute(context, model).asInt();
                 final boolean wrap = WRAP.resolveModelAttribute(context, model).asBoolean();
 
-                final InjectedValue<Provider[]> providersInjector = addSSLContextDependency(PROVIDERS_CAPABILITY, providersDefinition, Provider[].class, serviceBuilder, context, model);
-                InjectedValue<KeyManager> keyManagerInjector = addSSLContextDependency(KEY_MANAGER_CAPABILITY, KEY_MANAGER, KeyManager.class, serviceBuilder, context, model);
-                InjectedValue<TrustManager> trustManagerInjector = addSSLContextDependency(TRUST_MANAGER_CAPABILITY, TRUST_MANAGER, TrustManager.class, serviceBuilder, context, model);;
+                final InjectedValue<Provider[]> providersInjector = addDependency(PROVIDERS_CAPABILITY, providersDefinition, Provider[].class, serviceBuilder, context, model);
+                InjectedValue<KeyManager> keyManagerInjector = addDependency(KEY_MANAGER_CAPABILITY, KEY_MANAGER, KeyManager.class, serviceBuilder, context, model);
+                InjectedValue<TrustManager> trustManagerInjector = addDependency(TRUST_MANAGER_CAPABILITY, TRUST_MANAGER, TrustManager.class, serviceBuilder, context, model);;
                 // final ModelNode keyManagerObject = KEY_MANAGER_OBJECT.resolveModelAttribute(context, model);
                 // final ModelNode trustManagerObject = TRUST_MANAGER_OBJECT.resolveModelAttribute(context, model);
 
@@ -1812,7 +1811,7 @@ public class SSLContextDefinitions {
         if (trustManager == null) {
             return null;
         }
-        if (trustManager instanceof X509ExtendedKeyManager) {
+        if (trustManager instanceof X509ExtendedTrustManager) {
             X509ExtendedTrustManager x509TrustManager = (X509ExtendedTrustManager) trustManager;
             // TODO: add FIPS
             /* if (x509TrustManager instanceof DelegatingTrustManager && IS_FIPS.getAsBoolean()) {
@@ -1926,36 +1925,10 @@ public class SSLContextDefinitions {
                                                                 ModelNode model, InjectedValue<Provider[]> providersInjector) throws OperationFailedException { return null; }
 
     // Derives dynamic name from provided attribute
-    private static <T> InjectedValue<T> addSSLContextDependency(String baseName, SimpleAttributeDefinition attribute,
+    private static <T> InjectedValue<T> addDependency(String baseName, SimpleAttributeDefinition attribute,
                                                       Class<T> type, ServiceBuilder<SSLContext> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
         String dynamicNameElement = attribute.resolveModelAttribute(context, model).asStringOrNull();
         InjectedValue<T> injectedValue = new InjectedValue<>();
-        if (dynamicNameElement != null) {
-            serviceBuilder.addDependency(context.getCapabilityServiceName(
-                    buildDynamicCapabilityName(baseName, dynamicNameElement), type),
-                    type, injectedValue);
-        }
-        return injectedValue;
-    }
-
-    private static <T> InjectedValue<T> addKeyManagerDependency(String baseName, SimpleAttributeDefinition attribute,
-                                                      Class<T> type, ServiceBuilder<KeyManager> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
-        String dynamicNameElement = attribute.resolveModelAttribute(context, model).asStringOrNull();
-        InjectedValue<T> injectedValue = new InjectedValue<>();
-
-        if (dynamicNameElement != null) {
-            serviceBuilder.addDependency(context.getCapabilityServiceName(
-                    buildDynamicCapabilityName(baseName, dynamicNameElement), type),
-                    type, injectedValue);
-        }
-        return injectedValue;
-    }
-
-    private static <T> InjectedValue<T> addTrustManagerDependency(String baseName, SimpleAttributeDefinition attribute,
-                                                      Class<T> type, ServiceBuilder<TrustManager> serviceBuilder, OperationContext context, ModelNode model) throws OperationFailedException {
-        String dynamicNameElement = attribute.resolveModelAttribute(context, model).asStringOrNull();
-        InjectedValue<T> injectedValue = new InjectedValue<>();
-
         if (dynamicNameElement != null) {
             serviceBuilder.addDependency(context.getCapabilityServiceName(
                     buildDynamicCapabilityName(baseName, dynamicNameElement), type),

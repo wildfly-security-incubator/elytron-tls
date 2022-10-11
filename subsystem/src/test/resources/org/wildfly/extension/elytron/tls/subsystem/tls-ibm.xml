@@ -16,7 +16,7 @@
                 <implementation type="JKS" />
                 <file path="localhost.keystore" relative-to="jboss.server.config.dir" required="true"/>
             </key-store>
-            <key-store name="ElytronTlsCaTruststore" >
+            <key-store name="ElytronCaTruststore" >
                 <credential-reference clear-text="Elytron"/>
                 <implementation type="JKS" />
                 <file path="target/test-classes/org/wildfly/extension/elytron/tls/subsystem/ca.truststore"/>
@@ -46,32 +46,32 @@
             </key-manager>
         </key-managers>
         <trust-managers>
-            <trust-manager name="CaTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" alias-filter="NONE:+mykey"/>
-            <trust-manager name="MyTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
-            <trust-manager name="ProviderTrustManager" algorithm="IbmX509" key-store="ElytronTlsCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
-            <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
+            <trust-manager name="CaTrustManager" algorithm="IbmX509" key-store="ElytronCaTruststore" alias-filter="NONE:+mykey"/>
+            <trust-manager name="MyTrustManager" algorithm="IbmX509" key-store="ElytronCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
+            <trust-manager name="ProviderTrustManager" algorithm="IbmX509" key-store="ElytronCaTruststore" providers="ManagerProviderLoader" provider-name="IBMJSSE"/>
+            <trust-manager name="trust-with-crl" algorithm="PKIX" key-store="ElytronCaTruststore">
                 <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir" maximum-cert-path="2"/>
             </trust-manager>
-            <trust-manager name="trust-with-multiple-crls" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
+            <trust-manager name="trust-with-multiple-crls" algorithm="PKIX" key-store="ElytronCaTruststore">
                 <certificate-revocation-lists>
                     <certificate-revocation-list path="crl.pem" relative-to="jboss.server.config.dir"/>
                     <certificate-revocation-list path="crl-new.pem" relative-to="jboss.server.config.dir" />
                 </certificate-revocation-lists>
             </trust-manager>
-            <trust-manager name="trust-with-crl-dp" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
+            <trust-manager name="trust-with-crl-dp" algorithm="PKIX" key-store="ElytronCaTruststore">
                 <certificate-revocation-list />
             </trust-manager>
-            <trust-manager name="trust-with-crl-dp-deprecated-max-cert-path" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
+            <trust-manager name="trust-with-crl-dp-deprecated-max-cert-path" algorithm="PKIX" key-store="ElytronCaTruststore">
                 <certificate-revocation-list maximum-cert-path="1"/>
             </trust-manager>
-            <trust-manager name="trust-with-crls-dp" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
+            <trust-manager name="trust-with-crls-dp" algorithm="PKIX" key-store="ElytronCaTruststore">
                 <certificate-revocation-lists />
             </trust-manager>
-            <trust-manager name="trust-with-ocsp-crl" algorithm="PKIX" key-store="ElytronTlsCaTruststore" soft-fail="true" only-leaf-cert="true">
+            <trust-manager name="trust-with-ocsp-crl" algorithm="PKIX" key-store="ElytronCaTruststore" soft-fail="true" only-leaf-cert="true">
                 <certificate-revocation-list />
                 <ocsp responder="http://localhost/ocsp"/>
             </trust-manager>
-            <trust-manager name="trust-with-ocsp-simple" algorithm="PKIX" key-store="ElytronTlsCaTruststore">
+            <trust-manager name="trust-with-ocsp-simple" algorithm="PKIX" key-store="ElytronCaTruststore">
                 <ocsp/>
             </trust-manager>
         </trust-managers>

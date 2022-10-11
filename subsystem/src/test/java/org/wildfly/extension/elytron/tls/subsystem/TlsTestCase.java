@@ -1,3 +1,21 @@
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILED;
@@ -78,6 +96,7 @@ import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 import org.wildfly.security.x500.cert.X509CertificateBuilder;
 
 /**
+ * @author <a href="mailto:jkalina@redhat.com">Jan Kalina</a>
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
 public class TlsTestCase extends AbstractSubsystemTest {
@@ -99,7 +118,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
     private static final String INIT_TEST_TRUSTSTORE = "myTS";
     private static final String INIT_TEST_TRUSTMANAGER = "myTM";
 
-    private static final char[] GENERATED_KEYSTORE_PASSWORD = "ElytronTLS".toCharArray();
+    private static final char[] GENERATED_KEYSTORE_PASSWORD = "Elytron".toCharArray();
     private static final String PROTOCOLS_SERVER = "enabledProtocolsServer";
     private static final String PROTOCOLS_CLIENT = "enabledProtocolsClient";
     private static final String NEGOTIATED_PROTOCOL = "negotiatedProtocol";
@@ -249,7 +268,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
     private static void setUpKeyStores() throws Exception {
         File workingDir = new File(WORKING_DIRECTORY_LOCATION);
         if (!workingDir.exists()) {
-            Assert.assertTrue(workingDir.mkdirs());
+            workingDir.mkdirs();
         }
 
         SelfSignedX509CertificateAndSigningKey issuerSelfSignedX509CertificateAndSigningKey = createIssuer(ISSUER_DN);
@@ -284,7 +303,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         };
         for (File file : testFiles) {
             if (file.exists()) {
-                Assert.assertTrue(file.delete());
+                file.delete();
             }
         }
     }
@@ -332,7 +351,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
         } else {
             subsystemXml = JdkUtils.getJavaSpecVersion() <= 12 ? "tls-sun.xml" : "tls-oracle13plus.xml";
         }
-        services = super.createKernelServicesBuilder(TestEnvironment.asNormal()).setSubsystemXmlResource(subsystemXml).build();
+        services = super.createKernelServicesBuilder(new TestEnvironment()).setSubsystemXmlResource(subsystemXml).build();
         if (!services.isSuccessfulBoot()) {
             Assert.fail(services.getBootError().toString());
         }
@@ -398,9 +417,13 @@ public class TlsTestCase extends AbstractSubsystemTest {
     public void testSslServiceAuthProtocolMismatchSSLv2Hello() throws Throwable {
         Assume.assumeFalse("Skipping testSslServiceAuthSSLv2Hello as IBM JDK does not support enabling SSLv2Hello " +
                 "in the client", JdkUtils.isIbmJdk());
-        testCommunication("ServerSslContextTLS12Only", "ClientSslContextSSLv2Hello", false, "OU=Elytron,O=Elytron,C=CZ,ST=Elytron,CN=localhost",
-                "OU=Elytron,O=Elytron,C=UK,ST=Elytron,CN=Firefly");
-        fail("Excepted SSLHandshakeException not thrown");
+        try {
+            testCommunication("ServerSslContextTLS12Only", "ClientSslContextSSLv2Hello", false, "OU=Elytron,O=Elytron,C=CZ,ST=Elytron,CN=localhost",
+                    "OU=Elytron,O=Elytron,C=UK,ST=Elytron,CN=Firefly");
+            fail("Excepted SSLHandshakeException not thrown");
+        } catch (SSLHandshakeException ignored) {
+
+        }
     }
 
     @Test
@@ -765,6 +788,7 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
         // Check negotiated protocol is the one we expected
         assertEquals(protocolChecker.get(NEGOTIATED_PROTOCOL)[0], serverSocket.getSession().getProtocol());
+        assertEquals(protocolChecker.get(NEGOTIATED_PROTOCOL)[0], clientSocket.getSession().getProtocol());
     }
 
         private void testSessionsReading(String serverContextName, String clientContextName, String expectedServerPrincipal, String expectedClientPrincipal) {

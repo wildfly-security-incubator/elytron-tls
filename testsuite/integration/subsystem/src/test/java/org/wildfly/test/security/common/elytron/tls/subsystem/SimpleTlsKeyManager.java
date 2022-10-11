@@ -13,48 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.common;
+package org.wildfly.test.security.common.elytron.tls.subsystem;
 
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import static org.wildfly.common.Assert.checkNotNullParamWithNullPointerException;
+
+import javax.net.ssl.KeyManagerFactory;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.test.integration.management.util.CLIWrapper;
+import org.wildfly.test.security.common.elytron.AbstractConfigurableElement;
+import org.wildfly.test.security.common.elytron.CredentialReference;
 
 /**
- * Elytron key-store configuration implementation.
+ * Elytron TLS key-manager configuration implementation.
  *
  * @author Josef Cacek
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class SimpleKeyStore extends AbstractConfigurableElement {
+public class SimpleTlsKeyManager extends AbstractConfigurableElement {
 
-    private final CliPath path;
+    private final String keyStore;
     private final CredentialReference credentialReference;
-    private final String type;
-    private final boolean required;
 
-    private SimpleKeyStore(Builder builder) {
+    private SimpleTlsKeyManager(Builder builder) {
         super(builder);
-        this.path = defaultIfNull(builder.path, CliPath.EMPTY);
+        this.keyStore = checkNotNullParamWithNullPointerException("builder.keyStore", builder.keyStore);
         this.credentialReference = defaultIfNull(builder.credentialReference, CredentialReference.EMPTY);
-        this.type = defaultIfNull(builder.type, "JKS");
-        this.required = builder.required;
     }
 
     @Override
     public void create(ModelControllerClient client, CLIWrapper cli) throws Exception {
-        // /subsystem=elytron/key-store=httpsKS:add(path=keystore.jks,relative-to=jboss.server.config.dir,
-        // credential-reference={clear-text=secret},type=JKS,required=false)
-        cli.sendLine(String.format("/subsystem=elytron/key-store=%s:add(%s%stype=\"%s\",required=%s)", name, path.asString(),
-                credentialReference.asString(), type, Boolean.toString(required)));
+        // /subsystem=elytron-tls/key-manager=httpsKM:add(key-store=httpsKS,algorithm="SunX509",credential-reference={clear-text=secret})
+
+        cli.sendLine(String.format("/subsystem=elytron-tls/key-manager=%s:add(key-store=\"%s\",algorithm=\"%s\", %s)", name,
+                keyStore, KeyManagerFactory.getDefaultAlgorithm(), credentialReference.asString()));
     }
 
     @Override
     public void remove(ModelControllerClient client, CLIWrapper cli) throws Exception {
-        cli.sendLine(String.format("/subsystem=elytron/key-store=%s:remove()", name));
+        cli.sendLine(String.format("/subsystem=elytron-tls/key-manager=%s:remove()", name));
     }
 
     /**
-     * Creates builder to build {@link SimpleKeyStore}.
+     * Creates builder to build {@link SimpleTlsKeyManager}.
      *
      * @return created builder
      */
@@ -63,19 +65,17 @@ public class SimpleKeyStore extends AbstractConfigurableElement {
     }
 
     /**
-     * Builder to build {@link SimpleKeyStore}.
+     * Builder to build {@link SimpleTlsKeyManager}.
      */
     public static final class Builder extends AbstractConfigurableElement.Builder<Builder> {
-        private CliPath path;
+        private String keyStore;
         private CredentialReference credentialReference;
-        private String type;
-        private boolean required;
 
         private Builder() {
         }
 
-        public Builder withPath(CliPath path) {
-            this.path = path;
+        public Builder withKeyStore(String keyStore) {
+            this.keyStore = keyStore;
             return this;
         }
 
@@ -84,18 +84,8 @@ public class SimpleKeyStore extends AbstractConfigurableElement {
             return this;
         }
 
-        public Builder withType(String type) {
-            this.type = type;
-            return this;
-        }
-
-        public Builder withRequired(boolean required) {
-            this.required = required;
-            return this;
-        }
-
-        public SimpleKeyStore build() {
-            return new SimpleKeyStore(this);
+        public SimpleTlsKeyManager build() {
+            return new SimpleTlsKeyManager(this);
         }
 
         @Override

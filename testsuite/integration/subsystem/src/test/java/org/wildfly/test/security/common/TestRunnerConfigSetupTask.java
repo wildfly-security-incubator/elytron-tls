@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.common;
+package org.wildfly.test.security.common;
 
 import java.util.Arrays;
 import java.util.ListIterator;
@@ -25,6 +25,7 @@ import org.jboss.as.test.integration.management.util.ServerReload;
 import org.jboss.logging.Logger;
 import org.wildfly.core.testrunner.ManagementClient;
 import org.wildfly.core.testrunner.ServerSetupTask;
+import org.wildfly.test.security.common.elytron.ConfigurableElement;
 
 /**
  * WildFly TestRunner ServerSetupTask version of AbstractConfigSetupTask.
@@ -49,7 +50,7 @@ public abstract class TestRunnerConfigSetupTask implements ServerSetupTask {
 
     /**
      * Creates configuration elements (provided by implementation of {@link #getConfigurableElements()} method) and calls
-     * {@link ConfigurableElement#create(ModelControllerClient, CLIWrapper)} for them.
+     * {@link ConfigurableElement#create(CLIWrapper)} for them.
      */
     protected void setup(final ModelControllerClient modelControllerClient) throws Exception {
         configurableElements = getConfigurableElements();
@@ -70,7 +71,7 @@ public abstract class TestRunnerConfigSetupTask implements ServerSetupTask {
     }
 
     /**
-     * Reverts configuration changes done by {@link #setup(ModelControllerClient)} method - i.e. calls {@link ConfigurableElement#remove(ModelControllerClient, CLIWrapper)} method
+     * Reverts configuration changes done by {@link #setup(ModelControllerClient)} method - i.e. calls {@link ConfigurableElement#remove(CLIWrapper)} method
      * on instances provided by {@link #getConfigurableElements()} (in reverse order).
      */
     protected void tearDown(ModelControllerClient modelControllerClient) throws Exception {

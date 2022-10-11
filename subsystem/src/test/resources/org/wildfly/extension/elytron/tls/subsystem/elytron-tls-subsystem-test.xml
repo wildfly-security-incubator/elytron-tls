@@ -15,28 +15,35 @@
   -->
 <subsystem xmlns="urn:wildfly:elytron-tls-subsystem:1.0" default-ssl-context="server">
     <!-- TODO: ssl-contexts that also create key stores, managers, oscp, etc. -->
-    <credential-stores>
-        <credential-store name="test1" relative-to="jboss.server.data.dir" location="test1.store" create="true">
-            <implementation-properties>
-                <property name="keyStoreType" value="JCEKS"/>
-                <property name="keyAlias" value="adminKey"/>
-            </implementation-properties>
-            <credential-reference clear-text="secret2"/>
-        </credential-store>
-        <credential-store name="test2" relative-to="jboss.server.data.dir" modifiable="true">
-            <credential-reference store="test1" alias="to_open_test2"/>
-        </credential-store>
-        <credential-store name="test4" relative-to="jboss.server.data.dir" path="test1.store" create="true">
-            <credential-reference clear-text="secret2"/>
-        </credential-store>
-        <secret-key-credential-store name="test3" relative-to="jboss.server.data.dir" path="test3.cs" create="false" populate="false" key-size="192" default-alias="test3" />
-    </credential-stores>
     <tls>
         <key-stores>
+            <key-store name="PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11"/>
+            </key-store>
             <key-store name="jks_store" alias-filter="one,two,three">
                 <credential-reference clear-text="password"/>
                 <implementation type="jks"/>
                 <file relative-to="jboss.server.config.dir" path="keystore.jks" required="true"/>
+            </key-store>
+            <key-store name="jceks_store">
+                <credential-reference clear-text="password"/>
+                <implementation type="jceks"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jceks"/>
+            </key-store>
+            <key-store name="Custom_PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11" providers="custom-loader"/>
+            </key-store>
+            <key-store name="accounts.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="JKS"/>
+                <file path="accounts.keystore.jks" relative-to="jboss.server.config.dir"/>
+            </key-store>
+            <key-store name="test.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="PKCS12"/>
+                <file path="test.keystore" relative-to="jboss.server.config.dir"/>
             </key-store>
         </key-stores>
         <key-managers>
@@ -84,6 +91,22 @@
         </certificate-authority-accounts>
         <!-- TODO: server-ssl-sni-context -->
     </tls>
+    <credential-stores>
+        <credential-store name="test1" relative-to="jboss.server.data.dir" location="test1.store" create="true">
+            <implementation-properties>
+                <property name="keyStoreType" value="JCEKS"/>
+                <property name="keyAlias" value="adminKey"/>
+            </implementation-properties>
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <credential-store name="test2" relative-to="jboss.server.data.dir" modifiable="true">
+            <credential-reference store="test1" alias="to_open_test2"/>
+        </credential-store>
+        <credential-store name="test4" relative-to="jboss.server.data.dir" path="test1.store" create="true">
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <secret-key-credential-store name="test3" relative-to="jboss.server.data.dir" path="test3.cs" create="false" populate="false" key-size="192" default-alias="test3" />
+    </credential-stores>
     <expression-resolver default-resolver="A" prefix="G">
         <resolver name="A" credential-store="test1" secret-key="C"/>
         <resolver name="D" credential-store="test2" secret-key="F"/>

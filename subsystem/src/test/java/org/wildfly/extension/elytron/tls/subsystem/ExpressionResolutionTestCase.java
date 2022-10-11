@@ -107,7 +107,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
             csTwo = createCredentialStoreTwo();
             csThree = createCredentialStoreThree();
 
-            KernelServices services = super.createKernelServicesBuilder(TestEnvironment.asNormal())
+            KernelServices services = super.createKernelServicesBuilder(new TestEnvironment())
                     .setSubsystemXmlResource("expression-encryption.xml").build();
             if (!services.isSuccessfulBoot()) {
                 Assert.fail(services.getBootError().toString());
@@ -128,7 +128,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
 
     protected AdditionalInitialization createAdditionalInitialization() {
         // Our use of the expression=encryption resource requires kernel capability setup that TestEnvironment provides
-        return TestEnvironment.asAdmin();
+        return new TestEnvironment(RunningMode.ADMIN_ONLY);
     }
 
     private static void cleanUp(CredentialStoreUtility csUtil) {
@@ -185,7 +185,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
 
     @Test
     public void testExpressionEncryptionOperations() throws Exception {
-        KernelServices services = super.createKernelServicesBuilder(TestEnvironment.asNormal()).setSubsystemXml(emptySubsystemXml()).build();
+        KernelServices services = super.createKernelServicesBuilder(new TestEnvironment()).setSubsystemXml(emptySubsystemXml()).build();
         if (!services.isSuccessfulBoot()) {
             Assert.fail(services.getBootError().toString());
         }
@@ -202,9 +202,6 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
         add.get(ClientConstants.OP).set(ClientConstants.ADD);
         add.get(Constants.PATH).set(testStorePath);
         add.get(Constants.POPULATE).set(false);
-
-        System.out.println("string is");
-        System.out.println(add.get(ClientConstants.OP_ADDR));
 
         assertSuccess(services.executeOperation(add));
 
@@ -357,7 +354,7 @@ public class ExpressionResolutionTestCase extends AbstractSubsystemBaseTest {
         addEE.get(Constants.RESOLVERS).set(resolvers);
         steps.add(addEE);
 
-        KernelServices services = super.createKernelServicesBuilder(TestEnvironment.asNormal()).setSubsystemXml(emptySubsystemXml()).build();
+        KernelServices services = super.createKernelServicesBuilder(new TestEnvironment()).setSubsystemXml(emptySubsystemXml()).build();
         if (!services.isSuccessfulBoot()) {
             Assert.fail(services.getBootError().toString());
         }

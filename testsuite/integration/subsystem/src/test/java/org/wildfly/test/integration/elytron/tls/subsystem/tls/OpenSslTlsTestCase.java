@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.tls;
+package org.wildfly.test.integration.elytron.tls.subsystem.tls;
 
 import static org.jboss.as.controller.client.helpers.ClientConstants.CONTENT;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
@@ -74,21 +74,21 @@ import org.junit.runner.RunWith;
 import org.wildfly.core.testrunner.ManagementClient;
 import org.wildfly.core.testrunner.ServerSetupTask;
 import org.wildfly.core.testrunner.WildflyTestRunner;
-import org.wildfly.extension.elytron.ElytronExtension;
+import org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension;
 import org.wildfly.openssl.OpenSSLProvider;
 import org.wildfly.security.ssl.CipherSuiteSelector;
 import org.wildfly.security.ssl.ProtocolSelector;
 import org.wildfly.security.ssl.SSLContextBuilder;
 import org.wildfly.security.ssl.test.util.CAGenerationTool;
 import org.wildfly.security.ssl.test.util.CAGenerationTool.Identity;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.TestRunnerConfigSetupTask;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.CliPath;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.ConfigurableElement;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.SimpleServerSslContext;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.CredentialReference;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.SimpleKeyManager;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.SimpleKeyStore;
-import org.wildfly.test.feature.pack.elytron.tls.subsystem.common.SimpleTrustManager;
+import org.wildfly.test.security.common.TestRunnerConfigSetupTask;
+import org.wildfly.test.security.common.elytron.ConfigurableElement;
+import org.wildfly.test.security.common.elytron.CredentialReference;
+import org.wildfly.test.security.common.elytron.tls.subsystem.SimpleTlsKeyManager;
+import org.wildfly.test.security.common.elytron.tls.subsystem.SimpleTlsKeyStore;
+import org.wildfly.test.security.common.elytron.tls.subsystem.SimpleTlsServerSslContext;
+import org.wildfly.test.security.common.elytron.tls.subsystem.SimpleTlsTrustManager;
+import org.wildfly.test.security.common.elytron.tls.subsystem.CliPath;
 import org.wildfly.test.undertow.UndertowSSLService;
 import org.wildfly.test.undertow.UndertowSSLServiceActivator;
 import org.wildfly.test.undertow.UndertowServiceActivator;
@@ -113,7 +113,7 @@ public class OpenSslTlsTestCase {
     private static final String SERVER_TRUST_MANAGER_NAME = "serverTM";
     private static final String SERVER_SSL_CONTEXT_NAME = "test-context";
 
-    private static final PathAddress ROOT_ADDRESS = PathAddress.pathAddress(SUBSYSTEM, ElytronExtension.SUBSYSTEM_NAME);
+    private static final PathAddress ROOT_ADDRESS = PathAddress.pathAddress(SUBSYSTEM, ElytronTlsExtension.SUBSYSTEM_NAME);
     private static final PathAddress SERVER_SSL_CONTEXT_ADDRESS = ROOT_ADDRESS.append("server-ssl-context", SERVER_SSL_CONTEXT_NAME);
     private static final Pattern OPENSSL_TLSv13_PATTERN = Pattern.compile("^(TLS_AES_128_GCM_SHA256|TLS_AES_256_GCM_SHA384|TLS_CHACHA20_POLY1305_SHA256|TLS_AES_128_CCM_SHA256|TLS_AES_128_CCM_8_SHA256)$");
 
@@ -199,7 +199,7 @@ public class OpenSslTlsTestCase {
                     .build();
 
             // KeyStores
-            final SimpleKeyStore.Builder ksCommon = SimpleKeyStore.builder()
+            final SimpleTlsKeyStore.Builder ksCommon = SimpleTlsKeyStore.builder()
                     .withType("JKS")
                     .withCredentialReference(credentialReference);
             elements.add(ksCommon.withName(SERVER_KEY_STORE_NAME)
@@ -214,19 +214,19 @@ public class OpenSslTlsTestCase {
                     .build());
 
             // Key and Trust Managers
-            elements.add(SimpleKeyManager.builder()
+            elements.add(SimpleTlsKeyManager.builder()
                     .withName(SERVER_KEY_MANAGER_NAME)
                     .withCredentialReference(credentialReference)
                     .withKeyStore(SERVER_KEY_STORE_NAME)
                     .build());
             elements.add(
-                    SimpleTrustManager.builder()
+                    SimpleTlsTrustManager.builder()
                             .withName(SERVER_TRUST_MANAGER_NAME)
                             .withKeyStore(SERVER_TRUST_STORE_NAME)
                             .build());
 
             // SSLContext with OpenSSL provider
-            elements.add(SimpleServerSslContext.builder()
+            elements.add(SimpleTlsServerSslContext.builder()
                     .withName(SERVER_SSL_CONTEXT_NAME)
                     .withKeyManagers(SERVER_KEY_MANAGER_NAME)
                     .withTrustManagers(SERVER_TRUST_MANAGER_NAME)
@@ -235,7 +235,7 @@ public class OpenSslTlsTestCase {
                     .withCipherSuiteNames("TLS_AES_256_GCM_SHA384:TLS_AES_128_CCM_8_SHA256")
                     .build());
 
-            return elements.toArray(new ConfigurableElement[elements.size()]);
+            return elements.toArray(new ConfigurableElement[0]);
         }
 
         @Override

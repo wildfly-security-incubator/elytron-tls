@@ -32,7 +32,7 @@ import org.jboss.msc.service.StopContext;
  *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
-class TrivialService<T> implements Service<T>, org.jboss.msc.Service {
+class TrivialService<T> implements Service<T> {
 
     private volatile ValueSupplier<T> valueSupplier;
     private final Consumer<T> valueConsumer;

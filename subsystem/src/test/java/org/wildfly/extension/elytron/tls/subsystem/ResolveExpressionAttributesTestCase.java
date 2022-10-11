@@ -68,7 +68,7 @@ public class ResolveExpressionAttributesTestCase extends AbstractSubsystemBaseTe
     @Override
     protected AdditionalInitialization createAdditionalInitialization() {
         // Our use of the expression=encryption resource requires kernel capability setup that TestEnvironment provides
-        return TestEnvironment.asAdmin();
+        return new TestEnvironment(RunningMode.ADMIN_ONLY);
     }
 
     @Test
@@ -82,6 +82,7 @@ public class ResolveExpressionAttributesTestCase extends AbstractSubsystemBaseTe
         testKeyStore();
         // testLdapKeyStore();
         testProvider();
+        // testSaslServer();
         testTLSComponents();
     }
 
@@ -126,11 +127,25 @@ public class ResolveExpressionAttributesTestCase extends AbstractSubsystemBaseTe
 
     private void testElytronTlsDefinition() {
         assertEquals(Arrays.asList("test"), getValue(serverModel, Constants.DISALLOWED_PROVIDERS, true));
+        // assertEquals("false", getValue(serverModel, Constants.REGISTER_JASPI_FACTORY));
     }
 
     private void testFilteringKeyStoreDefinition() {
         ModelNode keystore = serverModel.get(Constants.FILTERING_KEY_STORE).get("FilteringKeyStore");
         assertEquals("NONE:+firefly", getValue(keystore, Constants.ALIAS_FILTER));
+    }
+
+    private void testJaspiConfiguration() {
+        ModelNode jaspi = serverModel.get(Constants.JASPI_CONFIGURATION).get("test");
+        assertEquals("HttpServlet", getValue(jaspi, Constants.LAYER));
+        assertEquals("default /test", getValue(jaspi, Constants.APPLICATION_CONTEXT));
+        assertEquals("Test Definition", getValue(jaspi, Constants.DESCRIPTION));
+
+        ModelNode testModule = jaspi.get(Constants.SERVER_AUTH_MODULES).get(0);
+        assertEquals("REQUISITE", getValue(testModule, Constants.FLAG));
+
+        ModelNode options = testModule.get(Constants.OPTIONS);
+        assertEquals("b", getValue(options, "a"));
     }
 
     private void testKeyStore() {
@@ -173,8 +188,15 @@ public class ResolveExpressionAttributesTestCase extends AbstractSubsystemBaseTe
     private void testProvider() {
         ModelNode provider = serverModel.get(Constants.PROVIDER_LOADER).get("openssl");
         assertEquals("val", getValue(provider.get(Constants.CONFIGURATION), "prop"));
-        provider = serverModel.get(Constants.PROVIDER_LOADER).get("elytron-tls");
+        provider = serverModel.get(Constants.PROVIDER_LOADER).get("elytron");
         assertEquals("arg", getValue(provider, Constants.ARGUMENT));
+    }
+
+    private void testSaslServer() {
+        ModelNode factory = serverModel.get(Constants.SASL_AUTHENTICATION_FACTORY).get("SaslAuthenticationDefinition").get(Constants.MECHANISM_CONFIGURATIONS).get(0);
+        assertEquals("PLAIN", getValue(factory, Constants.MECHANISM_NAME));
+        assertEquals("host", getValue(factory, Constants.HOST_NAME));
+        assertEquals("protocol", getValue(factory, Constants.PROTOCOL));
     }
 
     private void testTLSComponents() {

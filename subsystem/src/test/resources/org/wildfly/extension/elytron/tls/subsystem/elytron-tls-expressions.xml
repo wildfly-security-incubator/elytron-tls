@@ -24,7 +24,7 @@
                 <property name="prop" value="${exp.value:val}"/>
             </configuration>
         </provider-loader>
-        <provider-loader name="elytron-tls" module="org.wildfly.extras.elytron-tls" argument="${exp.argument:arg}"/>
+        <provider-loader name="elytron" module="org.wildfly.security.elytron" argument="${exp.argument:arg}"/>
     </providers>
     <tls>
         <key-stores>

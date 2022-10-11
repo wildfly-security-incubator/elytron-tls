@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Red Hat, Inc.
+ * Copyright 2016 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.common;
+package org.jboss.as.test.shared;
 
-import org.jboss.dmr.ModelNode;
+import static org.wildfly.common.Assert.checkNotNullParamWithNullPointerException;
 
 /**
- * Represents objects which are convertable to ModelNode instances.
+ * CLI helper methods.
  *
  * @author Josef Cacek
  */
-public interface ModelNodeConvertable {
+public class CliUtils {
 
-    ModelNode toModelNode();
-
+    /**
+     * Escapes given path String for CLI.
+     *
+     * @param path path string to escape (must be not-<code>null</code>)
+     * @return escaped path
+     */
+    public static String escapePath(String path) {
+        return checkNotNullParamWithNullPointerException("path", path).replace("\\", "\\\\");
+    }
 }

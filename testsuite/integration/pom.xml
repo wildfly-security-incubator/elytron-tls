@@ -88,6 +88,10 @@
             <artifactId>wildfly-arquillian-protocol-jmx</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-core-test-runner</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

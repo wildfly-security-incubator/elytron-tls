@@ -96,7 +96,6 @@
         <trace>none</trace>
 
         <jvm.args.dirs>
-            -Djboss.dist=${jboss.dist}
             -Djava.io.tmpdir=${basedir}/target
         </jvm.args.dirs>
 

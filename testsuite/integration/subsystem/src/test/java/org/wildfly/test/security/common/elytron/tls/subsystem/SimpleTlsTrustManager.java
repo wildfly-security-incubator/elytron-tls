@@ -13,47 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.common;
+package org.wildfly.test.security.common.elytron.tls.subsystem;
 
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.wildfly.common.Assert.checkNotNullParamWithNullPointerException;
 
 import javax.net.ssl.KeyManagerFactory;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.test.integration.management.util.CLIWrapper;
+import org.wildfly.test.security.common.elytron.AbstractConfigurableElement;
 
 /**
- * Elytron key-manager configuration implementation.
+ * Elytron TLS trust-managers configuration implementation.
  *
  * @author Josef Cacek
+ * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-public class SimpleKeyManager extends AbstractConfigurableElement {
+public class SimpleTlsTrustManager extends AbstractConfigurableElement {
 
     private final String keyStore;
-    private final CredentialReference credentialReference;
 
-    private SimpleKeyManager(Builder builder) {
+    private SimpleTlsTrustManager(Builder builder) {
         super(builder);
         this.keyStore = checkNotNullParamWithNullPointerException("builder.keyStore", builder.keyStore);
-        this.credentialReference = defaultIfNull(builder.credentialReference, CredentialReference.EMPTY);
     }
 
     @Override
     public void create(ModelControllerClient client, CLIWrapper cli) throws Exception {
-        // /subsystem=elytron/key-manager=httpsKM:add(key-store=httpsKS,algorithm="SunX509",credential-reference={clear-text=secret})
+        // /subsystem=elytron-tls/trust-manager=twoWayTM:add(key-store=twoWayTS,algorithm="SunX509")
 
-        cli.sendLine(String.format("/subsystem=elytron/key-manager=%s:add(key-store=\"%s\",algorithm=\"%s\", %s)", name,
-                keyStore, KeyManagerFactory.getDefaultAlgorithm(), credentialReference.asString()));
+        cli.sendLine(String.format("/subsystem=elytron-tls/trust-manager=%s:add(key-store=\"%s\",algorithm=\"%s\")", name,
+                keyStore, KeyManagerFactory.getDefaultAlgorithm()));
     }
 
     @Override
     public void remove(ModelControllerClient client, CLIWrapper cli) throws Exception {
-        cli.sendLine(String.format("/subsystem=elytron/key-manager=%s:remove()", name));
+        cli.sendLine(String.format("/subsystem=elytron-tls/trust-manager=%s:remove()", name));
     }
 
     /**
-     * Creates builder to build {@link SimpleKeyManager}.
+     * Creates builder to build {@link SimpleTlsTrustManager}.
      *
      * @return created builder
      */
@@ -62,11 +61,10 @@ public class SimpleKeyManager extends AbstractConfigurableElement {
     }
 
     /**
-     * Builder to build {@link SimpleKeyManager}.
+     * Builder to build {@link SimpleTlsTrustManager}.
      */
     public static final class Builder extends AbstractConfigurableElement.Builder<Builder> {
         private String keyStore;
-        private CredentialReference credentialReference;
 
         private Builder() {
         }
@@ -76,13 +74,8 @@ public class SimpleKeyManager extends AbstractConfigurableElement {
             return this;
         }
 
-        public Builder withCredentialReference(CredentialReference credentialReference) {
-            this.credentialReference = credentialReference;
-            return this;
-        }
-
-        public SimpleKeyManager build() {
-            return new SimpleKeyManager(this);
+        public SimpleTlsTrustManager build() {
+            return new SimpleTlsTrustManager(this);
         }
 
         @Override

@@ -38,6 +38,7 @@
         <!-- TODO: Remove this module once key store and manager objects are implemented -->
         <module name="org.wildfly.extension.elytron"/>
         <module name="org.wildfly.security.elytron-web.undertow-server"/>
+        <module name="org.wildfly.security.manager"/>
         <module name="org.wildfly.elytron-tls-dependency"/>
     </dependencies>
 </module>

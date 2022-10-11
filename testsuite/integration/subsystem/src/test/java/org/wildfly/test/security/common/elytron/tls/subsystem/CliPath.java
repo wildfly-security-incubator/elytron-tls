@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.common;
+package org.wildfly.test.security.common.elytron.tls.subsystem;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.jboss.as.test.shared.CliUtils.escapePath;

@@ -57,12 +57,22 @@ import org.wildfly.security.x500.cert.acme.CertificateAuthority;
  */
 class Capabilities {
 
+    // This has to be at this position, and must not be a lambda, to avoid an init circularity problem on IBM
+    @SuppressWarnings("Convert2Lambda")
+    static final Consumer<ServiceBuilder> COMMON_REQUIREMENTS = new Consumer<ServiceBuilder>() {
+        // unchecked because ServiceBuilder is a raw type
+        @SuppressWarnings("unchecked")
+        public void accept(final ServiceBuilder serviceBuilder) {
+            ElytronTlsSubsystemDefinition.commonRequirements(serviceBuilder);
+        }
+    };
+
     private static final String WILDFLY_SECURITY_CAPABILITY_BASE = "org.wildfly.security.";
 
     static final String ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME = "org.wildfly.extras.elytron-tls";
     
-    static final RuntimeCapability<Void> ELYTRON_TLS_RUNTIME_CAPABILITY = RuntimeCapability.Builder
-            .of(ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME)
+    static final RuntimeCapability<Consumer<ServiceBuilder>> ELYTRON_TLS_RUNTIME_CAPABILITY = RuntimeCapability.Builder
+            .of(ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME, COMMON_REQUIREMENTS)
             .addRequirements(ElytronTlsExtension.WELD_CAPABILITY_NAME)
             .build();
 
@@ -103,24 +113,6 @@ class Capabilities {
             .build();
 
     static final String DIR_CONTEXT_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "dir-context";
-
-    // This has to be at this position, and must not be a lambda, to avoid an init circularity problem on IBM
-    @SuppressWarnings("Convert2Lambda")
-    static final Consumer<ServiceBuilder> COMMON_DEPENDENCIES = new Consumer<ServiceBuilder>() {
-        // unchecked because ServiceBuilder is a raw type
-        @SuppressWarnings("unchecked")
-        public void accept(final ServiceBuilder serviceBuilder) {
-            //ElytronDefinition.commonDependencies(serviceBuilder);
-            //TODO:
-        }
-    };
-
-    static final String ELYTRON_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "elytron";
-
-
-    static final RuntimeCapability<Consumer<ServiceBuilder>> ELYTRON_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(ELYTRON_CAPABILITY, COMMON_DEPENDENCIES)
-            .build();
 
     static final String EVIDENCE_DECODER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "evidence-decoder";
 

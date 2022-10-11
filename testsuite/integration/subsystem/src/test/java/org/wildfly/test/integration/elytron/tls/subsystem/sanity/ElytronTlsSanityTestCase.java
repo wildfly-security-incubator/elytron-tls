@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wildfly.test.feature.pack.elytron.tls.subsystem.sanity;
+package org.wildfly.test.integration.elytron.tls.subsystem.sanity;
 
 import javax.inject.Inject;
 
@@ -33,7 +33,7 @@ import org.wildfly.feature.pack.elytron.tls.dependency.Message;
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
 @RunWith(Arquillian.class)
-public class SubsystemSanityTestCase {
+public class ElytronTlsSanityTestCase {
 
     @Inject
     @ExampleQualifier
@@ -43,7 +43,7 @@ public class SubsystemSanityTestCase {
     public static WebArchive getDeployment() {
         final WebArchive webArchive = ShrinkWrap.create(WebArchive.class, "sanity-test.war")
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
-                .addPackage(SubsystemSanityTestCase.class.getPackage());
+                .addPackage(ElytronTlsSanityTestCase.class.getPackage());
         return webArchive;
     }
 

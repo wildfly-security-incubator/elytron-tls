@@ -131,7 +131,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
         } else {
             subsystemXml = JdkUtils.getJavaSpecVersion() <= 12 ? "tls-sun.xml" : "tls-oracle13plus.xml";
         }
-        services = super.createKernelServicesBuilder(TestEnvironment.asNormal()).setSubsystemXmlResource(subsystemXml).build();
+        services = super.createKernelServicesBuilder(new TestEnvironment()).setSubsystemXmlResource(subsystemXml).build();
         if (!services.isSuccessfulBoot()) {
             Assert.fail(services.getBootError().toString());
         }

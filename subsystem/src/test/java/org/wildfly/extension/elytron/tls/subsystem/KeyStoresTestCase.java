@@ -70,6 +70,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.wildfly.security.WildFlyElytronProvider;
@@ -363,7 +364,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         } else {
             subsystemXml = JdkUtils.getJavaSpecVersion() <= 12 ? "tls-sun.xml" : "tls-oracle13plus.xml";
         }
-        services = super.createKernelServicesBuilder(TestEnvironment.asNormal()).setSubsystemXmlResource(subsystemXml).build();
+        services = super.createKernelServicesBuilder(new TestEnvironment()).setSubsystemXmlResource(subsystemXml).build();
         if (!services.isSuccessfulBoot()) {
             Assert.fail(services.getBootError().toString());
         }
@@ -522,6 +523,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         }
     }
 
+    @Ignore("Filtering keystores not implemented yet")
     @Test
     public void testFilteringKeystoreService() throws Exception {
         ServiceName serviceName = Capabilities.KEY_STORE_RUNTIME_CAPABILITY.getCapabilityServiceName("FilteringKeyStore");
@@ -537,6 +539,26 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
         assertFalse(keyStore.containsAlias("ca"));
         assertFalse(keyStore.isCertificateEntry("ca"));
+    }
+
+    @Ignore("Filtering keystores not implemented yet")
+    @Test
+    public void testFilteringKeystoreCli() throws Exception {
+        ModelNode operation = new ModelNode();
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.FILTERING_KEY_STORE,"FilteringKeyStore");
+        operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
+        List<ModelNode> nodes = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
+        assertEquals(1, nodes.size());
+        assertEquals("firefly", nodes.get(0).asString());
+
+        operation = new ModelNode();
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron").add(Constants.FILTERING_KEY_STORE,"FilteringKeyStore");
+        operation.get(ClientConstants.OP).set(Constants.READ_ALIAS);
+        operation.get(Constants.ALIAS).set("firefly");
+        ModelNode firefly = assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT);
+        assertEquals("firefly", firefly.get(Constants.ALIAS).asString());
+        assertEquals(KeyStore.PrivateKeyEntry.class.getSimpleName(), firefly.get(Constants.ENTRY_TYPE).asString());
+        assertTrue(firefly.get(Constants.CERTIFICATE_CHAIN).isDefined());
     }
 
     @Test
@@ -1328,7 +1350,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
     private List<ModelNode> readAliases() {
         ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","`elytron-tls").add("key-store", KEYSTORE_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("key-store", KEYSTORE_NAME);
         operation.get(ClientConstants.OP).set(Constants.READ_ALIASES);
         return assertSuccess(services.executeOperation(operation)).get(ClientConstants.RESULT).asList();
     }
@@ -1414,7 +1436,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     private void removeCertificateAuthorityAccount() {
         ModelNode operation = new ModelNode();
         operation.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
-        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls`").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
+        operation.get(ClientConstants.OP_ADDR).add("subsystem","elytron-tls").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
         operation.get(ClientConstants.OP).set(ClientConstants.REMOVE_OPERATION);
         assertSuccess(services.executeOperation(operation));
     }

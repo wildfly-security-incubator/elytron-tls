@@ -46,6 +46,8 @@
 
 
         <!-- Other dependency versions -->
+        <version.io.netty>4.1.71.Final</version.io.netty>
+        <version.org.apache.velocity>2.3</version.org.apache.velocity>
         <version.jakarta.json.jakarta-json-api>1.1.6</version.jakarta.json.jakarta-json-api>
         <version.org.bouncycastle>1.69</version.org.bouncycastle>
         <version.org.glassfish.jakarta.json>1.1.6</version.org.glassfish.jakarta.json>
@@ -325,6 +327,68 @@
 
 
             <!-- Test dependencies -->
+            <!-- mockserver-netty uses .... netty!  But we want a later version with some CVE fixes-->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-socks</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler-proxy</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport</artifactId>
+                <version>${version.io.netty}</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- mockserver-netty transitively uses velocity but we want a later version with a CVE fixed -->
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-core</artifactId>
+                <version>${version.org.apache.velocity}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-scripting</artifactId>
+                <version>${version.org.apache.velocity}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15on</artifactId>
@@ -353,6 +417,36 @@
                 <artifactId>mockserver-netty</artifactId>
                 <version>${version.org.mockserver}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>jsr305</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcmail-jdk15on</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcprov-jdk15on</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcpkix-jdk15on</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcutil-jdk15on</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
                 <dependency>
                 <groupId>org.wildfly.core</groupId>
