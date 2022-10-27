@@ -17,7 +17,6 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import java.security.KeyStore;
-import java.security.Permissions;
 import java.security.Policy;
 import java.security.Provider;
 import java.util.function.Consumer;
@@ -29,21 +28,11 @@ import javax.security.sasl.SaslServerFactory;
 
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.msc.service.ServiceBuilder;
-import org.wildfly.security.auth.client.AuthenticationConfiguration;
-import org.wildfly.security.auth.client.AuthenticationContext;
-import org.wildfly.security.auth.server.EvidenceDecoder;
-import org.wildfly.security.auth.server.HttpAuthenticationFactory;
-import org.wildfly.security.auth.server.ModifiableSecurityRealm;
-import org.wildfly.security.auth.server.PrincipalDecoder;
-import org.wildfly.security.auth.server.RealmMapper;
 import org.wildfly.security.auth.server.SaslAuthenticationFactory;
 import org.wildfly.security.auth.server.SecurityDomain;
 import org.wildfly.security.auth.server.SecurityRealm;
-import org.wildfly.security.authz.PermissionMapper;
-import org.wildfly.security.authz.RoleDecoder;
 import org.wildfly.security.authz.RoleMapper;
 import org.wildfly.security.credential.store.CredentialStore;
-import org.wildfly.security.http.HttpServerAuthenticationMechanismFactory;
 import org.wildfly.security.x500.cert.acme.AcmeAccount;
 import org.wildfly.security.x500.cert.acme.CertificateAuthority;
 
@@ -73,19 +62,6 @@ class Capabilities {
     
     static final RuntimeCapability<Consumer<ServiceBuilder>> ELYTRON_TLS_RUNTIME_CAPABILITY = RuntimeCapability.Builder
             .of(ELYTRON_TLS_SUBSYSTEM_CAPABILITY_NAME, COMMON_REQUIREMENTS)
-            .addRequirements(ElytronTlsExtension.WELD_CAPABILITY_NAME)
-            .build();
-
-    static final String AUTHENTICATION_CONFIGURATION_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "authentication-configuration";
-
-    static final RuntimeCapability<Void> AUTHENTICATION_CONFIGURATION_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(AUTHENTICATION_CONFIGURATION_CAPABILITY, true, AuthenticationConfiguration.class)
-            .build();
-
-    static final String AUTHENTICATION_CONTEXT_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "authentication-context";
-
-    static final RuntimeCapability<Void> AUTHENTICATION_CONTEXT_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(AUTHENTICATION_CONTEXT_CAPABILITY, true, AuthenticationContext.class)
             .build();
 
     static final String CERTIFICATE_AUTHORITY_ACCOUNT_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "certificate-authority-account";
@@ -112,31 +88,6 @@ class Capabilities {
             .Builder.of(CREDENTIAL_STORE_CAPABILITY, true, CredentialStore.class)
             .build();
 
-    static final String DIR_CONTEXT_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "dir-context";
-
-    static final String EVIDENCE_DECODER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "evidence-decoder";
-
-    static final RuntimeCapability<Void> EVIDENCE_DECODER_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(EVIDENCE_DECODER_CAPABILITY, true, EvidenceDecoder.class)
-            .build();
-
-    static final String HTTP_AUTHENTICATION_FACTORY_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "http-authentication-factory";
-
-    static final RuntimeCapability<Void> HTTP_AUTHENTICATION_FACTORY_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(HTTP_AUTHENTICATION_FACTORY_CAPABILITY, true, HttpAuthenticationFactory.class)
-            .build();
-
-    static final String HTTP_SERVER_MECHANISM_FACTORY_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "http-server-mechanism-factory";
-
-    static final RuntimeCapability<Void> HTTP_SERVER_MECHANISM_FACTORY_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(HTTP_SERVER_MECHANISM_FACTORY_CAPABILITY, true, HttpServerAuthenticationMechanismFactory.class)
-            .build();
-
-    static final String JACC_POLICY_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "jacc-policy";
-    static final RuntimeCapability<Void> JACC_POLICY_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(JACC_POLICY_CAPABILITY, false, Policy.class)
-            .build();
-
     static final String KEY_MANAGER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "key-manager";
 
     static final RuntimeCapability<Void> KEY_MANAGER_RUNTIME_CAPABILITY =  RuntimeCapability
@@ -149,38 +100,6 @@ class Capabilities {
             .Builder.of(KEY_STORE_CAPABILITY, true, KeyStore.class)
             .build();
 
-    static final String MODIFIABLE_SECURITY_REALM_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "modifiable-security-realm";
-
-    static final RuntimeCapability<Void> MODIFIABLE_SECURITY_REALM_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(MODIFIABLE_SECURITY_REALM_CAPABILITY, true, ModifiableSecurityRealm.class)
-            .build();
-
-    static final String PERMISSION_MAPPER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "permission-mapper";
-
-    static final RuntimeCapability<Void> PERMISSION_MAPPER_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(PERMISSION_MAPPER_CAPABILITY, true, PermissionMapper.class)
-            .build();
-
-    static final String PERMISSION_SET_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "permission-set";
-
-    static final RuntimeCapability<Void> PERMISSION_SET_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(PERMISSION_SET_CAPABILITY, true, Permissions.class)
-            .build();
-
-    static final String POLICY_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "policy";
-    static final RuntimeCapability<Void> POLICY_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(POLICY_CAPABILITY, false, Policy.class)
-            .build();
-
-    static final String PRINCIPAL_TRANSFORMER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "principal-transformer";
-
-
-    static final String PRINCIPAL_DECODER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "principal-decoder";
-
-    static final RuntimeCapability<Void> PRINCIPAL_DECODER_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(PRINCIPAL_DECODER_CAPABILITY, true, PrincipalDecoder.class)
-            .build();
-
     static final String PROVIDERS_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "providers";
 
     /*
@@ -191,54 +110,6 @@ class Capabilities {
 
     static final RuntimeCapability<Void> PROVIDERS_RUNTIME_CAPABILITY =  RuntimeCapability
             .Builder.of(PROVIDERS_CAPABILITY, true, Provider[].class)
-            .build();
-
-    static final String REALM_MAPPER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "realm-mapper";
-
-    static final RuntimeCapability<Void> REALM_MAPPER_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(REALM_MAPPER_CAPABILITY, true, RealmMapper.class)
-            .build();
-
-    static final String ROLE_DECODER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "role-decoder";
-
-    static final RuntimeCapability<Void> ROLE_DECODER_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(ROLE_DECODER_CAPABILITY, true, RoleDecoder.class)
-            .build();
-
-    static final String ROLE_MAPPER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "role-mapper";
-
-    static final RuntimeCapability<Void> ROLE_MAPPER_RUNTIME_CAPABILITY =  RuntimeCapability
-            .Builder.of(ROLE_MAPPER_CAPABILITY, true, RoleMapper.class)
-            .build();
-
-    static final String SASL_AUTHENTICATION_FACTORY_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "sasl-authentication-factory";
-
-    static final RuntimeCapability<Void> SASL_AUTHENTICATION_FACTORY_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(SASL_AUTHENTICATION_FACTORY_CAPABILITY, true, SaslAuthenticationFactory.class)
-            .build();
-
-    static final String SASL_SERVER_FACTORY_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "sasl-server-factory";
-
-    static final RuntimeCapability<Void> SASL_SERVER_FACTORY_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(SASL_SERVER_FACTORY_CAPABILITY, true, SaslServerFactory.class)
-            .build();
-
-    static final String SECURITY_DOMAIN_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "security-domain";
-
-    static final RuntimeCapability<Void> SECURITY_DOMAIN_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(SECURITY_DOMAIN_CAPABILITY, true, SecurityDomain.class)
-            .build();
-
-    static final String SECURITY_EVENT_LISTENER_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "security-event-listener";
-
-    static final String SECURITY_FACTORY_CAPABILITY_BASE = WILDFLY_SECURITY_CAPABILITY_BASE + "security-factory.";
-
-    static final String SECURITY_FACTORY_CREDENTIAL_CAPABILITY = SECURITY_FACTORY_CAPABILITY_BASE + "credential";
-
-    static final String SECURITY_REALM_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "security-realm";
-
-    static final RuntimeCapability<Void> SECURITY_REALM_RUNTIME_CAPABILITY = RuntimeCapability
-            .Builder.of(SECURITY_REALM_CAPABILITY, true, SecurityRealm.class)
             .build();
 
     static final String SSL_CONTEXT_CAPABILITY = WILDFLY_SECURITY_CAPABILITY_BASE + "ssl-context";
