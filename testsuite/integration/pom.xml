@@ -26,18 +26,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-testsuite-integration</artifactId>
-    <name>Elytron TLS Subsystem - Subsystem Integration Test Suite</name>
+    <name>Elytron TLS Subsystem - Integration Test Suite</name>
     <packaging>pom</packaging>
     <modules>
         <module>subsystem</module>
     </modules>
 
     <dependencies>
-        <dependency>
-            <groupId>jakarta.enterprise</groupId>
-            <artifactId>jakarta.enterprise.cdi-api</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -93,5 +88,4 @@
             <artifactId>wildfly-core-test-runner</artifactId>
         </dependency>
     </dependencies>
-
 </project>

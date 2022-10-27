@@ -52,13 +52,5 @@ public class DependencyProcessor implements DeploymentUnitProcessor {
         // In this case we don't need any classes from the subsystem module itself so we don't need to add it to the
         // deployment's module dependencies
         // moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.extension.elytron-tls", false, false, true, false));
-        moduleSpecification.addSystemDependency(cdiDependency(new ModuleDependency(moduleLoader, "org.wildfly.elytron-tls-dependency", false, false, true, false)));
-    }
-
-
-    private ModuleDependency cdiDependency(ModuleDependency moduleDependency) {
-        // This is needed following https://issues.redhat.com/browse/WFLY-13641 / https://github.com/wildfly/wildfly/pull/13406
-        moduleDependency.addImportFilter(s -> s.equals("META-INF"), true);
-        return moduleDependency;
     }
 }

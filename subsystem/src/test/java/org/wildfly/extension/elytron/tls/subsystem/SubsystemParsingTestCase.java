@@ -91,7 +91,7 @@ public class SubsystemParsingTestCase extends AbstractSubsystemBaseTest {
 
     @Override
     protected AdditionalInitialization createAdditionalInitialization() {
-        return AdditionalInitialization.withCapabilities(ElytronTlsExtension.WELD_CAPABILITY_NAME);
+        return AdditionalInitialization.MANAGEMENT;
     }
 
 

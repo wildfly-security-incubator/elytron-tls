@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-testsuite-integration-subsystem</artifactId>
-    <name>Elytron TLS Subsystem - Testsuite: Subsystem</name>
+    <name>Elytron TLS Subsystem - Testsuite: elytron-tls</name>
 
     <dependencies>
         <dependency>
@@ -38,11 +38,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>elytron-tls-subsystem</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-dependency</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

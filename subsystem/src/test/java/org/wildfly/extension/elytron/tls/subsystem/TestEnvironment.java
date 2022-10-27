@@ -171,12 +171,6 @@ class TestEnvironment extends AdditionalInitialization {
         return initializer;
     }
 
-    @Override
-    protected void initializeExtraSubystemsAndModel(ExtensionRegistry extensionRegistry, Resource rootResource, ManagementResourceRegistration rootRegistration, RuntimeCapabilityRegistry capabilityRegistry) {
-        super.initializeExtraSubystemsAndModel(extensionRegistry, rootResource, rootRegistration, capabilityRegistry);
-        registerCapabilities(capabilityRegistry, ElytronTlsExtension.WELD_CAPABILITY_NAME);
-    }
-
     /* public static void startLdapService() {
         try {
             setUpKeyStores();

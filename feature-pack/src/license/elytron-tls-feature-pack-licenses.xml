@@ -23,17 +23,6 @@ TODO: Rename this file to something which matches our Galleon feature pack name
         <!-- Project dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-dependency</artifactId>
-            <licenses>
-                <license>
-                    <name>Apache License 2.0</name>
-                    <url>http://www.apache.org/licenses/LICENSE-2.0</url>
-                    <distribution>repo</distribution>
-                </license>
-            </licenses>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>elytron-tls-subsystem</artifactId>
             <licenses>
                 <license>

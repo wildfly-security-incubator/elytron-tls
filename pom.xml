@@ -47,8 +47,8 @@
 
         <!-- Other dependency versions -->
         <version.io.netty>4.1.71.Final</version.io.netty>
-        <version.org.apache.velocity>2.3</version.org.apache.velocity>
         <version.jakarta.json.jakarta-json-api>1.1.6</version.jakarta.json.jakarta-json-api>
+        <version.org.apache.velocity>2.3</version.org.apache.velocity>
         <version.org.bouncycastle>1.69</version.org.bouncycastle>
         <version.org.glassfish.jakarta.json>1.1.6</version.org.glassfish.jakarta.json>
         <version.org.jboss.arquillian.junit>1.6.0.Final</version.org.jboss.arquillian.junit>
@@ -611,8 +611,6 @@
     </scm>
     <modules>
         <module>build</module>
-        <module>dependency</module>
-        <module>example</module>
         <module>feature-pack</module>
         <module>subsystem</module>
         <module>testsuite</module>
