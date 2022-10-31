@@ -69,7 +69,6 @@ import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
-import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.ObjectListAttributeDefinition;
 import org.jboss.as.controller.ObjectTypeAttributeDefinition;
 import org.jboss.as.controller.OperationContext;
@@ -211,14 +210,6 @@ public class SSLContextDefinitions {
             .build();
 
     static final SimpleAttributeDefinition MAXIMUM_CERT_PATH = new SimpleAttributeDefinitionBuilder(Constants.MAXIMUM_CERT_PATH, ModelType.INT, true)
-            .setValidator(new IntRangeValidator(1))
-            .setAllowExpression(true)
-            .setRestartAllServices()
-            .build();
-
-    @Deprecated
-    static final SimpleAttributeDefinition MAXIMUM_CERT_PATH_CRL = new SimpleAttributeDefinitionBuilder(Constants.MAXIMUM_CERT_PATH, ModelType.INT, true)
-            .setDeprecated(ModelVersion.create(8))
             .setValidator(new IntRangeValidator(1))
             .setAllowExpression(true)
             .setRestartAllServices()
@@ -692,17 +683,6 @@ public class SSLContextDefinitions {
                 boolean softFail = SOFT_FAIL.resolveModelAttribute(context, model).asBoolean();
                 boolean onlyLeafCert = ONLY_LEAF_CERT.resolveModelAttribute(context, model).asBoolean();
                 Integer maxCertPath = MAXIMUM_CERT_PATH.resolveModelAttribute(context, model).asIntOrNull();
-
-                //BW compatibility, max cert path is now in trust-manager
-                @Deprecated
-                Integer crlCertPath = MAXIMUM_CERT_PATH_CRL.resolveModelAttribute(context, crlNode).asIntOrNull();
-                if (crlCertPath != null) {
-                    LOGGER.warn("maximum-cert-path in certificate-revocation-list is for legacy support. Please use only the one in trust-manager!");
-                    if (maxCertPath != null) {
-                        throw LOGGER.multipleMaximumCertPathDefinitions();
-                    }
-                    maxCertPath = crlCertPath;
-                }
 
                 String crlPath = null;
                 String crlRelativeTo = null;
@@ -1351,17 +1331,6 @@ public class SSLContextDefinitions {
         boolean softFail = SOFT_FAIL.resolveModelAttribute(context, model).asBoolean();
         boolean onlyLeafCert = ONLY_LEAF_CERT.resolveModelAttribute(context, model).asBoolean();
         Integer maxCertPath = MAXIMUM_CERT_PATH.resolveModelAttribute(context, model).asIntOrNull();
-
-        //BW compatibility, max cert path is now in trust-manager
-        @Deprecated
-        Integer crlCertPath = MAXIMUM_CERT_PATH_CRL.resolveModelAttribute(context, crlNode).asIntOrNull();
-        if (crlCertPath != null) {
-            LOGGER.warn("maximum-cert-path in certificate-revocation-list is for legacy support. Please use only the one in trust-manager!");
-            if (maxCertPath != null) {
-                throw LOGGER.multipleMaximumCertPathDefinitions();
-            }
-            maxCertPath = crlCertPath;
-        }
 
         String crlPath;
         String crlRelativeTo;

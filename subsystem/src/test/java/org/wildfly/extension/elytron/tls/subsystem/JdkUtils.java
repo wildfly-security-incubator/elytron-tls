@@ -25,10 +25,7 @@ final class JdkUtils {
     private static final String javaSpecVersion = System.getProperty("java.specification.version");
     private static final String javaVendor = System.getProperty("java.vendor");
 
-    private JdkUtils() {}
-
     static int getJavaSpecVersion() {
-        if ("1.8".equals(javaSpecVersion)) return 8;
         return Integer.parseInt(javaSpecVersion);
     }
 

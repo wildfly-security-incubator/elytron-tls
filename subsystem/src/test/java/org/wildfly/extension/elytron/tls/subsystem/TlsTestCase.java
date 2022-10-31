@@ -50,7 +50,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -375,8 +374,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     @Test
     public void testSslServiceAuthTLS13() throws Throwable {
-        Assume.assumeTrue("Skipping testSslServiceAuthTLS13, test is not being run on JDK 11+.",
-                JdkUtils.getJavaSpecVersion() >= 11);
         testCommunication("ServerSslContextTLS13", "ClientSslContextTLS13", false, "OU=Elytron,O=Elytron,C=CZ,ST=Elytron,CN=localhost",
                 "OU=Elytron,O=Elytron,C=UK,ST=Elytron,CN=Firefly", "TLS_AES_256_GCM_SHA384", true);
     }
@@ -481,8 +478,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     @Test
     public void testSslServiceAuthProtocolMismatch() throws Throwable {
-        Assume.assumeTrue("Skipping testSslServiceAuthProtocolMismatch, test is not being run on JDK 11+.",
-                JdkUtils.getJavaSpecVersion() >= 11);
         try {
             testCommunication("ServerSslContextTLS12Only", "ClientSslContextTLS13Only", false, "",
                     "", "");
@@ -493,8 +488,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
 
     @Test
     public void testSslServiceAuthCipherSuiteMismatch() throws Throwable {
-        Assume.assumeTrue("Skipping testSslServiceAuthCipherSuiteMismatch, test is not being run on JDK 11+.",
-                JdkUtils.getJavaSpecVersion() >= 11);
         try {
             testCommunication("ServerSslContextTLS13Only", "ClientSslContextTLS13Only", false, "",
                     "", "");
@@ -562,18 +555,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
         assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not realoadable
     }
 
-    @Test
-    public void testRevocationListsDpOnlyDeprecatedMaximumCertPath() throws Throwable {
-        ServiceName serviceName = Capabilities.TRUST_MANAGER_RUNTIME_CAPABILITY.getCapabilityServiceName("trust-with-crl-dp-deprecated-max-cert-path");
-        TrustManager trustManager = (TrustManager) services.getContainer().getService(serviceName).getValue();
-        MatcherAssert.assertThat(trustManager, CoreMatchers.instanceOf(X509RevocationTrustManager.class));
-
-        ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.TRUST_MANAGER, "trust-with-crl-dp-deprecated-max-cert-path");
-        operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
-        assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not reloadable
-    }
-
     /**
      * Tests distribution points work using certificate-revocation-lists attribute
      */
@@ -588,7 +569,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
         operation.get(ClientConstants.OP).set(Constants.RELOAD_CERTIFICATE_REVOCATION_LIST);
         assertEquals(FAILED, services.executeOperation(operation).get(OUTCOME).asString()); // not realoadable
     }
-
 
     /**
      * Verifies accepted issuers are sent when CRLs are configured.
@@ -699,7 +679,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
     }
 
     private void testCommunication(String serverContextName, String clientContextName, boolean defaultClient, String expectedServerPrincipal, String expectedClientPrincipal, String expectedCipherSuite, boolean tls13Test, Map<String, String[]> protocolChecker) throws Throwable{
-        boolean testSessions = ! (JdkUtils.getJavaSpecVersion() >= 11); // session IDs are essentially obsolete in TLSv1.3
         SSLContext serverContext = getSslContext(serverContextName);
         SSLContext clientContext = defaultClient ? SSLContext.getDefault() : getSslContext(clientContextName);
         ServerSocket listeningSocket;
@@ -746,9 +725,6 @@ public class TlsTestCase extends AbstractSubsystemTest {
         try {
             Assert.assertArrayEquals(new byte[]{0x12, 0x34}, serverFuture.get());
             Assert.assertArrayEquals(new byte[]{0x56, 0x78}, clientFuture.get());
-            if (testSessions) {
-                testSessionsReading(serverContextName, clientContextName, expectedServerPrincipal, expectedClientPrincipal);
-            }
             if (expectedCipherSuite != null) {
                 Assert.assertEquals(expectedCipherSuite, serverSocket.getSession().getCipherSuite());
                 Assert.assertEquals(expectedCipherSuite, clientSocket.getSession().getCipherSuite());
@@ -789,59 +765,5 @@ public class TlsTestCase extends AbstractSubsystemTest {
         // Check negotiated protocol is the one we expected
         assertEquals(protocolChecker.get(NEGOTIATED_PROTOCOL)[0], serverSocket.getSession().getProtocol());
         assertEquals(protocolChecker.get(NEGOTIATED_PROTOCOL)[0], clientSocket.getSession().getProtocol());
-    }
-
-        private void testSessionsReading(String serverContextName, String clientContextName, String expectedServerPrincipal, String expectedClientPrincipal) {
-        ModelNode operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.SERVER_SSL_CONTEXT, serverContextName);
-        operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(Constants.ACTIVE_SESSION_COUNT);
-        Assert.assertEquals("active session count", 1, services.executeOperation(operation).get(ClientConstants.RESULT).asInt());
-
-        operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.SERVER_SSL_CONTEXT, serverContextName);
-        operation.get(ClientConstants.OP).set(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
-        operation.get(ClientConstants.CHILD_TYPE).set(Constants.SSL_SESSION);
-        List<ModelNode> sessions = services.executeOperation(operation).get(ClientConstants.RESULT).asList();
-        Assert.assertEquals("session count in list", 1, sessions.size());
-
-        operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.SERVER_SSL_CONTEXT, serverContextName).add(Constants.SSL_SESSION, sessions.get(0).asString());
-        operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(Constants.PEER_CERTIFICATES);
-        ModelNode result = services.executeOperation(operation).get(ClientConstants.RESULT);
-        System.out.println("server's peer certificates:");
-        System.out.println(result);
-        if (expectedClientPrincipal == null) {
-            Assert.assertFalse(result.get(0).get(Constants.SUBJECT).isDefined());
-        } else {
-            Assert.assertEquals(expectedClientPrincipal, result.get(0).get(Constants.SUBJECT).asString());
-        }
-
-        operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.CLIENT_SSL_CONTEXT, clientContextName);
-        operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(Constants.ACTIVE_SESSION_COUNT);
-        Assert.assertEquals("active session count", 1, services.executeOperation(operation).get(ClientConstants.RESULT).asInt());
-
-        operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.CLIENT_SSL_CONTEXT, clientContextName);
-        operation.get(ClientConstants.OP).set(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
-        operation.get(ClientConstants.CHILD_TYPE).set(Constants.SSL_SESSION);
-        sessions = services.executeOperation(operation).get(ClientConstants.RESULT).asList();
-        Assert.assertEquals("session count in list", 1, sessions.size());
-
-        operation = new ModelNode();
-        operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add(Constants.CLIENT_SSL_CONTEXT, clientContextName).add(Constants.SSL_SESSION, sessions.get(0).asString());
-        operation.get(ClientConstants.OP).set(ClientConstants.READ_ATTRIBUTE_OPERATION);
-        operation.get(ClientConstants.NAME).set(Constants.PEER_CERTIFICATES);
-        result = services.executeOperation(operation).get(ClientConstants.RESULT);
-        System.out.println("client's peer certificates:");
-        System.out.println(result);
-        if (expectedServerPrincipal == null) {
-            Assert.assertFalse(result.get(0).get(Constants.SUBJECT).isDefined());
-        } else {
-            Assert.assertEquals(expectedServerPrincipal, result.get(0).get(Constants.SUBJECT).asString());
-        }
     }
 }
