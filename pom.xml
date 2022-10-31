@@ -25,9 +25,9 @@
     <artifactId>elytron-tls-parent</artifactId>
     <version>1.0.0.Alpha-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Elytron TLS Subsystem - Parent</name>
+    <name>Elytron TLS: Parent</name>
   
-    <description>Elytron TLS Subsystem</description>
+    <description>Elytron TLS: Parent</description>
 
     <licenses>
         <license>
@@ -222,7 +222,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>elytron-tls-feature-pack</artifactId>
+                <artifactId>elytron-tls-galleon-pack</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <exclusions>
@@ -234,7 +234,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>elytron-tls-feature-pack</artifactId>
+                <artifactId>elytron-tls-galleon-pack</artifactId>
                 <version>${project.version}</version>
                 <type>zip</type>
                 <exclusions>
@@ -611,7 +611,7 @@
     </scm>
     <modules>
         <module>build</module>
-        <module>feature-pack</module>
+        <module>galleon-pack</module>
         <module>subsystem</module>
         <module>testsuite</module>
     </modules>

@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-testsuite</artifactId>
-    <name>Elytron TLS Subsystem - Test Suite</name>
+    <name>Elytron TLS: Testsuite</name>
     <packaging>pom</packaging>
     <modules>
         <module>integration</module>

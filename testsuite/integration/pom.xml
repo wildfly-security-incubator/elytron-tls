@@ -26,10 +26,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-testsuite-integration</artifactId>
-    <name>Elytron TLS Subsystem - Integration Test Suite</name>
+    <name>Elytron TLS: Testsuite - Integration</name>
     <packaging>pom</packaging>
     <modules>
-        <module>subsystem</module>
+        <module>elytron-tls</module>
     </modules>
 
     <dependencies>
@@ -82,10 +82,6 @@
             <groupId>org.wildfly.arquillian</groupId>
             <artifactId>wildfly-arquillian-protocol-jmx</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-core-test-runner</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -26,20 +26,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-build</artifactId>
-    <name>Elytron TLS Subsystem - Build</name>
+    <name>Elytron TLS: Build</name>
 
     <packaging>pom</packaging>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-feature-pack</artifactId>
+            <artifactId>elytron-tls-galleon-pack</artifactId>
             <type>pom</type>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>elytron-tls-feature-pack</artifactId>
+            <artifactId>elytron-tls-galleon-pack</artifactId>
             <type>zip</type>
             <exclusions>
                 <exclusion>
@@ -76,7 +76,7 @@
                                 </feature-pack>
                                 <feature-pack>
                                     <groupId>${project.groupId}</groupId>
-                                    <artifactId>elytron-tls-feature-pack</artifactId>
+                                    <artifactId>elytron-tls-galleon-pack</artifactId>
                                     <version>${project.version}</version>
                                 </feature-pack>
                             </feature-packs>

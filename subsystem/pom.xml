@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elytron-tls-subsystem</artifactId>
-    <name>Elytron TLS Subsystem - Subsystem</name>
+    <name>Elytron TLS: Elytron TLS Extension</name>
 
     <dependencies>
         <dependency>
@@ -160,7 +160,7 @@
                 <configuration>
                     <validationSets>
                         <validationSet>
-                            <dir>src/test/resources/org/wildfly/extension/elytron/tls/subsystem</dir>
+                            <dir>src/test/resources/org/wildfly/extension/elytron/tls</dir>
                             <includes>
                                 <include>*.xml</include>
                             </includes>
