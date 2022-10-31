@@ -68,7 +68,7 @@ import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
-import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
+import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages;
 import org.wildfly.extension.elytron.tls.subsystem.deployment.DependencyProcessor;
 import org.wildfly.extension.elytron.tls.subsystem.expression.DeploymentExpressionResolverProcessor;
 import org.wildfly.security.Version;
@@ -294,7 +294,7 @@ public class ElytronTlsSubsystemDefinition extends PersistentResourceDefinition 
                 }, RUNTIME);
             }
 
-            ElytronTLSLogger.LOGGER.activatingSubsystem();
+            ElytronTLSMessages.LOGGER.activatingSubsystem();
         }
 
         @Override

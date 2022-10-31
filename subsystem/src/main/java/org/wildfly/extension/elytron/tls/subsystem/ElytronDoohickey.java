@@ -18,7 +18,7 @@ package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.wildfly.common.Assert.checkNotNullParam;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.io.File;
 import java.util.ArrayDeque;

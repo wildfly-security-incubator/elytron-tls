@@ -35,7 +35,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.ProviderAttributeDefin
 import static org.wildfly.extension.elytron.tls.subsystem.ProviderAttributeDefinition.populateProvider;
 import static org.wildfly.extension.elytron.tls.subsystem.ServiceStateDefinition.STATE;
 import static org.wildfly.extension.elytron.tls.subsystem.ServiceStateDefinition.populateResponse;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;

@@ -24,7 +24,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.CertificateChainAttrib
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.ISO_8601_FORMAT;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;

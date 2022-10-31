@@ -28,7 +28,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.ge
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,7 +86,7 @@ import org.jboss.msc.service.ServiceRegistry;
 import org.wildfly.common.bytes.ByteStringBuilder;
 import org.wildfly.common.function.ExceptionSupplier;
 import org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PathResolver;
-import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
+import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages;
 import org.wildfly.security.credential.source.CredentialSource;
 import org.wildfly.security.pem.Pem;
 import org.wildfly.security.x500.X500;
@@ -153,7 +153,7 @@ class AdvancedModifiableKeyStoreDecorator extends ModifiableKeyStoreDecorator {
     }
 
     private static AcmeClientSpi loadAcmeClient() {
-        for (AcmeClientSpi acmeClient : ServiceLoader.load(AcmeClientSpi.class, ElytronTLSLogger.class.getClassLoader())) {
+        for (AcmeClientSpi acmeClient : ServiceLoader.load(AcmeClientSpi.class, ElytronTLSMessages.class.getClassLoader())) {
             return acmeClient;
         }
         throw LOGGER.unableToInstatiateAcmeClientSpiImplementation();

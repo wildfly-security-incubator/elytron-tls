@@ -25,7 +25,6 @@ import java.security.NoSuchProviderException;
 
 import org.jboss.as.controller.ExpressionResolver;
 import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -44,17 +43,14 @@ import org.wildfly.security.x500.cert.acme.AcmeException;
  * @author <a href="mmazanek@redhat.com">Martin Mazanek</a>
  * @author <a href="mailto:carodrig@redhat.com">Cameron Rodriguez</a>
  */
-@MessageLogger(projectCode = "ELYTLS", length = 4)
-public interface ElytronTLSLogger extends BasicLogger {
+@MessageLogger(projectCode = "ELYTLS", length = 5)
+public interface ElytronTLSMessages extends BasicLogger {
 
-    ElytronTLSLogger LOGGER = Logger.getMessageLogger(ElytronTLSLogger.class, "org.wildfly.extension.elytron.tls.subsystem");
+    ElytronTLSMessages LOGGER = Logger.getMessageLogger(ElytronTLSMessages.class, "org.wildfly.extension.elytron.tls.subsystem");
 
     @LogMessage(level = INFO)
     @Message(id = 1, value = "Activating Elytron TLS Subsystem")
     void activatingSubsystem();
-
-    @Message(id = 2, value = "Deployment %s requires use of the '%s' capability but it is not currently registered")
-    DeploymentUnitProcessingException deploymentRequiresCapability(String deploymentName, String capabilityName);
 
     @Message(id = 3, value = "The operation did not contain an address with a value for '%s'.")
     IllegalArgumentException operationAddressMissingKey(final String key);
@@ -298,12 +294,6 @@ public interface ElytronTLSLogger extends BasicLogger {
             " information associated with this existing account, use %s. To change the key associated with this existing account, use %s.")
     OperationFailedException certificateAuthorityAccountAlreadyExists(String updateAccount, String changeAccountKey);
 
-    @Message(id = 1057, value = "Failed to create ServerAuthModule [%s] using module '%s'")
-    RuntimeException failedToCreateServerAuthModule(String className, String module, @Cause Exception cause);
-
-    @Message(id = 1058, value = "Failed to parse PEM public key with kid: %s")
-    OperationFailedException failedToParsePEMPublicKey(String kid);
-
     @Message(id = 1059, value = "Unable to detect KeyStore '%s'")
     StartException unableToDetectKeyStore(String path);
 
@@ -357,7 +347,7 @@ public interface ElytronTLSLogger extends BasicLogger {
 
     @Message(id = 1091, value = "Multiple trust manager definitions")
     OperationFailedException multipleTrustManagerDefinitions();
-    
+
     @Message(id = 1092, value = "Missing keystore definition")
     OperationFailedException missingKeyStoreDefinition();
     @Message(id = 1093, value = "Missing key manager definition")

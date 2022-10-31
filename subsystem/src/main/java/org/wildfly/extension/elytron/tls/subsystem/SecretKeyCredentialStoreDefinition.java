@@ -22,7 +22,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.is
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 import static org.wildfly.security.encryption.SecretKeyUtil.generateSecretKey;
 
 import java.io.File;

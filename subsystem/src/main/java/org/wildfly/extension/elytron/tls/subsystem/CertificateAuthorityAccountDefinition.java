@@ -32,7 +32,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.is
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.commonRequirements;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.security.KeyStore;
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
 import org.wildfly.common.function.ExceptionSupplier;
-import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger;
+import org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages;
 import org.wildfly.security.credential.source.CredentialSource;
 import org.wildfly.security.x500.cert.acme.AcmeAccount;
 import org.wildfly.security.x500.cert.acme.AcmeClientSpi;
@@ -143,7 +143,7 @@ class CertificateAuthorityAccountDefinition extends SimpleResourceDefinition {
     }
 
     private static AcmeClientSpi loadAcmeClient() {
-        for (AcmeClientSpi acmeClient : ServiceLoader.load(AcmeClientSpi.class, ElytronTLSLogger.class.getClassLoader())) {
+        for (AcmeClientSpi acmeClient : ServiceLoader.load(AcmeClientSpi.class, ElytronTLSMessages.class.getClassLoader())) {
             return acmeClient;
         }
         throw LOGGER.unableToInstatiateAcmeClientSpiImplementation();

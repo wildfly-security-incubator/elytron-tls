@@ -98,11 +98,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
     @BeforeClass
     public static void initTests() {
         server = new ClientAndServer(4001);
-        AccessController.doPrivileged(new PrivilegedAction<Integer>() {
-            public Integer run() {
-                return Security.insertProviderAt(wildFlyElytronProvider, 1);
-            }
-        });
+        AccessController.doPrivileged((PrivilegedAction<Integer>) () -> Security.insertProviderAt(wildFlyElytronProvider, 1));
         csUtil = new CredentialStoreUtility("target/tlstest.keystore", CS_PASSWORD);
         csUtil.addEntry("the-key-alias", "Elytron");
         csUtil.addEntry("master-password-alias", "Elytron");
@@ -114,12 +110,9 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
             server.stop();
         }
         csUtil.cleanUp();
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-            public Void run() {
-                Security.removeProvider(wildFlyElytronProvider.getName());
-
-                return null;
-            }
+        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+            Security.removeProvider(wildFlyElytronProvider.getName());
+            return null;
         });
     }
 
@@ -224,7 +217,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
             ModelNode result = services.executeOperation(operation);
             assertFailed(result);
             String failureDescription = result.get(FAILURE_DESCRIPTION).asString();
-            assertTrue(failureDescription.contains("ELYTLS1043") && failureDescription.contains("ELY10057"));
+            assertTrue(failureDescription.contains("ELYTLS01043") && failureDescription.contains("ELY10057"));
         } finally {
             removeCertificateAuthorityAccount();
             removeCertificateAuthority();
@@ -277,7 +270,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
             ModelNode result = services.executeOperation(operation);
             assertFailed(result);
             String failureDescription = result.get(FAILURE_DESCRIPTION).asString();
-            assertTrue(failureDescription.contains("ELYTLS1043") && failureDescription.contains("must agree to terms of service"));
+            assertTrue(failureDescription.contains("ELYTLS01043") && failureDescription.contains("must agree to terms of service"));
         } finally {
             removeCertificateAuthorityAccount();
             removeCertificateAuthority();
@@ -320,7 +313,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
             operation.get(ClientConstants.OP_ADDR).add("subsystem", "elytron-tls").add("certificate-authority-account", CERTIFICATE_AUTHORITY_ACCOUNT_NAME);
             operation.get(ClientConstants.OP).set(Constants.CHANGE_ACCOUNT_KEY);
             assertSuccess(services.executeOperation(operation));
-            assertTrue(! oldCertificate.equals(acmeAccount.getCertificate()));
+            assertFalse(oldCertificate.equals(acmeAccount.getCertificate()));
             assertEquals(oldDn, acmeAccount.getDn());
         } finally {
             removeCertificateAuthorityAccount();

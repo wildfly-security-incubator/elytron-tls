@@ -21,7 +21,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CREDENTIA
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 import static org.wildfly.extension.elytron.tls.subsystem.ServiceStateDefinition.STATE;
 import static org.wildfly.extension.elytron.tls.subsystem.ServiceStateDefinition.populateResponse;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 import static org.wildfly.security.encryption.SecretKeyUtil.exportSecretKey;
 import static org.wildfly.security.encryption.SecretKeyUtil.generateSecretKey;
 import static org.wildfly.security.encryption.SecretKeyUtil.importSecretKey;

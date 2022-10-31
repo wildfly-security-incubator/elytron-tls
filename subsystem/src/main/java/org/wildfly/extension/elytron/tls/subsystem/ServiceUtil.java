@@ -19,7 +19,7 @@
 package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;

@@ -29,7 +29,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.PROVIDERS
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.isServerOrHostController;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathResolver;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.io.File;
 import java.io.IOException;

@@ -21,7 +21,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 import static org.wildfly.extension.elytron.tls.subsystem.CertificateChainAttributeDefinitions.getNamedCertificateList;
 import static org.wildfly.extension.elytron.tls.subsystem.CertificateChainAttributeDefinitions.writeCertificates;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.ISO_8601_FORMAT;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;

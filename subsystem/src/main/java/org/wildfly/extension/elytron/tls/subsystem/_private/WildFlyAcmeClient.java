@@ -17,7 +17,7 @@
  */
 package org.wildfly.extension.elytron.tls.subsystem._private;
 
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.io.File;
 import java.io.FileOutputStream;

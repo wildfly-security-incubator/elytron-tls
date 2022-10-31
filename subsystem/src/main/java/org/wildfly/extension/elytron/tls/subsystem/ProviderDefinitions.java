@@ -28,7 +28,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitio
 import static org.wildfly.extension.elytron.tls.subsystem.ProviderAttributeDefinition.LOADED_PROVIDERS;
 import static org.wildfly.extension.elytron.tls.subsystem.ProviderAttributeDefinition.populateProviders;
 import static org.wildfly.extension.elytron.tls.subsystem.SecurityActions.doPrivileged;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

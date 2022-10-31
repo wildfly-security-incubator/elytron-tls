@@ -17,7 +17,7 @@
 package org.wildfly.extension.elytron.tls.subsystem.expression;
 
 import static org.wildfly.common.Assert.checkNotNullParam;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 import static org.wildfly.security.encryption.CipherUtil.decrypt;
 import static org.wildfly.security.encryption.CipherUtil.encrypt;
 

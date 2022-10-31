@@ -32,7 +32,7 @@ import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.ge
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.PATH;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.RELATIVE_TO;
 import static org.wildfly.extension.elytron.tls.subsystem.FileAttributeDefinitions.pathName;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.io.File;
 import java.io.FileInputStream;

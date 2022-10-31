@@ -21,7 +21,7 @@ package org.wildfly.extension.elytron.tls.subsystem;
 import static org.wildfly.extension.elytron.tls.subsystem.Capabilities.CERTIFICATE_AUTHORITY_RUNTIME_CAPABILITY;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsExtension.getRequiredService;
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.commonRequirements;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.net.MalformedURLException;
 import java.net.URL;

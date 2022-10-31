@@ -264,7 +264,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
 
     private static void setUpFiles() throws Exception {
         File workingDir = new File(WORKING_DIRECTORY_LOCATION);
-        if (workingDir.exists() == false) {
+        if (!workingDir.exists()) {
             workingDir.mkdirs();
         }
 
@@ -324,11 +324,7 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
     public static void initTests() throws Exception {
         server = new ClientAndServer(4001);
         setUpFiles();
-        AccessController.doPrivileged(new PrivilegedAction<Integer>() {
-            public Integer run() {
-                return Security.insertProviderAt(wildFlyElytronProvider, 1);
-            }
-        });
+        AccessController.doPrivileged((PrivilegedAction<Integer>) () -> Security.insertProviderAt(wildFlyElytronProvider, 1));
         csUtil = new CredentialStoreUtility("target/tlstest.keystore", CS_PASSWORD);
         csUtil.addEntry("the-key-alias", "Elytron");
         csUtil.addEntry("master-password-alias", "Elytron");
@@ -342,12 +338,10 @@ public class KeyStoresTestCase extends AbstractSubsystemTest {
         }
         removeTestFiles();
         csUtil.cleanUp();
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-            public Void run() {
-                Security.removeProvider(wildFlyElytronProvider.getName());
+        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+            Security.removeProvider(wildFlyElytronProvider.getName());
 
-                return null;
-            }
+            return null;
         });
         if (oldHomeDir == null) {
             System.clearProperty("jboss.home.dir");

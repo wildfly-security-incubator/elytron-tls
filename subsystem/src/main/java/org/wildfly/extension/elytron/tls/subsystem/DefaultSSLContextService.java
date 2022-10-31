@@ -18,7 +18,7 @@ package org.wildfly.extension.elytron.tls.subsystem;
 
 import static org.wildfly.extension.elytron.tls.subsystem.ElytronTlsSubsystemDefinition.RESTORE_DEFAULT_SSL_CONTEXT;
 import static org.wildfly.extension.elytron.tls.subsystem.SecurityActions.doPrivileged;
-import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSLogger.LOGGER;
+import static org.wildfly.extension.elytron.tls.subsystem._private.ElytronTLSMessages.LOGGER;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedAction;
