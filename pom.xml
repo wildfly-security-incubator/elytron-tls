@@ -200,17 +200,6 @@
             <!-- Project -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>elytron-tls-dependency</artifactId>
-                <version>${project.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>elytron-tls-subsystem</artifactId>
                 <version>${project.version}</version>
                 <exclusions>
@@ -264,61 +253,51 @@
                 <artifactId>wildfly-checkstyle-config</artifactId>
                 <version>${version.org.wildfly.checkstyle-config}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-asn1</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-base</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-credential</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-provider-util</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-ssl-common</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-x500</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-x500-cert</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-x500-cert-acme</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-x500-cert-util</artifactId>
                 <version>${version.org.wildfly.security.elytron}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.wildfly.security</groupId>
                 <artifactId>wildfly-elytron-x500-principal</artifactId>
@@ -410,6 +389,7 @@
             <dependency>
                 <groupId>org.jmockit</groupId>
                 <artifactId>jmockit</artifactId>
+                <scope>test</scope>
                 <version>${version.org.jmockit}</version>
             </dependency>
             <dependency>
