@@ -310,7 +310,7 @@ public class CredentialStoreTestCase extends AbstractSubsystemTest {
         assertSuccess(services.executeOperation(generate));
 
         ModelNode doubleGenerateResult = assertFailed(services.executeOperation(generate));
-        assertThat(doubleGenerateResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00913:"));
+        assertThat(doubleGenerateResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00203:"));
 
         // Export the generated SecretKey
         ModelNode export = new ModelNode();
@@ -331,7 +331,7 @@ public class CredentialStoreTestCase extends AbstractSubsystemTest {
         assertSuccess(services.executeOperation(importKey));
 
         ModelNode doubleImportResult = assertFailed(services.executeOperation(importKey));
-        assertThat(doubleImportResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00913:"));
+        assertThat(doubleImportResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00203:"));
 
         // Remove aliases
         ModelNode remove = new ModelNode();
@@ -353,7 +353,7 @@ public class CredentialStoreTestCase extends AbstractSubsystemTest {
         assertSuccess(services.executeOperation(remove2));
 
         ModelNode doubleRemoveResult = assertFailed(services.executeOperation(remove2));
-        assertThat(doubleRemoveResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00920:"));
+        assertThat(doubleRemoveResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00205:"));
     }
 
     @Test
@@ -371,7 +371,7 @@ public class CredentialStoreTestCase extends AbstractSubsystemTest {
         export.get(ClientConstants.OP).set("export-secret-key");
         export.get(Constants.ALIAS).set(alias);
         ModelNode exportResult = assertFailed(services.executeOperation(export));
-        assertThat(exportResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00920:"));
+        assertThat(exportResult.get(ClientConstants.FAILURE_DESCRIPTION).asString(), containsString("ELYTLS00205:"));
     }
 
     @Test

@@ -217,7 +217,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
             ModelNode result = services.executeOperation(operation);
             assertFailed(result);
             String failureDescription = result.get(FAILURE_DESCRIPTION).asString();
-            assertTrue(failureDescription.contains("ELYTLS01043") && failureDescription.contains("ELY10057"));
+            assertTrue(failureDescription.contains("ELYTLS00317") && failureDescription.contains("ELY10057"));
         } finally {
             removeCertificateAuthorityAccount();
             removeCertificateAuthority();
@@ -270,7 +270,7 @@ public class CertificateAuthoritiesTestCase extends AbstractSubsystemTest {
             ModelNode result = services.executeOperation(operation);
             assertFailed(result);
             String failureDescription = result.get(FAILURE_DESCRIPTION).asString();
-            assertTrue(failureDescription.contains("ELYTLS01043") && failureDescription.contains("must agree to terms of service"));
+            assertTrue(failureDescription.contains("ELYTLS00317") && failureDescription.contains("must agree to terms of service"));
         } finally {
             removeCertificateAuthorityAccount();
             removeCertificateAuthority();
