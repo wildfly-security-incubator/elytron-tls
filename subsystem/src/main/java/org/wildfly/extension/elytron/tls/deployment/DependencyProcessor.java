@@ -49,8 +49,6 @@ public class DependencyProcessor implements DeploymentUnitProcessor {
 
         // This is needed if running with a security manager, and seems to be needed by arquillian in all cases
         moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.security.manager", false, false, true, false));
-        // In this case we don't need any classes from the subsystem module itself so we don't need to add it to the
-        // deployment's module dependencies
-        // moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.extension.elytron-tls", false, false, true, false));
+        moduleSpecification.addSystemDependency(new ModuleDependency(moduleLoader, "org.wildfly.extension.elytron-tls", false, false, true, false));
     }
 }
