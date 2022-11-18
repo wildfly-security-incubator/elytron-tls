@@ -69,8 +69,8 @@
         <modular.jdk.props/>
 
         <!-- Misc. -->
-        <wildfly-extras.repo.scm.connection>git@github.com:wildfly-extras/wildfly-galleon-pack-template.git</wildfly-extras.repo.scm.connection>
-        <wildfly-extras.repo.scm.url>https://github.com/wildfly-extras/wildfly-galleon-pack-template</wildfly-extras.repo.scm.url>
+        <wildfly-extras.repo.scm.connection>git@github.com:wildfly-security-incubator/elytron-tls.git</wildfly-extras.repo.scm.connection>
+        <wildfly-extras.repo.scm.url>https://github.com/wildfly-security-incubator/elytron-tls</wildfly-extras.repo.scm.url>
         <!-- Protocol to use for communication with remote maven repositories.
             You can set to 'http' if you are using a maven proxy and 'https'
             interferes with that. Use 'https' for builds that will be released
