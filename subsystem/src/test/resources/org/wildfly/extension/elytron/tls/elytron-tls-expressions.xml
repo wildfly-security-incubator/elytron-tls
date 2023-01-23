@@ -1,0 +1,162 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright 2020, Red Hat, Inc., and individual contributors as indicated
+  ~ by the @authors tag.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!-- for needs of DomainTestCase -->
+<subsystem xmlns="urn:wildfly:elytron-tls-subsystem:1.0" default-ssl-context="client" disallowed-providers="${exp.providers:test}">
+    <providers>
+        <provider-loader name="openssl" module="org.wildfly.openssl">
+            <configuration>
+                <property name="prop" value="${exp.value:val}"/>
+            </configuration>
+        </provider-loader>
+        <provider-loader name="elytron" module="org.wildfly.security.elytron" argument="${exp.argument:arg}"/>
+    </providers>
+    <tls>
+        <key-stores>
+            <key-store name="PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11"/>
+            </key-store>
+            <key-store name="jks_store" alias-filter="${exp.alias.filter:one,two,three}">
+                <credential-reference clear-text="password"/>
+                <implementation type="${exp.type:jks}" provider-name="${exp.provider:SunJSSE}"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jks" required="${exp.required:true}"/>
+            </key-store>
+            <key-store name="jceks_store">
+                <credential-reference clear-text="password"/>
+                <implementation type="jceks"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jceks"/>
+            </key-store>
+            <key-store name="Custom_PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11" providers="custom-loader"/>
+            </key-store>
+            <key-store name="accounts.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="JKS"/>
+                <file path="accounts.keystore.jks" relative-to="jboss.server.config.dir"/>
+            </key-store>
+            <key-store name="test.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="PKCS12"/>
+                <file path="test.keystore" relative-to="jboss.server.config.dir"/>
+            </key-store>
+            <!-- <ldap-key-store name="LdapKeyStore" dir-context="DirContextSsl" > -->
+                <!-- <new-item-template new-item-path="${exp.path:ou=keystore,dc=elytron,dc=wildfly,dc=org}" new-item-rdn="${exp.item:cn}"> -->
+                    <!-- <attribute name="${exp.name:objectClass}" value="${exp.value:top} ${exp.value2:inetOrgPerson}"/> -->
+                    <!-- <attribute name="sn" value="NewKeyStoreItem"/> -->
+                <!-- </new-item-template> -->
+                <!-- <search path="${exp.path:dc=elytron,dc=wildfly,dc=org}" recursive="${exp.recursive:true}" time-limit="${exp.time:1000}" filter-alias="${exp.filter:(&amp;(objectClass=inetOrgPerson)(sn={0}))}" -->
+                        <!-- filter-certificate="${exp.filter:(&amp;(objectClass=inetOrgPerson)(usercertificate={0}))}" filter-iterate="${exp.iterate:(sn=serenity*)}"/> -->
+                <!-- <attribute-mapping alias-attribute="${exp.alias:sn}" certificate-attribute="${exp.certificate:usercertificate}" certificate-chain-attribute="${exp.chain:userSMIMECertificate}" certificate-chain-encoding="${exp.encoding:PKCS7}" certificate-type="${exp.type:X.509}" key-attribute="${exp.key:userPKCS12}" -->
+                                   <!-- key-type="${exp.type:PKCS12}"/> -->
+            <!-- </ldap-key-store> -->
+            <!-- <filtering-key-store name="FilteringKeyStore" key-store="Custom_PKCS_11" alias-filter="${exp.alias.filter:NONE:+firefly}"/> -->
+        </key-stores>
+        <key-managers>
+            <key-manager name="serverKey" algorithm="SunX509" key-store="jks_store">
+                <credential-reference clear-text="password"/>
+            </key-manager>
+            <key-manager name="serverKey2" algorithm="${exp.algo:SunX509}" key-store="jks_store" providers="custom-loader" provider-name="first" alias-filter="${exp.alias:one,two,three}" generate-self-signed-certificate-host="${exp.generate:localhost}">
+                <credential-reference store="credstore1" alias="password-alias" type="PasswordCredential"/>
+            </key-manager>
+            <key-manager name="clientKey" algorithm="SunX509" key-store="jks_store">
+                <credential-reference store="credstore1" alias="password-alias" type="PasswordCredential"/>
+            </key-manager>
+            <key-manager name="LazyKeyManager" key-store="test.keystore" generate-self-signed-certificate-host="localhost">
+                <credential-reference clear-text="elytron"/>
+            </key-manager>
+        </key-managers>
+        <trust-managers>
+            <trust-manager name="serverTrust" algorithm="SunX509" key-store="jks_store"/>
+            <trust-manager name="serverTrust2" algorithm="SunX509" key-store="jks_store" providers="custom-loader" provider-name="first"/>
+            <trust-manager name="trust-with-crl" algorithm="SunX509" key-store="jks_store">
+                <certificate-revocation-list path="${exp.path:crl.pem}" relative-to="jboss.server.config.dir" maximum-cert-path="${exp.max:2}"/>
+            </trust-manager>
+            <trust-manager name="trust-with-crl-dp" algorithm="SunX509" key-store="jks_store">
+                <certificate-revocation-list/>
+            </trust-manager>
+            <trust-manager name="trust-with-ocsp" algorithm="${exp.algorithm:PKIX}" key-store="jks_store">
+                <ocsp responder="${exp.responder:http://localhost/ocsp}" responder-keystore="${exp.responder.keystore:jceks_store}" responder-certificate="${exp.responder.certificate:responder-alias}"/>
+            </trust-manager>
+        </trust-managers>
+        <server-ssl-contexts>
+            <server-ssl-context name="server" protocols="${exp.protocols:TLSv1.2}" want-client-auth="${exp.client.auth:true}" need-client-auth="${exp.need.client:true}" authentication-optional="${exp.authentication:true}"
+                                use-cipher-suites-order="${exp.cipher.suites:false}" maximum-session-cache-size="${exp.cache:10}" cipher-suite-filter="${exp.filter:DEFAULT}" cipher-suite-names="${exp.names:name}"
+                                session-timeout="${exp.session:120}" wrap="${exp.wrap:false}" key-manager="serverKey" trust-manager="serverTrust" providers="custom-loader" provider-name="${exp.provider.name:first}"/>
+            <server-ssl-context name="server2" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true" authentication-optional="true"
+                                use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager="serverKey" trust-manager="serverTrust"  providers="custom-loader" provider-name="first"/>
+        </server-ssl-contexts>
+        <client-ssl-contexts>
+            <client-ssl-context name="client" protocols="TLSv1.3 TLSv1.2" key-manager="clientKey" trust-manager="serverTrust" providers="custom-loader"
+                                provider-name="first"/>
+        </client-ssl-contexts>
+        <certificate-authorities>
+            <certificate-authority name="testCA" url="${exp.url:https://www.test.com}" staging-url="${exp.staging.url:https://www.test.com}"/>
+        </certificate-authorities>
+        <certificate-authority-accounts>
+            <certificate-authority-account name="MyCA" certificate-authority="${exp.certificate.authority:LetsEncrypt}" contact-urls="${exp.contact.urls:https://www.test.com}">
+                <account-key key-store="accounts.keystore" alias="${exp.alias:server}">
+                    <credential-reference clear-text="elytron"/>
+                </account-key>
+            </certificate-authority-account>
+            <certificate-authority-account name="MyCA2" certificate-authority="testCA">
+                <account-key key-store="accounts.keystore" alias="server">
+                    <credential-reference clear-text="elytron"/>
+                </account-key>
+            </certificate-authority-account>
+        </certificate-authority-accounts>
+        <!-- <server-ssl-sni-contexts> -->
+            <!-- <server-ssl-sni-context name="sni" default-ssl-context="server"> -->
+                <!-- <sni-mapping host="server" ssl-context="server" /> -->
+                <!-- <sni-mapping host=".*\.server" ssl-context="server2" /> -->
+            <!-- </server-ssl-sni-context> -->
+        <!-- </server-ssl-sni-contexts> -->
+    </tls>
+    <credential-stores>
+        <credential-store name="test1" relative-to="jboss.server.data.dir" location="${exp.location:test1.store}" create="true" type="${exp.type:JCEKS}" provider-name="${exp.provider:provider}">
+            <implementation-properties>
+                <property name="keyStoreType" value="JCEKS"/>
+                <property name="keyAlias" value="adminKey"/>
+            </implementation-properties>
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <credential-store name="test2" relative-to="jboss.server.data.dir" modifiable="true">
+            <credential-reference store="test1" alias="to_open_test2"/>
+        </credential-store>
+        <credential-store name="test4" relative-to="jboss.server.data.dir" path="${exp.path:test1.store}" create="true">
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <secret-key-credential-store name="secretkeycredstore" relative-to="jboss.server.data.dir" path="mysecretkeycredstore.cs" create="${exp.create:true}" populate="${exp.populate:true}" />
+        <secret-key-credential-store name="test3" relative-to="jboss.server.data.dir" path="test3.cs"
+                                     create="${exp.create:false}" populate="${exp.populate:false}"
+                                     key-size="${exp.key:192}" default-alias="${exp.alias:test3}" />
+    </credential-stores>
+    <expression-resolver default-resolver="A" prefix="G">
+        <resolver name="A" credential-store="test1" secret-key="C"/>
+        <resolver name="D" credential-store="test2" secret-key="F"/>
+    </expression-resolver>
+    <!-- <dir-contexts> -->
+        <!-- <dir-context name="DirContextSsl" authentication-context="ldapAuthContext" referral-mode="throw" url="ldaps://localhost:11391/" connection-timeout="6000" read-timeout="10000"> -->
+            <!-- <properties> -->
+                <!-- <property name="java.naming.dns.url" value="dns://dnsserver/wiz.com"/> -->
+            <!-- </properties> -->
+        <!-- </dir-context> -->
+    <!-- </dir-contexts> -->
+</subsystem>
