@@ -1,0 +1,1336 @@
+<!--
+  ~ Copyright 2022 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:wildfly:elytron-tls:1.0"
+           xmlns="urn:wildfly:elytron-tls:1.0"
+           xmlns:credential-reference="urn:wildfly:credential-reference:1.1"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="1.0">
+
+    <!-- Shared credential reference schema -->
+    <xs:import namespace="urn:wildfly:credential-reference:1.1" schemaLocation="wildfly-credential-reference_1_1.xsd"/>
+
+    <!-- The subsystem root element -->
+    <xs:element name="subsystem" type="subsystemType"/>
+
+    <xs:complexType name="subsystemType">
+        <xs:all>
+            <xs:element name="security-properties" type="securityPropertiesType" minOccurs="0" />
+            <xs:element name="providers" type="providersType" minOccurs="0" />
+            <xs:element name="tls" type="tlsType" minOccurs="0" />
+            <xs:element name="credential-stores" type="credentialStoresType" minOccurs="0" />
+            <xs:element name="expression-resolver" type="expressionResolverType" minOccurs="0" />
+        </xs:all>
+        <xs:attribute name="initial-providers" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to a capability providing a Provider[] which will be registered globally ahead of all existing Provider registrations.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="final-providers" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to a capability providing a Provider[] which will be registered globally after all existing Provider registrations.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="disallowed-providers" type="stringListType">
+            <xs:annotation>
+                <xs:documentation>
+                    A list of providers that are disallowed, and will be removed from the providers list.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="default-ssl-context" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to an SSLContext which should be globally registered as the default.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        Security Properties
+     -->
+
+    <xs:complexType name="securityPropertiesType">
+        <xs:annotation>
+            <xs:documentation>
+                Type to contain a list of security properties to be set.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="security-property" type="propertyType" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="propertyType">
+        <xs:annotation>
+            <xs:documentation>
+                Representation of a key/value property pair.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The key for this property.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="value" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The value for this property.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        Providers
+     -->
+
+    <xs:complexType name="providersType">
+        <xs:annotation>
+            <xs:documentation>
+                Container of Provider configuration.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice maxOccurs="unbounded">
+            <xs:element name="aggregate-providers" type="aggregateProvidersType" />
+            <xs:element name="provider-loader" type="providerLoaderType" />
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="aggregateProvidersType">
+        <xs:annotation>
+            <xs:documentation>
+                A PrincipalDecoder definition that is actually an aggregation of other PrincipalDecoders.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="providers" type="providersRefType" minOccurs="2" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The name to use to represent this provider loader in the management model.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="providersRefType">
+        <xs:annotation>
+            <xs:documentation>
+                A reference to a Provider[] resource.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="providerLoaderType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single provider loader.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="configuration" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="property" type="propertyType" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The name to use to represent this provider loader in the management model.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="module" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the module to use to load the providers.
+
+                    If this is not specified the ClassLoader used to load the service will be used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="class-names" type="stringListType">
+            <xs:annotation>
+                <xs:documentation>
+                    The fully qualified class names of the providers to load.
+
+                    If this attribute is not specified then service loader based discovery will be used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="path" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The path to the configuration to use to initialise the provider.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    A reference to a previously defined path that the path of the configuration is
+                    relative to.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="argument" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Argument to pass into the constructor as the Provider is instantiated.
+
+                    Can only be used where the class names to load are specified.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!-- TODO: add objects for key store, trust manager, key stores-->
+    <xs:complexType name="tlsType">
+        <xs:annotation>
+            <xs:documentation>
+                Complex type to contain the definitions of the various components needed
+                for SSL, the end result being that these components can be combined together to
+                create a fully defined SSLContext.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="client-ssl-contexts" type="clientSSLContextsType" minOccurs="0" />
+            <xs:element name="server-ssl-contexts" type="serverSSLContextsType" minOccurs="0" />
+            <xs:element name="certificate-authorities" type="certificateAuthoritiesType" minOccurs="0" />
+            <xs:element name="certificate-authority-accounts" type="certificateAuthorityAccountsType" minOccurs="0" />
+            <xs:element name="key-managers" type="keyManagersType" minOccurs="0" />
+            <xs:element name="trust-managers" type="trustManagersType" minOccurs="0" />
+            <xs:element name="key-stores" type="keyStoresType" minOccurs="0" />
+        </xs:all>
+    </xs:complexType>
+
+    <!---
+        SSL Contexts
+    -->
+
+    <xs:complexType name="clientSSLContextsType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for client SSLContext definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="client-ssl-context" type="clientSSLContextType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="clientSSLContextType">
+        <xs:annotation>
+            <xs:documentation>
+                Definitions of a single client side SSLContext.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this client side SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="cipher-suite-filter" type="xs:string" use="optional" default="DEFAULT">
+            <xs:annotation>
+                <xs:documentation>
+                    The filter to be applied to the cipher suites made available by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="cipher-suite-names" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The filter to be applied to the TLSv1.3 cipher suites made available by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="protocols" type="stringListType" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    List of protocols supported by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-manager" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the KeyManager to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="key-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyManager object to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="trust-manager" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the TrustManager to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    TrustManager object to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="provider-name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the provider to use.
+                    If not specified, all providers from providers will be passed to the SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers to obtain the Provider[] to use to load the SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="serverSSLContextsType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for Server SSLContext definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="server-ssl-context" type="serverSSLContextType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="serverSSLContextType">
+        <xs:annotation>
+            <xs:documentation>
+                Definitions of a single server side SSLContext.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this Server side SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="cipher-suite-filter" type="xs:string" use="optional" default="DEFAULT">
+            <xs:annotation>
+                <xs:documentation>
+                    The filter to be applied to the cipher suites made available by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="cipher-suite-names" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The filter to be applied to the TLSv1.3 cipher suites made available by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="protocols" type="stringListType" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    List of protocols supported by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="want-client-auth" type="xs:boolean" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    To request (but not to require) a client certificate on SSL handshake.
+                    Ignored when need-client-auth is set.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="need-client-auth" type="xs:boolean" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    To require a client certificate on SSL handshake.
+                    Connection without trusted client certificate (see trust-manager) will be rejected.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="authentication-optional" type="xs:boolean" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    Rejecting of the client certificate by the security domain will not prevent the connection.
+                    Allows a fall through to use other authentication mechanisms (like form login) when the client certificate is rejected by security domain.
+                    Has an effect only when the security domain is set.
+                    This does not bypass the underlying trust manager check - see need-client-auth to allow connection without client certificate.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="use-cipher-suites-order" type="xs:boolean" default="true">
+            <xs:annotation>
+                <xs:documentation>
+                    Configure the SSLContext to honor local cipher suites preference.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maximum-session-cache-size" type="xs:int" default="-1">
+            <xs:annotation>
+                <xs:documentation>
+                    The maximum number of SSL sessions in the cache. The default value -1 means use the JVM default value. Value zero means there is no limit.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="session-timeout" type="xs:int" default="-1">
+            <xs:annotation>
+                <xs:documentation>
+                    The timeout for SSL sessions, in seconds. The default value -1 means use the JVM default value. Value zero means there is no limit.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="wrap" type="xs:boolean" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    Should the resulting SSLEngine, SSLSocketFactory, and SSLSocket instances returned by this SSLContext
+                    be wrapped to prevent further configuration changes.
+
+                    Note:  The WildFly HTTP2 support requires raw access to these objects so if HTTP2 is being used this
+                    should be set to false.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-manager" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the KeyManager to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="key-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyManager object to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="trust-manager" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the TrustManager to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="trust-manager-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    TrustManager object to be used by this SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="provider-name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the provider to use.
+                    If not specified, all providers from providers will be passed to the SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers to obtain the Provider[] to use to load the SSLContext.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!-- 
+        Certificate Authorities
+    -->
+
+    <xs:complexType name="certificateAuthorityAccountsType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for certificate authority account definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="certificate-authority-account" type="certificateAuthorityAccountType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="certificateAuthorityAccountType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single certificate authority account.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="account-key" type="accountKeyType" minOccurs="1"/>
+        </xs:all>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this certificate authority account.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="certificate-authority" type="xs:string" default="LetsEncrypt">
+            <xs:annotation>
+                <xs:documentation>
+                    The reference to certificate authority to use.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="contact-urls" type="stringListType" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A list of URLs that the certificate authority can contact about any issues related to this account.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="certificateAuthoritiesType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for certificate authority definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="certificate-authority" type="certificateAuthorityType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="certificateAuthorityType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single certificate authority.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this certificate authority.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="url" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    URL of the certificate authority.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="staging-url" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    URL of the certificate authority to use in pre-production.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="accountKeyType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a certificate authority account key.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="credential-reference" type="credential-reference:credentialReferenceType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Credential to be used when accessing the certificate authority account key.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:all>
+        <xs:attribute name="key-store" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the KeyStore that contains the certificate authority account key.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="key-store-object" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyStore object to use with the KeyManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="alias" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The alias of the certificate authority account key in the KeyStore.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        Managers
+    -->
+
+    <xs:complexType name="keyManagersType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for KeyManager definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="key-manager" type="keyManagerType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="keyManagerType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single KeyManager.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="credential-reference" type="credential-reference:credentialReferenceType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Credential to be used by the underlying KeyManager when accessing the entries in the underlying KeyStore.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:all>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this KeyManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="algorithm" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The algorithm name to use to initialise the KeyManagerFactory.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-store" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the KeyStore to use with the KeyManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="key-store-object" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyStore object to use with the KeyManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="alias-filter" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A filter to apply to the aliases provided by KeyStore to choose key to use from keys in KeyStore.
+
+                    Can either be a comma separated list of aliases to return or one of the following formats ALL:-alias1:-alias2, NONE:+alias1:+alias2
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="provider-name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the provider to use to
+                    instantiate the KeyManagerFactory, if the provider is not
+                    specified then the first provider found that can
+                    create an instance of the specified 'type' will be
+                    used.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers defined within the subsystem to obtain the Providers
+                    to search for the one that can create the required KeyManagerFactory type.
+
+                    If this is not specified then the global list of Providers is used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="generate-self-signed-certificate-host" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    If this attribute is set and if the file that backs the KeyStore does not exist, then
+                    a self-signed certificate will be generated on first use and it will be persisted to
+                    the file that backs the KeyStore. The value of this attribute will be used for the
+                    Common Name value in the self-signed certificate.
+    
+                    The use of this attribute is intended for testing purposes only. This attribute is not
+                    intended for production use.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="trustManagersType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for TrustManager definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="trust-manager" type="trustManagerType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="trustManagerType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single TrustManager.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element name="certificate-revocation-list" type="certificateRevocationListType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="certificate-revocation-lists" type="certificateRevocationListsType" minOccurs="0" maxOccurs="1" />
+            <xs:element name="ocsp" type="ocspType" minOccurs="0" maxOccurs="1"/>
+        </xs:all>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this TrustManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="algorithm" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The algorithm name to use to initialise the TrustManagerFactory.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-store" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the KeyStore to use with the TrustManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- <xs:attribute name="key-store-object" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    KeyStore object to use with the TrustManager.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute> -->
+        <xs:attribute name="alias-filter" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A filter to apply to the aliases provided by KeyStore.
+
+                    Can either be a comma separated list of aliases to return or one of the following formats ALL:-alias1:-alias2, NONE:+alias1:+alias2
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="provider-name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the provider to use to
+                    instantiate the TrustManagerFactory, if the provider is not
+                    specified then the first provider found that can
+                    create an instance of the specified 'type' will be
+                    used.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers defined within the subsystem to obtain the Providers
+                    to search for the one that can create the required TrustManagerFactory type.
+
+                    If this is not specified then the global list of Providers is used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maximum-cert-path" type="xs:int" use="optional" default="5">
+            <xs:annotation>
+                <xs:documentation>
+                    The maximum number of non-self-issued intermediate certificates that may exist in a certification path for OCSP and CRL checks. If neither OCSP and CRL is configured, this attribute has no effect.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="only-leaf-cert" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    Check revocation status only of leaf certificates.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="soft-fail" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    Accept certificate if revocation status is unknown.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        Start of revocation definitions
+    -->
+
+    <xs:complexType name="certificateRevocationListType">
+        <xs:annotation>
+            <xs:documentation>
+                Enables certificate revocation list checks to a trust manager.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="path" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The path to the configuration to use to initialise the provider.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The base path of the certificate revocation list file.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maximum-cert-path" type="xs:int" use="optional" default="5">
+            <xs:annotation>
+                <xs:documentation>
+                    The maximum number of non-self-issued intermediate certificates that may exist in a certification path.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="certificateRevocationListNoMaxCertPathType">
+        <xs:annotation>
+            <xs:documentation>
+                The presence of this element enables checking the peer's certificate against a certificate revocation list.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="path" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Path to the certificate revocation list.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The base path of the certificate revocation list file.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="certificateRevocationListsType">
+        <xs:annotation>
+            <xs:documentation>
+                The presence of this element enables checking the peer's certificate against multiple certificate revocation lists.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="certificate-revocation-list" type="certificateRevocationListNoMaxCertPathType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ocspType">
+        <xs:annotation>
+            <xs:documentation>
+                Enables online certificate status protocol checks to a trust manager.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="responder" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    OCSP responder URI to override those extracted from certificate.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="prefer-crls" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    Prefer certificate revocation list revocation over OCSP if certificate-revocation-list is defined.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="responder-certificate" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The alias for OCSP Responder certificate. Keep undefined to use the issuer of certificate being validated.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="responder-keystore" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the keystore for responder-certificate. Keep undefined to use trust-manager keystore. Requires responder-certificate to be defined.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="responder-keystore-object" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The keystore object for responder-certificate. Keep undefined to use trust-manager keystore. Requires responder-certificate to be defined.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        End of revocation definitions
+    -->
+
+    <!--
+        Key Store
+    -->
+
+    <xs:complexType name="keyStoresType">
+        <xs:annotation>
+            <xs:documentation>
+                Container for the KeyStore definitions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="key-store" type="keyStoreType" />
+<!--                <xs:element name="ldap-key-store" type="ldapKeyStoreType" />-->
+<!--                <xs:element name="filtering-key-store" type="filteringKeyStoreType" />-->
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="keyStoreType">
+        <xs:annotation>
+            <xs:documentation>
+                An individual names KeyStore definition.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="credential-reference" type="credential-reference:credentialReferenceType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        The credential reference to credential store or clear text (password)
+                        to use to initialize or load the KeyStore.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="implementation" type="keyStoreImplementationType" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Implementation details
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="file" type="fileType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        The location of the file to use to initialise the KeyStore instance.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this KeyStore.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="alias-filter" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A filter to apply to the aliases made available by this KeyStore.
+
+                    Can either be a comma separated list of aliases to return or one of the following formats ALL:-alias1:-alias2, NONE:+alias1:+alias2
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="keyStoreImplementationType">
+        <xs:annotation>
+            <xs:documentation>
+                keystore implementation details
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="type" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The KeyStore type, e.g. jks, pkcs#12.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="provider-name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the provider to use to
+                    instantiate the KeyStore, if the provider is not
+                    specified then the first provider found that can
+                    create an instance of the specified 'type' will be
+                    used.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers defined within the subsystem to obtain the Providers
+                    to search for the one that can create the required KeyStore type.
+
+                    If this is not specified then the global list of Providers is used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <!--
+        Credential Store Components
+     -->
+
+    <xs:complexType name="credentialStoresType">
+        <xs:annotation>
+            <xs:documentation>
+                Complex type to contain the definitions of the credential stores.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="credential-store" type="credentialStoreType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="secret-key-credential-store" type="secretKeyCredentialStoreType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="credentialStoreType">
+        <xs:annotation>
+            <xs:documentation>
+                An individual credential store definition.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="implementation-properties" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Map of credentials store implementation specific properties.
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="property" type="propertyType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="credential-reference" type="credential-reference:credentialReferenceType">
+                <xs:annotation>
+                    <xs:documentation>
+                        Credential to be used by as protection parameter for the Credential Store.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="type" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The credential store type, e.g. KeyStoreCredentialStore.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="provider-name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the provider to use to instantiate the CredentialStoreSpi.
+                    If the provider is not specified then the first provider found that can
+                    create an instance of the specified 'type' will be used.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers defined within the subsystem to obtain the Providers
+                    to search for the one that can create the required CredentialStore type.
+                    If this is not specified then the global list of Providers is used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="other-providers" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    The name of the providers defined within the subsystem to obtain the Providers
+                    to search for the one that can create the required JCA objects within credential store.
+                    This is valid only for key-store based  CredentialStore.
+                    If this is not specified then the global list of Providers is used instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A reference to a previously defined path that the file name is
+                    relative to.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="location" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    File name of credential store storage.
+
+                    Deprecated: Use "path" attribute instead.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="path" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    File name of credential store storage.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="modifiable" type="xs:boolean" use="optional" default="true">
+            <xs:annotation>
+                <xs:documentation>
+                    Specifies whether credential store is modifiable.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="create" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    Specifies whether credential store should create storage when it doesn't exist.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="secretKeyCredentialStoreType">
+        <xs:annotation>
+            <xs:documentation>
+                A simple credential store which stores SecretKeyCredential instances in a properties file.
+
+                This credential store does not encrypt the stored keys, the purpose of this credential store is
+                to provide initial access to keys used to protect other configuration values.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this credential store definition.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    A reference to a previously defined path that the file name is
+                    relative to.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="path" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The path to the credential store file.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="create" type="xs:boolean" default="true">
+            <xs:annotation>
+                <xs:documentation>
+                    Specifies whether credential store should create storage when it doesn't exist.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="populate" type="xs:boolean" default="true">
+            <xs:annotation>
+                <xs:documentation>
+                    If an entry with the default-alias does not exist should one be dynamically added using the
+                    configured key-size?
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="key-size" type="keySizeType" default="256">
+            <xs:annotation>
+                <xs:documentation>
+                    The default key size when generating secret keys.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="default-alias" type="xs:string" default="key">
+            <xs:annotation>
+                <xs:documentation>
+                    The default alias to use if dynamically adding an entry.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+
+    <!--
+       Expression Resolver Types
+    -->
+
+    <xs:complexType name="expressionResolverType">
+        <xs:annotation>
+            <xs:documentation>
+                An expression resolver backed by a list of sub-expression resolvers which can be used to decrypt encrypted expressions.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="resolver" type="resolverType" minOccurs="1" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="default-resolver" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The default resolver to use for expressions which do not specify the name of the resolver.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="prefix" type="xs:string" default="ENC">
+            <xs:annotation>
+                <xs:documentation>
+                    The prefix for expressions that should be resolved using this expression resolver.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="resolverType">
+        <xs:annotation>
+            <xs:documentation>
+                Definition of a single expression resolver.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The unique name of this expression resolver.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="credential-store" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Reference to the credential store which contains the secret key to be used by this resolver.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="secret-key" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The alias of the secret key contained within the credential store.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+
+    <!--
+        Misc
+    -->
+
+    <xs:complexType name="fileType">
+        <xs:annotation>
+            <xs:documentation>
+                A reference to a file.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="basicFileType">
+                <xs:attribute name="required" type="xs:boolean"
+                              use="optional" default="false">
+                    <xs:annotation>
+                        <xs:documentation>
+                            It is possible that a KeyStore definition can be created to a
+                            non-existent file and the file be automatically created when the store is saved, however
+                            no error will be reported where the file does not exist to begin with.
+
+                            If the intent is that the store will always exist in advance set
+                            this to 'true' so that an error will be reported if the file is missing.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="basicFileType">
+        <xs:annotation>
+            <xs:documentation>
+                Minimal attributes required to specify the location to a file.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="relative-to" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    A reference to a previously defined path that the file name is
+                    relative to.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="path" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The remaining path to the file referenced.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:simpleType name="stringListType">
+        <xs:annotation>
+            <xs:documentation>A list of String.</xs:documentation>
+        </xs:annotation>
+        <xs:list itemType="xs:string"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="keySizeType">
+        <xs:annotation>
+            <xs:documentation>
+                Allowed key sizes.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:int">
+            <xs:enumeration value="128" />
+            <xs:enumeration value="192" />
+            <xs:enumeration value="256" />
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

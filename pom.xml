@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2023 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-parent</artifactId>
+        <version>39</version>
+    </parent>
+    <groupId>org.wildfly.extras.elytron-tls</groupId>
+    <artifactId>elytron-tls-parent</artifactId>
+    <version>1.0.0.Alpha-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Elytron TLS: Parent</name>
+  
+    <description>Elytron TLS: Parent</description>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <properties>
+        <maven.compiler.release>11</maven.compiler.release>
+
+        <!-- Dependency versions -->
+        <version.org.wildfly>29.0.0.Final</version.org.wildfly>
+        <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
+        <version.org.wildfly.common>1.6.0.Final</version.org.wildfly.common>
+        <version.org.wildfly.core>21.1.0.Final</version.org.wildfly.core>
+        <version.org.wildfly.openssl>2.2.5.Final</version.org.wildfly.openssl>
+        <version.org.wildfly.security.elytron>2.2.1.Final</version.org.wildfly.security.elytron>
+
+        <version.org.jboss.arquillian.junit>1.7.0.Final</version.org.jboss.arquillian.junit>
+        <version.org.jboss.galleon>5.2.0.Final</version.org.jboss.galleon>
+        <version.junit>4.13.2</version.junit>
+
+        <!-- Plugin versions and their dependency versions -->
+        <version.wildfly.maven.plugin>4.2.0.Final</version.wildfly.maven.plugin>
+
+        <version.jacoco.plugin>0.8.10</version.jacoco.plugin>
+        <version.org.wildfly.galleon-plugin>6.4.2.Final</version.org.wildfly.galleon-plugin>
+        <version.surefire.plugin>3.0.0</version.surefire.plugin>
+
+        <!-- Test configuration -->
+        <galleon.fork.embedded>true</galleon.fork.embedded>
+        <galleon.log.time>true</galleon.log.time>
+        <galleon.wildfly.home>/tmp</galleon.wildfly.home>
+
+        <surefire.jpda.args/>
+        <surefire.system.args>${modular.jdk.args} ${modular.jdk.props} -ea -Duser.region=US -Duser.language=en -Duser.timezone=America/Chicago -XX:MaxMetaspaceSize=256m
+            ${surefire.jpda.args} ${surefire.jacoco.args}
+        </surefire.system.args>
+        <test.level>INFO</test.level>
+
+        <org.jboss.model.test.cache.root>[pom.xml,testsuite]</org.jboss.model.test.cache.root>
+        <org.jboss.model.test.classpath.cache>target/model-test-cache</org.jboss.model.test.classpath.cache>
+
+        <!-- Server build config -->
+        <server.name>wildfly-${version.org.wildfly}-elytron-tls-${project.version}</server.name>
+        <wildfly.build.output.dir>build/target/${server.name}</wildfly.build.output.dir>
+
+        <modular.jdk.args>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-exports=jdk.unsupported/sun.reflect=ALL-UNNAMED
+            --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED
+            --add-modules=java.se</modular.jdk.args>
+        <modular.jdk.props/>
+
+        <!-- Checkstyle configuration -->
+        <linkXRef>false</linkXRef>
+
+        <!-- Repositories -->
+        <wildfly-extras.repo.scm.connection>git@github.com:wildfly-security-incubator/elytron-tls.git</wildfly-extras.repo.scm.connection>
+        <wildfly-extras.repo.scm.url>https://github.com/wildfly-security-incubator/elytron-tls</wildfly-extras.repo.scm.url>
+        <maven.repository.protocol>https</maven.repository.protocol>
+        <maven.repository.url>${maven.repository.protocol}://repository.jboss.org/nexus/content/groups/public/</maven.repository.url>
+        <maven.redhat.repository.url>${maven.repository.protocol}://maven.repository.redhat.com/ga/</maven.redhat.repository.url>
+    </properties>
+
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>${maven.repository.url}</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>${maven.repository.url}</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <scm>
+        <connection>scm:git:${wildfly-extras.repo.scm.connection}</connection>
+        <developerConnection>scm:git:${wildfly-extras.repo.scm.connection}</developerConnection>
+        <url>${wildfly-extras.repo.scm.url}</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <modules>
+        <module>build</module>
+        <module>feature-pack</module>
+        <module>subsystem</module>
+        <module>testsuite</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-preview-feature-pack</artifactId>
+                <version>${version.org.wildfly}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-preview-ee-bom</artifactId>
+                <version>${version.org.wildfly}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-elytron-integration-common</artifactId>
+                <version>22.0.0.Beta1-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.security</groupId>
+                <artifactId>wildfly-elytron-ssl-base</artifactId>
+                <version>2.2.2.CR1-SNAPSHOT</version>
+            </dependency>
+
+            <!-- Local dependencies-->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>elytron-tls-subsystem</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>elytron-tls-galleon-pack</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>elytron-tls-galleon-pack</artifactId>
+                <version>${project.version}</version>
+                <type>zip</type>
+            </dependency>
+
+            <!-- Test dependencies -->
+            <dependency>
+                <groupId>org.jboss.arquillian.junit</groupId>
+                <artifactId>arquillian-junit-core</artifactId>
+                <version>${version.org.jboss.arquillian.junit}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-standard-test-bom</artifactId>
+                <version>${version.org.wildfly}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-core-test-runner</artifactId>
+                <version>${version.org.wildfly.core}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.openssl</groupId>
+                <artifactId>wildfly-openssl-java</artifactId>
+                <version>${version.org.wildfly.openssl}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-testsuite-shared</artifactId>
+                <version>${version.org.wildfly}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- General build & testing plugins -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>check-style</id>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>checkstyle</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.wildfly.checkstyle</groupId>
+                            <artifactId>wildfly-checkstyle-config</artifactId>
+                            <version>${version.org.wildfly.checkstyle-config}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
+                        <consoleOutput>true</consoleOutput>
+                        <failsOnError>true</failsOnError>
+                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        <excludes>**/*$logger.java,**/*$bundle.java</excludes>
+                        <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                        <useFile/>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <goals>
+                        <goal>copy</goal>
+                        <goal>properties</goal>
+                        <goal>copy-dependencies</goal>
+                        <goal>unpack-dependencies</goal>
+                    </goals>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <enableAssertions>true</enableAssertions>
+                        <systemPropertyVariables>
+                            <org.jboss.model.test.cache.root>${org.jboss.model.test.cache.root}</org.jboss.model.test.cache.root>
+                            <org.jboss.model.test.classpath.cache>${org.jboss.model.test.classpath.cache}</org.jboss.model.test.classpath.cache>
+                            <org.jboss.model.test.cache.strict>true</org.jboss.model.test.cache.strict>
+                        </systemPropertyVariables>
+                        <systemProperties>
+                            <property>
+                                <name>java.util.logging.manager</name>
+                                <value>org.jboss.logmanager.LogManager</value>
+                            </property>
+                            <property>
+                                <name>jboss.remoting.leakdebugging</name>
+                                <value>false</value>
+                            </property>
+                            <property>
+                                <name>test.level</name>
+                                <value>${test.level}</value>
+                            </property>
+                        </systemProperties>
+                        <argLine>${surefire.system.args}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>xml-maven-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${version.jacoco.plugin}</version>
+                </plugin>
+
+                <!-- WildFly/Galleon plugins -->
+                <plugin>
+                    <groupId>org.jboss.galleon</groupId>
+                    <artifactId>galleon-maven-plugin</artifactId>
+                    <version>${version.org.jboss.galleon}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.wildfly.galleon-plugins</groupId>
+                    <artifactId>wildfly-galleon-maven-plugin</artifactId>
+                    <version>${version.org.wildfly.galleon-plugin}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.wildfly.core</groupId>
+                            <artifactId>wildfly-embedded</artifactId>
+                            <version>${version.org.wildfly.core}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.wildfly.common</groupId>
+                            <artifactId>wildfly-common</artifactId>
+                            <version>${version.org.wildfly.common}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.wildfly.plugins</groupId>
+                    <artifactId>wildfly-maven-plugin</artifactId>
+                    <version>${version.wildfly.maven.plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <!--
+            JaCoCo test coverage. Will set ${surefire.jacoco.args} to be used in WildFly Test Runner config and as surefire jvm argument.
+            This profile generate .exec files only. This profile doesn't generate html coverage report.
+        -->
+        <profile>
+            <id>ts.jacoco.profile</id>
+            <activation>
+                <property>
+                    <name>coverage</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>ts.jacoco-prepare</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <append>true</append>
+                                    <destFile>target/jacoco.exec</destFile>
+                                    <includes>
+                                        <include>*</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>org.jboss.as.test.*</exclude>
+                                    </excludes>
+                                    <output>file</output>
+                                    <propertyName>surefire.jacoco.args</propertyName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+            This profile is needed for the jacoco plugin as the jacoco plugin is unable to replace surefire.jacoco.args
+            property if this property is defined in main properties section of the pom file
+          -->
+        <profile>
+            <id>ts.jacoco.profile.not.enabled</id>
+            <activation>
+                <property>
+                    <name>!coverage</name>
+                </property>
+            </activation>
+            <properties>
+                <surefire.jacoco.args/>
+            </properties>
+        </profile>
+    </profiles>
+</project>
