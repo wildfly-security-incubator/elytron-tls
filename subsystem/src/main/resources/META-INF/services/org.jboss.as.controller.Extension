@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-org.wildfly.extension.elytron.tls.ElytronTlsExtension
+org.wildfly.extension.elytron_tls.ElytronTlsExtension
