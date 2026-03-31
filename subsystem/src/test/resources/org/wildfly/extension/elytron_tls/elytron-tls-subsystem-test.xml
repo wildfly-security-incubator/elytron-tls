@@ -1,0 +1,114 @@
+<!--
+  ~ Copyright 2019 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<subsystem xmlns="urn:wildfly:elytron-tls:1.0" default-ssl-context="server">
+    <!-- TODO: ssl-contexts that also create key stores, managers, oscp, etc. -->
+    <tls>
+        <key-stores>
+            <key-store name="PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11"/>
+            </key-store>
+            <key-store name="jks_store" alias-filter="one,two,three">
+                <credential-reference clear-text="password"/>
+                <implementation type="jks"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jks" required="true"/>
+            </key-store>
+            <key-store name="jceks_store">
+                <credential-reference clear-text="password"/>
+                <implementation type="jceks"/>
+                <file relative-to="jboss.server.config.dir" path="keystore.jceks"/>
+            </key-store>
+            <key-store name="Custom_PKCS_11">
+                <credential-reference clear-text="password"/>
+                <implementation type="PKCS#11" provider-name="SunPKCS#11" providers="custom-loader"/>
+            </key-store>
+            <key-store name="accounts.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="JKS"/>
+                <file path="accounts.keystore.jks" relative-to="jboss.server.config.dir"/>
+            </key-store>
+            <key-store name="test.keystore">
+                <credential-reference clear-text="elytron"/>
+                <implementation type="PKCS12"/>
+                <file path="test.keystore" relative-to="jboss.server.config.dir"/>
+            </key-store>
+        </key-stores>
+        <key-managers>
+            <key-manager name="serverKey" algorithm="SunX509" key-store="jks_store">
+                <credential-reference clear-text="password"/>
+            </key-manager>
+            <key-manager name="clientKey" algorithm="SunX509" key-store="jks_store">
+                <credential-reference store="credstore1" alias="password-alias" type="PasswordCredential"/>
+            </key-manager>
+            <key-manager name="LazyKeyManager" key-store="test.keystore" generate-self-signed-certificate-host="localhost">
+                <credential-reference clear-text="elytron"/>
+            </key-manager>
+        </key-managers>
+        <trust-managers>
+            <trust-manager name="serverTrust" algorithm="SunX509" key-store="jks_store"/>
+        </trust-managers>
+        <server-ssl-contexts>
+            <server-ssl-context name="server" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true"
+                                authentication-optional="true" use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager="serverKey" trust-manager="serverTrust"
+                                providers="custom-loader" provider-name="first"/>
+            <server-ssl-context name="server2" protocols="TLSv1.2" want-client-auth="true" need-client-auth="true"
+                                authentication-optional="true" use-cipher-suites-order="false" maximum-session-cache-size="10"
+                                session-timeout="120" wrap="false" key-manager="serverKey" trust-manager="serverTrust"
+                                providers="custom-loader" provider-name="first"/>
+        </server-ssl-contexts>
+        <client-ssl-contexts>
+            <client-ssl-context name="client" protocols="TLSv1.3 TLSv1.2" key-manager="clientKey" trust-manager="serverTrust"
+                                providers="custom-loader" provider-name="first"/>
+        </client-ssl-contexts>
+        <certificate-authorities>
+            <certificate-authority name="testCA" url="https://www.test.com"/>
+        </certificate-authorities>
+        <certificate-authority-accounts>
+            <certificate-authority-account name="MyCA" certificate-authority="LetsEncrypt">
+                <account-key key-store="accounts.keystore" alias="server">
+                    <credential-reference clear-text="elytron"/>
+                </account-key>
+            </certificate-authority-account>
+            <certificate-authority-account name="MyCA2" certificate-authority="testCA">
+                <account-key key-store="accounts.keystore" alias="server">
+                    <credential-reference clear-text="elytron"/>
+                </account-key>
+            </certificate-authority-account>
+        </certificate-authority-accounts>
+        <!-- TODO: server-ssl-sni-context -->
+    </tls>
+    <credential-stores>
+        <credential-store name="test1" relative-to="jboss.server.data.dir" location="test1.store" create="true">
+            <implementation-properties>
+                <property name="keyStoreType" value="JCEKS"/>
+                <property name="keyAlias" value="adminKey"/>
+            </implementation-properties>
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <credential-store name="test2" relative-to="jboss.server.data.dir" modifiable="true">
+            <credential-reference store="test1" alias="to_open_test2"/>
+        </credential-store>
+        <credential-store name="test4" relative-to="jboss.server.data.dir" path="test1.store" create="true">
+            <credential-reference clear-text="secret2"/>
+        </credential-store>
+        <secret-key-credential-store name="test3" relative-to="jboss.server.data.dir" path="test3.cs" create="false" populate="false" key-size="192" default-alias="test3" />
+    </credential-stores>
+    <expression-resolver default-resolver="A" prefix="G">
+        <resolver name="A" credential-store="test1" secret-key="C"/>
+        <resolver name="D" credential-store="test2" secret-key="F"/>
+    </expression-resolver>
+</subsystem>
